@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Data;
+using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.DTOs.ScreenTime;
@@ -23,12 +24,12 @@ namespace WebApi.Controllers
 
             var response = new ProcessDailyUsageResponse
             {
-                HourlyUsages = new long[24]
+                HourlyDurationMs = new long[24]
             };
 
             // 填充24小时数据
             for (int hour = 0; hour < 24; hour++)
-                response.HourlyUsages[hour] = hourlyData.TryGetValue(hour, out var duration) ? duration : 0;
+                response.HourlyDurationMs[hour] = hourlyData.TryGetValue(hour, out var duration) ? duration : 0;
 
             return Ok(response);
         }
@@ -39,23 +40,10 @@ namespace WebApi.Controllers
         /// <param name="limit">使用时间由多到少前 N 个，为 0 时不限个数</param>
         /// <returns></returns>
         [HttpGet("{date}/summary")]
-        public async Task<ActionResult<IEnumerable<ProcessUsage>>> GetUsageByDate(DateOnly date, [FromQuery] int limit = 10)
+        public async Task<ActionResult<IEnumerable<ProcessUsageByDateRangeResponse>>> GetUsageByDate(DateOnly date, [FromQuery] int limit = 10)
         {
-            IQueryable<ProcessUsage> query = _context.DailyUsages
-                .Where(x => x.Date == date)
-                .OrderByDescending(x => x.DurationMs)
-                .Select(x => new ProcessUsage
-                {
-                    ProcessName = x.ProcessName,
-                    DurationMs = x.DurationMs,
-                })
-                .OrderByDescending(x => x.DurationMs);
-
-            // limit = 0 时表示不限制返回数量
-            if (limit > 0)
-                query = query.Take(limit);
-
-            return Ok(await query.ToListAsync());
+            var result = await GetUsageByDateRangeInternal(date, date, limit);
+            return Ok(result);
         }
 
         /// <summary>
@@ -66,28 +54,60 @@ namespace WebApi.Controllers
         /// <param name="limit">使用时间由多到少前 N 个，为 0 时不限个数</param>
         /// <returns></returns>
         [HttpGet("summary")]
-        public async Task<ActionResult<IEnumerable<ProcessUsage>>> GetUsageByDateRange(
+        public async Task<ActionResult<IEnumerable<ProcessUsageByDateRangeResponse>>> GetUsageByDateRange(
             [FromQuery, Required] DateOnly startDate,
             [FromQuery, Required] DateOnly endDate,
             [FromQuery] int limit = 10)
         {
-            DateOnly today = DateOnly.FromDateTime(DateTime.Now);
+            var result = await GetUsageByDateRangeInternal(startDate, endDate, limit);
+            return Ok(result);
+        }
 
-            IQueryable<ProcessUsage> query = _context.DailyUsages
+        private async Task<ProcessUsageByDateRangeResponse> GetUsageByDateRangeInternal(
+            DateOnly startDate,
+            DateOnly endDate,
+            int limit = 10)
+        {
+            // 每个进程在这段时间内使用情况和
+            IQueryable<ProcessUsage> processQuery = _context.DailyUsages
                 .Where(x => x.Date >= startDate && x.Date <= endDate)
                 .GroupBy(x => x.ProcessName)
                 .Select(g => new ProcessUsage
                 {
                     ProcessName = g.Key,
-                    DurationMs = g.Sum(x => x.DurationMs),
+                    DurationMs = g.Sum(x => x.DurationMs)
                 })
                 .OrderByDescending(x => x.DurationMs);
-
-            // limit = 0 时表示不限制返回数量
             if (limit > 0)
-                query = query.Take(limit);
+                processQuery = processQuery.Take(limit);
+            var processUsages = await processQuery.ToListAsync();
+            // 每一天所有进程使用情况和
+            var dateList = Enumerable.Range(0, (endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue)).Days + 1)
+                .Select(offset => startDate.AddDays(offset))
+                .ToList();
+            var usageData = await _context.DailyUsages
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .GroupBy(x => x.Date)
+                .Select(g => new DailyUsageSummary
+                {
+                    Date = g.Key,
+                    DurationMs = g.Sum(x => x.DurationMs)
+                })
+                .ToDictionaryAsync(x => x.Date, x => x.DurationMs);
+            // 合并完整日期和实际数据
+            var dailySummary = dateList
+                .Select(date => new DailyUsageSummary
+                {
+                    Date = date,
+                    DurationMs = usageData.TryGetValue(date, out long value) ? value : 0
+                })
+                .ToList();
 
-            return Ok(await query.ToListAsync());
+            return new ProcessUsageByDateRangeResponse
+            {
+                ProcessUsages = processUsages,
+                DailyUsageSummary = dailySummary
+            };
         }
     }
 }

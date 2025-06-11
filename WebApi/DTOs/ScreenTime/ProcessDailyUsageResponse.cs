@@ -2,6 +2,6 @@
 {
     public class ProcessDailyUsageResponse
     {
-        public required long[] HourlyUsages { get; set; }
+        public required long[] HourlyDurationMs { get; set; }
     }
 }
