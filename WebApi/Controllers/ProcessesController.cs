@@ -9,7 +9,7 @@ using WebApi.Options;
 namespace WebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/processes")]
     public class ProcessesController(ScreenTimeContext context, AppOptions options, ILogger<ProcessesController> logger) : ControllerBase
     {
         private readonly ScreenTimeContext _context = context;

@@ -8,18 +8,34 @@ using WebApi.DTOs.ScreenTime;
 namespace WebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class ScreenTimeController(ScreenTimeContext context, ILogger<ScreenTimeController> logger) : ControllerBase
+    [Route("api/screen-time")]
+    public class ScreenTimeController : ControllerBase
     {
-        private readonly ScreenTimeContext _context = context;
-        private readonly ILogger<ScreenTimeController> _logger = logger;
+        private readonly ScreenTimeContext _context;
+        private readonly ILogger<ScreenTimeController> _logger;
+        private const int DefaultLimit = 10; // 默认限制返回的进程数量
+        private const int MaxQueryDays = 35; // 最大查询天数常量
 
-        // 获取指定日期和进程名称的24小时使用情况
-        [HttpGet("{date}/processName/{processName}/hourly")]
-        public async Task<ActionResult<ProcessDailyUsageResponse>> GetProcessDailyUsage(DateOnly date, string processName)
+        public ScreenTimeController(ScreenTimeContext context, ILogger<ScreenTimeController> logger)
         {
+            _context = context;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// 获取指定进程在某天的24小时使用情况
+        /// GET /api/screen-time/processes/{processName}/hourly?date=2024-01-15
+        /// </summary>
+        [HttpGet("processes/{processName}/hourly")]
+        public async Task<ActionResult<ProcessDailyUsageResponse>> GetProcessHourlyUsage(
+            string processName,
+            [FromQuery, Required] DateOnly date)
+        {
+            // 进程名称有可能是空格，所以允许空字符串
+
             var hourlyData = await _context.HourlyUsages
                 .Where(h => h.Date == date && h.ProcessName == processName)
+                .AsNoTracking()
                 .ToDictionaryAsync(h => h.Hour, h => h.DurationMs);
 
             var response = new ProcessDailyUsageResponse
@@ -29,21 +45,42 @@ namespace WebApi.Controllers
 
             // 填充24小时数据
             for (int hour = 0; hour < 24; hour++)
-                response.HourlyDurationMs[hour] = hourlyData.TryGetValue(hour, out var duration) ? duration : 0;
+                response.HourlyDurationMs[hour] = hourlyData.GetValueOrDefault(hour, 0);
 
             return Ok(response);
         }
 
         /// <summary>
-        /// 获取指定日期的所有进程使用情况
+        /// 获取指定进程在日期范围内的每日使用情况
+        /// GET /api/screen-time/processes/{processName}/daily?startDate=2024-01-01&endDate=2024-01-31
         /// </summary>
-        /// <param name="limit">使用时间由多到少前 N 个，为 0 时不限个数</param>
-        /// <returns></returns>
-        [HttpGet("{date}/summary")]
-        public async Task<ActionResult<IEnumerable<ProcessUsageByDateRangeResponse>>> GetUsageByDate(DateOnly date, [FromQuery] int limit = 10)
+        [HttpGet("processes/{processName}/daily")]
+        public async Task<ActionResult<IEnumerable<DateUsage>>> GetProcessDailyUsage(
+            string processName,
+            [FromQuery, Required] DateOnly startDate,
+            [FromQuery, Required] DateOnly endDate)
         {
-            var result = await GetUsageByDateRangeInternal(date, date, limit);
-            return Ok(result);
+            // 进程名称有可能是空格，所以允许空字符串
+
+            var validationResult = ValidateDateRange(startDate, endDate);
+            if (validationResult != null)
+                return validationResult;
+
+            var dailyUsageDict = await _context.DailyUsages
+                .Where(x => x.ProcessName == processName && x.Date >= startDate && x.Date <= endDate)
+                .AsNoTracking()
+                .ToDictionaryAsync(x => x.Date, x => x.DurationMs);
+
+            // 生成完整日期范围并填充数据
+            var response = GenerateDateRange(startDate, endDate)
+                .Select(date => new DateUsage
+                {
+                    Date = date,
+                    DurationMs = dailyUsageDict.GetValueOrDefault(date, 0)
+                })
+                .ToList();
+
+            return Ok(response);
         }
 
         /// <summary>
@@ -51,23 +88,18 @@ namespace WebApi.Controllers
         /// </summary>
         /// <param name="startDate"></param>
         /// <param name="endDate"></param>
-        /// <param name="limit">使用时间由多到少前 N 个，为 0 时不限个数</param>
+        /// <param name="limit">使用时间由多到少前 N 个，为非正数时不限个数</param>
         /// <returns></returns>
-        [HttpGet("summary")]
-        public async Task<ActionResult<IEnumerable<ProcessUsageByDateRangeResponse>>> GetUsageByDateRange(
+        [HttpGet("summary/range")]
+        public async Task<ActionResult<ProcessUsageByDateRangeResponse>> GetUsageSummary(
             [FromQuery, Required] DateOnly startDate,
             [FromQuery, Required] DateOnly endDate,
-            [FromQuery] int limit = 10)
+            [FromQuery] int limit = DefaultLimit)
         {
-            var result = await GetUsageByDateRangeInternal(startDate, endDate, limit);
-            return Ok(result);
-        }
+            var validationResult = ValidateDateRange(startDate, endDate);
+            if (validationResult != null)
+                return validationResult;
 
-        private async Task<ProcessUsageByDateRangeResponse> GetUsageByDateRangeInternal(
-            DateOnly startDate,
-            DateOnly endDate,
-            int limit = 10)
-        {
             // 每个进程在这段时间内使用情况和
             IQueryable<ProcessUsage> processQuery = _context.DailyUsages
                 .Where(x => x.Date >= startDate && x.Date <= endDate)
@@ -77,37 +109,74 @@ namespace WebApi.Controllers
                     ProcessName = g.Key,
                     DurationMs = g.Sum(x => x.DurationMs)
                 })
-                .OrderByDescending(x => x.DurationMs);
+                .OrderByDescending(x => x.DurationMs)
+                .AsNoTracking();
             if (limit > 0)
                 processQuery = processQuery.Take(limit);
+
             var processUsages = await processQuery.ToListAsync();
-            // 每一天所有进程使用情况和
-            var dateList = Enumerable.Range(0, (endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue)).Days + 1)
-                .Select(offset => startDate.AddDays(offset))
-                .ToList();
-            var usageData = await _context.DailyUsages
+
+            // 每一天所有进程使用情况统计
+            var dailyUsageDict = await _context.DailyUsages
                 .Where(x => x.Date >= startDate && x.Date <= endDate)
                 .GroupBy(x => x.Date)
-                .Select(g => new DailyUsageSummary
+                .Select(g => new DateUsage
                 {
                     Date = g.Key,
                     DurationMs = g.Sum(x => x.DurationMs)
                 })
+                .AsNoTracking()
                 .ToDictionaryAsync(x => x.Date, x => x.DurationMs);
-            // 合并完整日期和实际数据
-            var dailySummary = dateList
-                .Select(date => new DailyUsageSummary
+
+            // 生成完整的日期范围并填充数据
+            var dailySummary = GenerateDateRange(startDate, endDate)
+                .Select(date => new DateUsage
                 {
                     Date = date,
-                    DurationMs = usageData.TryGetValue(date, out long value) ? value : 0
+                    DurationMs = dailyUsageDict.GetValueOrDefault(date, 0)
                 })
                 .ToList();
 
-            return new ProcessUsageByDateRangeResponse
+            return Ok(new ProcessUsageByDateRangeResponse
             {
                 ProcessUsages = processUsages,
                 DailyUsageSummary = dailySummary
-            };
+            });
+        }
+
+        /// <summary>
+        /// 生成日期范围
+        /// </summary>
+        /// <param name="startDate">开始日期</param>
+        /// <param name="endDate">结束日期</param>
+        /// <returns>日期序列</returns>
+        private static IEnumerable<DateOnly> GenerateDateRange(DateOnly startDate, DateOnly endDate)
+        {
+            var daysDiff = endDate.DayNumber - startDate.DayNumber + 1;
+            return Enumerable.Range(0, daysDiff)
+                .Select(offset => startDate.AddDays(offset));
+        }
+
+        /// <summary>
+        /// 验证日期范围
+        /// </summary>
+        /// <param name="startDate">开始日期</param>
+        /// <param name="endDate">结束日期</param>
+        /// <returns>验证失败时返回BadRequest，验证通过返回null</returns>
+        private BadRequestObjectResult? ValidateDateRange(DateOnly startDate, DateOnly endDate)
+        {
+            if (startDate > endDate)
+            {
+                return BadRequest("开始日期不能晚于结束日期");
+            }
+
+            var daysDiff = endDate.DayNumber - startDate.DayNumber + 1;
+            if (daysDiff > MaxQueryDays)
+            {
+                return BadRequest($"日期范围不能超过 {MaxQueryDays} 天");
+            }
+
+            return null;
         }
     }
 }

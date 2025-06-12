@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -38,6 +39,17 @@ namespace WebApi
             var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseUrls(Shared.Constants.Web.BaseUrl); // 设置监听地址和端口
 
+            // 允许跨域请求
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
+
             // Add services to the container.
 
             builder.Host.UseSerilog();
@@ -64,6 +76,7 @@ namespace WebApi
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                Process.Start(new ProcessStartInfo("cmd", $"/c start {Shared.Constants.Web.BaseUrl}/swagger/index.html") { CreateNoWindow = true });
             }
 
             // wwwroot为html目录
@@ -81,6 +94,8 @@ namespace WebApi
             });
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.MapControllers();
 
