@@ -13,7 +13,7 @@ namespace WebApi.Controllers
     {
         private readonly ScreenTimeContext _context;
         private readonly ILogger<ScreenTimeController> _logger;
-        private const int DefaultLimit = 10; // 默认限制返回的进程数量
+        private const int DefaultProcessLimit = 10; // 默认限制返回的进程数量
         private const int MaxQueryDays = 35; // 最大查询天数常量
 
         public ScreenTimeController(ScreenTimeContext context, ILogger<ScreenTimeController> logger)
@@ -24,10 +24,9 @@ namespace WebApi.Controllers
 
         /// <summary>
         /// 获取指定进程在某天的24小时使用情况
-        /// GET /api/screen-time/processes/{processName}/hourly?date=2024-01-15
         /// </summary>
-        [HttpGet("processes/{processName}/hourly")]
-        public async Task<ActionResult<ProcessDailyUsageResponse>> GetProcessHourlyUsage(
+        [HttpGet("processes/{processName}/daily")]
+        public async Task<ActionResult<IEnumerable<long>>> GetProcessDailyUsage(
             string processName,
             [FromQuery, Required] DateOnly date)
         {
@@ -38,24 +37,21 @@ namespace WebApi.Controllers
                 .AsNoTracking()
                 .ToDictionaryAsync(h => h.Hour, h => h.DurationMs);
 
-            var response = new ProcessDailyUsageResponse
-            {
-                HourlyDurationMs = new long[24]
-            };
+            var hourlyDurationMs = new long[24];
+
 
             // 填充24小时数据
             for (int hour = 0; hour < 24; hour++)
-                response.HourlyDurationMs[hour] = hourlyData.GetValueOrDefault(hour, 0);
+                hourlyDurationMs[hour] = hourlyData.GetValueOrDefault(hour, 0);
 
-            return Ok(response);
+            return Ok(hourlyDurationMs);
         }
 
         /// <summary>
         /// 获取指定进程在日期范围内的每日使用情况
-        /// GET /api/screen-time/processes/{processName}/daily?startDate=2024-01-01&endDate=2024-01-31
         /// </summary>
-        [HttpGet("processes/{processName}/daily")]
-        public async Task<ActionResult<IEnumerable<DateUsage>>> GetProcessDailyUsage(
+        [HttpGet("processes/{processName}/range")]
+        public async Task<ActionResult<IEnumerable<DateUsage>>> GetProcessUsageRange(
             string processName,
             [FromQuery, Required] DateOnly startDate,
             [FromQuery, Required] DateOnly endDate)
@@ -84,17 +80,14 @@ namespace WebApi.Controllers
         }
 
         /// <summary>
-        /// 获取指定日期范围内的所有进程使用情况
-        /// </summary>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
+        /// 获取所有进程在日期范围内的每日使用情况，从时长长倒短
         /// <param name="limit">使用时间由多到少前 N 个，为非正数时不限个数</param>
-        /// <returns></returns>
-        [HttpGet("summary/range")]
-        public async Task<ActionResult<ProcessUsageByDateRangeResponse>> GetUsageSummary(
+        /// </summary>
+        [HttpGet("processes/range")]
+        public async Task<ActionResult<IEnumerable<ProcessUsage>>> GetTopProcessesUsageRange(
             [FromQuery, Required] DateOnly startDate,
             [FromQuery, Required] DateOnly endDate,
-            [FromQuery] int limit = DefaultLimit)
+            [FromQuery] int limit = DefaultProcessLimit)
         {
             var validationResult = ValidateDateRange(startDate, endDate);
             if (validationResult != null)
@@ -115,6 +108,54 @@ namespace WebApi.Controllers
                 processQuery = processQuery.Take(limit);
 
             var processUsages = await processQuery.ToListAsync();
+
+            return Ok(processUsages);
+        }
+
+
+        /// <summary>
+        /// 获取指定日期内共24小时每小时内所有进程使用情况
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        [HttpGet("summary/daily")]
+        public async Task<ActionResult<IEnumerable<long>>> GetDailyUsageSummary(
+            [FromQuery, Required] DateOnly date)
+        {
+            var hourlyData = await _context.HourlyUsages
+                .Where(h => h.Date == date)
+                .GroupBy(x => x.Hour)
+                .Select(g => new 
+                {
+                    Hour = g.Key,
+                    DurationMs = g.Sum(x => x.DurationMs)
+                })
+                .AsNoTracking()
+                .ToDictionaryAsync(h => h.Hour, h => h.DurationMs);
+
+            var hourlyDurationMs = new long[24];
+
+            // 填充24小时数据
+            for (int hour = 0; hour < 24; hour++)
+                hourlyDurationMs[hour] = hourlyData.GetValueOrDefault(hour, 0);
+
+            return Ok(hourlyDurationMs);
+        }
+
+        /// <summary>
+        /// 获取指定日期范围内的所有进程使用情况
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        [HttpGet("summary/range")]
+        public async Task<ActionResult<IEnumerable<DateUsage>>> GetUsageSummaryRange(
+            [FromQuery, Required] DateOnly startDate,
+            [FromQuery, Required] DateOnly endDate)
+        {
+            var validationResult = ValidateDateRange(startDate, endDate);
+            if (validationResult != null)
+                return validationResult;
 
             // 每一天所有进程使用情况统计
             var dailyUsageDict = await _context.DailyUsages
@@ -137,11 +178,7 @@ namespace WebApi.Controllers
                 })
                 .ToList();
 
-            return Ok(new ProcessUsageByDateRangeResponse
-            {
-                ProcessUsages = processUsages,
-                DailyUsageSummary = dailySummary
-            });
+            return Ok(dailySummary);
         }
 
         /// <summary>

@@ -1,9 +1,5 @@
 @import './base.css';
+@import "tailwindcss";
 
-
-#app {
-  margin: 0 auto;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-}
+/* tailwindcss 暗黑模式 */
+@custom-variant dark (&:where(.dark, .dark *));

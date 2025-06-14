@@ -19,7 +19,7 @@ namespace Tracker.Services
             string processName = process.ProcessName;
             var processInfo = await _context.ProcessInfos.FindAsync(processName);
 
-            // 如果找不到对应的进程信息，则添加；若最后更新日期不是今天，则覆盖
+            // 如果找不到对应的进程信息，则添加；若最后更新日期不是今天，则覆盖 Alias 以外的属性
             if (processInfo == null || processInfo.LastUpdated != today)
             {
                 string? exePath = null;

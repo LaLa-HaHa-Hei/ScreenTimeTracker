@@ -1,0 +1,1 @@
+function o(t){const e=t.getFullYear(),n=String(t.getMonth()+1).padStart(2,"0"),a=String(t.getDate()).padStart(2,"0");return`${e}-${n}-${a}`}function r(t){const[e,n,a]=t.split("-").map(Number);return new Date(e,n-1,a)}function s(t){return`${t.getMonth()+1}/${t.getDate()}`}function g(t){return["周日","周一","周二","周三","周四","周五","周六"][t.getDay()]}export{r as a,o as d,s as f,g};

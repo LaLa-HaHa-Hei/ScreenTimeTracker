@@ -50,8 +50,6 @@ namespace WebApi
                 });
             });
 
-            // Add services to the container.
-
             builder.Host.UseSerilog();
             builder.Services.AddControllers();
 
@@ -81,16 +79,16 @@ namespace WebApi
 
             // wwwroot为html目录
             app.UseDefaultFiles();
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "wwwroot")),
-                RequestPath = ""
-            });
             // 公开 DataDirPath 目录下的文件，访问路径为 /{DataDirPath}
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(DataDirPath),
                 RequestPath = Shared.Constants.Web.DataRequestPath
+            });
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "wwwroot")),
+                RequestPath = ""
             });
 
             app.UseRouting();
@@ -98,6 +96,9 @@ namespace WebApi
             app.UseCors();
 
             app.MapControllers();
+
+            // Vue3采用了History模式的路由
+            app.MapFallbackToFile("index.html");
 
             Log.Warning("Data directory: {DataDirPath}", DataDirPath);
             Log.Warning("Listening on: {BaseUrl}", Shared.Constants.Web.BaseUrl);
