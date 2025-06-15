@@ -2,8 +2,9 @@ import type { DateOnly } from '@/types';
 
 export function dateToDateOnly(date: Date): DateOnly {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    // 此处不要补0，Asp.Net Core Web API 的 DateOnly 只能识别 YYYY-M-D 格式
+    const month = String(date.getMonth() + 1);
+    const day = String(date.getDate());
     return `${year}-${month}-${day}` as DateOnly;
 }
 

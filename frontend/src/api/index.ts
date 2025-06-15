@@ -28,6 +28,15 @@ export default {
         return response.data;
     },
 
+    /// 删除指定日期以前的数据
+    async DeleteUsagesBeforeDate(date: DateOnly) {
+        var response = await server({
+            method: 'delete',
+            url: `/screen-time/cleanup/before`,
+            params: { date }
+        })
+        return response.data;
+    },
     // 获取指定进程在某天的24小时使用情况
     async getProcessDailyUsage(name: string, date: DateOnly): Promise<number[]> {
         var response = await server({

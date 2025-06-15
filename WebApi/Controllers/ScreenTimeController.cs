@@ -9,17 +9,33 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/screen-time")]
-    public class ScreenTimeController : ControllerBase
+    public class ScreenTimeController(ScreenTimeContext context, ILogger<ScreenTimeController> logger) : ControllerBase
     {
-        private readonly ScreenTimeContext _context;
-        private readonly ILogger<ScreenTimeController> _logger;
+        private readonly ScreenTimeContext _context = context;
+        private readonly ILogger<ScreenTimeController> _logger = logger;
         private const int DefaultProcessLimit = 10; // 默认限制返回的进程数量
         private const int MaxQueryDays = 35; // 最大查询天数常量
 
-        public ScreenTimeController(ScreenTimeContext context, ILogger<ScreenTimeController> logger)
+        /// <summary>
+        /// 删除 HourlyUsages 和 DailyUsages 中指定日期以前的数据
+        /// </summary>
+        /// <param name="date">要保留的最早日期（不删除该日期及之后的数据）</param>
+        [HttpDelete("cleanup/before")]
+        public async Task<IActionResult> DeleteUsagesBeforeDate([FromQuery, Required] DateOnly date)
         {
-            _context = context;
-            _logger = logger;
+            int deletedDailyCount = await _context.DailyUsages
+                .Where(x => x.Date < date)
+                .ExecuteDeleteAsync();
+
+            int deletedHourlyCount = await _context.HourlyUsages
+                .Where(x => x.Date < date)
+                .ExecuteDeleteAsync();
+
+            int totalDeleted = deletedDailyCount + deletedHourlyCount;
+
+            _logger.LogInformation("已删除 {Count} 条早于 {Date} 的使用记录", totalDeleted, date);
+
+            return Ok(new { DeletedCount = totalDeleted });
         }
 
         /// <summary>
