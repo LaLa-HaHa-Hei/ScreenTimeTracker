@@ -12,7 +12,7 @@ export const useProcessStore = defineStore('process', () => {
         }
 
         try {
-            const data = await api.GetProcessByName(name)
+            const data = await api.getProcessByName(name)
             if (data !== null)
                 processes.value[name] = data
             return data
@@ -24,7 +24,7 @@ export const useProcessStore = defineStore('process', () => {
     }
 
     const updateAlias = async (name: string, alias: string) => {
-        api.UpdateProcessAlias(name, alias)
+        api.updateProcessAlias(name, alias)
         processes.value[name].alias = alias
     }
 
