@@ -27,6 +27,11 @@ const router = createRouter({
           name: 'MonthlyScreenTime',
           component: () => import('@/views/MonthlyScreenTime.vue')
         },
+        {
+          path: '/custom-range-screen-time/:startDate?/:endDate?/:limit?',
+          name: 'CustomRangeScreenTime',
+          component: () => import('@/views/CustomRangeScreenTime.vue')
+        }
       ]
     },
     {
@@ -40,9 +45,9 @@ const router = createRouter({
       component: () => import('@/views/WeeklyProcessUsage.vue')
     },
     {
-      path: '/monthly-process-usage/:processName/:startDate/:endDate',
-      name: 'MonthlyProcessUsage',
-      component: () => import('@/views/MonthlyProcessUsage.vue')
+      path: '/date-range-process-usage/:processName/:startDate/:endDate',
+      name: 'DateRangeProcessUsage',
+      component: () => import('@/views/DateRangeProcessUsage.vue')
     }
   ],
 })

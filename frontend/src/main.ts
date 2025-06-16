@@ -7,6 +7,7 @@ import router from './router'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import './assets/main.css'
+import './assets/styles/globals.css'
 
 import App from './App.vue'
 

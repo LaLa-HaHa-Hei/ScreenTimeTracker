@@ -1,31 +1,29 @@
 <template>
-    <div class="rounded-xl mt-4 p-4 bg-white dark:bg-neutral-800">
+    <div class="mt-4 card">
         <div class="flex flex-col gap-2 items-center ">
-            <div class="flex items-center border border-gray-400 rounded-full py-1 px-2">
-                <button @click="displayPreviousWeek" class="flex items-center cursor-pointer">
+            <div class="content-switcher">
+                <button @click="displayPreviousWeek">
                     <el-icon>
                         <ArrowLeft />
                     </el-icon>
                 </button>
-                <span>{{ weeksAgo === 0 ? '近7天' : weeksAgo === 1 ? '上周' : (formatMonthDay(displayedStartDate) + '-' +
-                    formatMonthDay(displayedEndDate))
-                }}使用时长</span>
-                <button @click="displayNextWeek" :disabled="weeksAgo === 0" class="flex items-center cursor-pointer">
+                <span>
+                    {{ weeksAgo === 0 ? '近7天' : weeksAgo === 1 ? '上周' :
+                        (formatMonthDay(displayedStartDate) + '-' + formatMonthDay(displayedEndDate))
+                    }}使用时长
+                </span>
+                <button @click="displayNextWeek" :disabled="weeksAgo === 0">
                     <el-icon>
                         <ArrowRight />
                     </el-icon>
                 </button>
             </div>
-            <!-- 日均时长 -->
-            <span class="font-bold text-lg">日均
-                {{ formatDuration(avgDurationMs) }}
-            </span>
         </div>
         <div class="w-full">
-            <WeeklyUsageChart :usage="weekUsageSummary" />
+            <WeeklyUsageBarChart :usage="weekUsageSummary" />
         </div>
     </div>
-    <div class="rounded-xl mt-4 p-4 bg-white dark:bg-neutral-800">
+    <div class="mt-4 card">
         <ProcessUsageList :usage="topProcessesUsage" :totalDurationMs="totalDurationMs"
             :onItemClick="onProcessItemClick" />
     </div>
@@ -35,13 +33,11 @@
 import { onMounted, ref, watch, computed, type Ref } from 'vue';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import type { DateUsage, ProcessUsage, DateOnly } from "@/types";
-import { dateToDateOnly, formatMonthDay } from "@/utils/date";
-import { formatDuration } from "@/utils/duration";
-import { useRouter } from 'vue-router';
+import { dateToDateOnly, formatMonthDay } from "@/utils";
+import { useRouter, useRoute } from 'vue-router';
 import { useWeeklyUsageStore } from '@/stores/weeklyUsage'
-import { useRoute } from 'vue-router';
 
-import WeeklyUsageChart from '@/components/WeeklyUsageChart.vue';
+import WeeklyUsageBarChart from '@/components/WeeklyUsageBarChart.vue';
 import ProcessUsageList from '@/components/ProcessUsageList.vue';
 
 const route = useRoute();
@@ -55,7 +51,6 @@ const displayedEndDate: Ref<Date> = ref(new Date());
 const weekUsageSummary: Ref<DateUsage[]> = ref([]);
 const topProcessesUsage: Ref<ProcessUsage[]> = ref([]);
 const totalDurationMs = computed(() => weekUsageSummary.value.reduce((total: number, item: DateUsage) => total + item.durationMs, 0))
-const avgDurationMs = computed(() => totalDurationMs.value / weekUsageSummary.value.length)
 
 const displayPreviousWeek = () => {
     router.push({ name: 'WeeklyScreenTime', params: { weeksAgo: (weeksAgo.value + 1).toString() } });

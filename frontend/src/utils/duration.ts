@@ -6,8 +6,8 @@ export function formatDuration(ms: number) {
 
     let result = '';
     if (hours > 0) result += hours + '小时';
-    if (minutes > 0 || hours > 0) result += minutes + '分钟';
-    if (hours === 0)
+    if (minutes > 0) result += minutes + '分钟';
+    if (result === '' || (hours === 0 && seconds !== 0))
         result += seconds + '秒';
 
     return result;

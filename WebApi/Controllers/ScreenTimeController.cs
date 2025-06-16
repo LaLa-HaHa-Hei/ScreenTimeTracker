@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Data;
-using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.DTOs.ScreenTime;
@@ -14,7 +13,6 @@ namespace WebApi.Controllers
         private readonly ScreenTimeContext _context = context;
         private readonly ILogger<ScreenTimeController> _logger = logger;
         private const int DefaultProcessLimit = 10; // 默认限制返回的进程数量
-        private const int MaxQueryDays = 35; // 最大查询天数常量
 
         /// <summary>
         /// 删除 HourlyUsages 和 DailyUsages 中指定日期以前的数据
@@ -74,9 +72,8 @@ namespace WebApi.Controllers
         {
             // 进程名称有可能是空格，所以允许空字符串
 
-            var validationResult = ValidateDateRange(startDate, endDate);
-            if (validationResult != null)
-                return validationResult;
+            if (startDate > endDate)
+                return BadRequest("开始日期不能晚于结束日期");
 
             var dailyUsageDict = await _context.DailyUsages
                 .Where(x => x.ProcessName == processName && x.Date >= startDate && x.Date <= endDate)
@@ -105,9 +102,8 @@ namespace WebApi.Controllers
             [FromQuery, Required] DateOnly endDate,
             [FromQuery] int limit = DefaultProcessLimit)
         {
-            var validationResult = ValidateDateRange(startDate, endDate);
-            if (validationResult != null)
-                return validationResult;
+            if (startDate > endDate)
+                return BadRequest("开始日期不能晚于结束日期");
 
             // 每个进程在这段时间内使用情况和
             IQueryable<ProcessUsage> processQuery = _context.DailyUsages
@@ -169,9 +165,8 @@ namespace WebApi.Controllers
             [FromQuery, Required] DateOnly startDate,
             [FromQuery, Required] DateOnly endDate)
         {
-            var validationResult = ValidateDateRange(startDate, endDate);
-            if (validationResult != null)
-                return validationResult;
+            if (startDate > endDate)
+                return BadRequest("开始日期不能晚于结束日期");
 
             // 每一天所有进程使用情况统计
             var dailyUsageDict = await _context.DailyUsages
@@ -208,28 +203,6 @@ namespace WebApi.Controllers
             var daysDiff = endDate.DayNumber - startDate.DayNumber + 1;
             return Enumerable.Range(0, daysDiff)
                 .Select(offset => startDate.AddDays(offset));
-        }
-
-        /// <summary>
-        /// 验证日期范围
-        /// </summary>
-        /// <param name="startDate">开始日期</param>
-        /// <param name="endDate">结束日期</param>
-        /// <returns>验证失败时返回BadRequest，验证通过返回null</returns>
-        private BadRequestObjectResult? ValidateDateRange(DateOnly startDate, DateOnly endDate)
-        {
-            if (startDate > endDate)
-            {
-                return BadRequest("开始日期不能晚于结束日期");
-            }
-
-            var daysDiff = endDate.DayNumber - startDate.DayNumber + 1;
-            if (daysDiff > MaxQueryDays)
-            {
-                return BadRequest($"日期范围不能超过 {MaxQueryDays} 天");
-            }
-
-            return null;
         }
     }
 }

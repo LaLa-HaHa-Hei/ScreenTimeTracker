@@ -1,7 +1,9 @@
 <template>
-    <div class="inline-block">
+    <div class="flex flex-col gap-1">
         <div class="flex">
-            <img :src='config.baseUrl + (processInfo?.iconPath ? processInfo.iconPath : "/defaultIcon.png")' alt="未知" />
+            <img v-if="processInfo?.iconPath" :src='config.baseUrl + processInfo.iconPath' :width="imgWidth"
+                :height="imgHeight" alt="丢失" />
+            <IconDefaultFileIcon v-if="!processInfo?.iconPath" :width="imgWidth" :height="imgHeight" />
             <span class="ml-2 text-lg font-bold">{{ processInfo?.processName }}</span>
         </div>
         <div class="flex justify-center items-center">
@@ -26,11 +28,14 @@ import { useProcessStore } from '@/stores/process';
 import type { ProcessInfo } from '@/types';
 import config from '@/config';
 import { ElMessage } from 'element-plus'
+import IconDefaultFileIcon from '@/components/icons/IconDefaultFileIcon.vue'
 
 const props = defineProps<{
     processName: string;
 }>();
 
+const imgWidth = '45px';
+const imgHeight = '45px';
 const processStore = useProcessStore();
 const processInfo: Ref<ProcessInfo | null | undefined> = ref()
 const newAlias: Ref<string> = ref('')

@@ -1,7 +1,7 @@
 <template>
-    <div class="rounded-xl p-4 w-full flex flex-col justify-center items-center bg-white dark:bg-neutral-800">
+    <div class="card flex flex-col items-center">
         <ProcessDetailInfo class="mt-3" :processName="processName" />
-        <WeeklyUsageChart :usage="processDateRangeUsage" />
+        <WeeklyUsageBarChart :usage="processDateRangeUsage" />
     </div>
 </template>
 
@@ -9,7 +9,7 @@
 import { ref, onMounted, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import type { DateUsage, ProcessUsage, DateOnly } from "@/types";
-import WeeklyUsageChart from "@/components/WeeklyUsageChart.vue";
+import WeeklyUsageBarChart from "@/components/WeeklyUsageBarChart.vue";
 import ProcessDetailInfo from "@/components/ProcessDetailInfo.vue";
 import api from "@/api";
 

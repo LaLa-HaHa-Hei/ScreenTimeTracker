@@ -1,32 +1,34 @@
 <template>
-    <div class="rounded-xl mt-4 p-4 bg-white dark:bg-neutral-800">
-        <div class="flex flex-col gap-2 items-center ">
-            <div class="flex items-center border border-gray-400 rounded-full py-1 px-2">
-                <button @click="displayPreviousDay" class="flex items-center cursor-pointer">
-                    <el-icon>
-                        <ArrowLeft />
-                    </el-icon>
-                </button>
-                <span>{{ daysAgo === 0 ? '今日' : daysAgo === 1 ? '昨日' : formatMonthDay(displayedDate)
-                }}使用时长</span>
-                <button @click="displayNextDay" :disabled="daysAgo === 0" class="flex items-center cursor-pointer">
-                    <el-icon>
-                        <ArrowRight />
-                    </el-icon>
-                </button>
+    <div class="w-full h-full">
+        <div class="card">
+            <div class="flex flex-col gap-2 items-center ">
+                <!-- 切换日期按钮 -->
+                <div class="content-switcher">
+                    <button @click="displayPreviousDay">
+                        <el-icon>
+                            <ArrowLeft />
+                        </el-icon>
+                    </button>
+                    <span>{{ daysAgo === 0 ? '今日' : daysAgo === 1 ? '昨日' : formatMonthDay(displayedDate) }}使用时长</span>
+                    <button @click="displayNextDay" :disabled="daysAgo === 0">
+                        <el-icon>
+                            <ArrowRight />
+                        </el-icon>
+                    </button>
+                </div>
+                <!-- 总时长 -->
+                <span class="font-bold text-lg">
+                    {{ formatDuration(totalDurationMs) }}
+                </span>
             </div>
-            <!-- 总时长 -->
-            <span class="font-bold text-lg">
-                {{ formatDuration(totalDurationMs) }}
-            </span>
+            <div class="w-full">
+                <DailyUsageBarChart :usage="hourlyUsageSummary" />
+            </div>
         </div>
-        <div class="w-full">
-            <DailyUsageChart :usage="hourlyUsageSummary" />
+        <div class="mt-4 card">
+            <ProcessUsageList :usage="topProcessessUsage" :totalDurationMs="totalDurationMs"
+                :onItemClick="onProcessItemClick" />
         </div>
-    </div>
-    <div class="rounded-xl mt-4 p-4 bg-white dark:bg-neutral-800">
-        <ProcessUsageList :usage="topProcessessUsage" :totalDurationMs="totalDurationMs"
-            :onItemClick="onProcessItemClick" />
     </div>
 </template>
 
@@ -35,14 +37,12 @@ import { onMounted, ref, watch, computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import type { ProcessUsage, DateOnly } from "@/types";
-import { dateToDateOnly, formatMonthDay } from "@/utils/date";
-import { formatDuration } from "@/utils/duration";
-import { useRouter } from 'vue-router';
+import { dateToDateOnly, formatMonthDay, formatDuration } from "@/utils";
+import { useRouter, useRoute } from 'vue-router';
 import { useDailyUsageStore } from '@/stores/dailyUsage'
-import { useRoute } from 'vue-router';
 
-import DailyUsageChart from '@/components/DailyUsageChart.vue';
 import ProcessUsageList from '@/components/ProcessUsageList.vue';
+import DailyUsageBarChart from '@/components/DailyUsageBarChart.vue';
 
 const route = useRoute();
 const router = useRouter();

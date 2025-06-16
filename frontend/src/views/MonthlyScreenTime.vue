@@ -1,31 +1,29 @@
 <template>
-    <div class="rounded-xl mt-4 p-4 bg-white dark:bg-neutral-800">
+    <div class="mt-4 card">
         <div class="flex flex-col gap-2 items-center ">
-            <div class="flex items-center border border-gray-400 rounded-full py-1 px-2">
+            <div class="content-switcher">
                 <button @click="displayPreviousMonth" class="flex items-center cursor-pointer">
                     <el-icon>
                         <ArrowLeft />
                     </el-icon>
                 </button>
-                <span>{{ monthsAgo === 0 ? '近30天' : monthsAgo === 1 ? '上月' : (formatMonthDay(displayedStartDate) + '-' +
-                    formatMonthDay(displayedEndDate))
-                    }}使用时长</span>
+                <span>
+                    {{ monthsAgo === 0 ? '近30天' : monthsAgo === 1 ? '上月' : (formatMonthDay(displayedStartDate) + '-' +
+                        formatMonthDay(displayedEndDate))
+                    }}使用时长
+                </span>
                 <button @click="displayNextMonth" :disabled="monthsAgo === 0" class="flex items-center cursor-pointer">
                     <el-icon>
                         <ArrowRight />
                     </el-icon>
                 </button>
             </div>
-            <!-- 日均时长 -->
-            <span class="font-bold text-lg">日均
-                {{ formatDuration(avgDurationMs) }}
-            </span>
         </div>
         <div class="w-full">
-            <MonthlyUsageChart :usage="monthUsageSummary" />
+            <DateRangeUsageBarChart :usage="monthUsageSummary" />
         </div>
     </div>
-    <div class="rounded-xl mt-4 p-4 bg-white dark:bg-neutral-800">
+    <div class=" mt-4 card">
         <ProcessUsageList :usage="topProcessesUsage" :totalDurationMs="totalDurationMs"
             :onItemClick="onProcessItemClick" />
     </div>
@@ -35,13 +33,12 @@
 import { onMounted, ref, watch, computed, type Ref } from 'vue';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import type { DateUsage, ProcessUsage, DateOnly } from "@/types";
-import { dateToDateOnly, formatMonthDay } from "@/utils/date";
-import { formatDuration } from "@/utils/duration";
+import { dateToDateOnly, formatMonthDay } from "@/utils";
 import { useRouter } from 'vue-router';
 import { useMonthlyUsageStore } from '@/stores/monthlyUsage'
 import { useRoute } from 'vue-router';
 
-import MonthlyUsageChart from '@/components/MonthlyUsageChart.vue';
+import DateRangeUsageBarChart from '@/components/DateRangeUsageBarChart.vue';
 import ProcessUsageList from '@/components/ProcessUsageList.vue';
 
 const route = useRoute();
@@ -55,7 +52,6 @@ const displayedEndDate: Ref<Date> = ref(new Date());
 const monthUsageSummary: Ref<DateUsage[]> = ref([]);
 const topProcessesUsage: Ref<ProcessUsage[]> = ref([]);
 const totalDurationMs = computed(() => monthUsageSummary.value.reduce((total: number, item: DateUsage) => total + item.durationMs, 0))
-const avgDurationMs = computed(() => totalDurationMs.value / monthUsageSummary.value.length)
 
 const displayPreviousMonth = () => {
     router.push({ name: 'MonthlyScreenTime', params: { monthsAgo: (monthsAgo.value + 1).toString() } });
@@ -66,7 +62,7 @@ const displayNextMonth = () => {
 }
 
 const onProcessItemClick = (processName: string) => {
-    router.push({ name: 'MonthlyProcessUsage', params: { processName, startDate: dateToDateOnly(displayedStartDate.value), endDate: dateToDateOnly(displayedEndDate.value) } });
+    router.push({ name: 'DateRangeProcessUsage', params: { processName, startDate: dateToDateOnly(displayedStartDate.value), endDate: dateToDateOnly(displayedEndDate.value) } });
 }
 
 const getPreviousMonthLastDay = (date: Date, n: number = 1) => {

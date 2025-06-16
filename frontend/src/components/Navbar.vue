@@ -2,18 +2,16 @@
   <el-page-header class="w-full px-3 py-4 border-b border-gray-400" title=" " @back="goBack">
     <template #content>
       <div class="flex items-center">
-        <span> 屏幕使用时间 </span>
+        <span>屏幕使用时间</span>
       </div>
     </template>
     <template #extra>
       <div class="flex items-center">
         <el-switch class="mr-3" v-model="lightTheme" :active-action-icon="Sunny" :inactive-action-icon="Moon"
           @click="toggleDark()" />
-        <a @click="clearData()" class="mr-3 cursor-pointer">
-          <img :src="config.baseUrl + '/clear.png'" />
-        </a>
-        <a href="https://github.com/LaLa-HaHa-Hei/ScreenTimeTracker" target="_blank">
-          <img class="" :src="config.baseUrl + '/github.png'" />
+        <IconClear @click="clearData()" class="mr-3 cursor-pointer" width="1.8em" height="1.8em" />
+        <a class="mr-1" href="https://github.com/LaLa-HaHa-Hei/ScreenTimeTracker" target="_blank">
+          <IconGitHub width="1.8em" height="1.8em" />
         </a>
       </div>
     </template>
@@ -24,11 +22,12 @@
 import { Sunny, Moon } from '@element-plus/icons-vue'
 import { useDark, useToggle } from '@vueuse/core'
 import { ref } from 'vue'
-import config from '@/config'
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '@/api'
 import { dateToDateOnly } from '@/utils';
+import IconClear from './icons/IconClear.vue';
+import IconGitHub from './icons/IconGitHub.vue';
 
 const router = useRouter();
 const isDark = useDark()
@@ -62,5 +61,3 @@ const goBack = () => {
   router.back()
 }
 </script>
-
-<style scoped></style>
