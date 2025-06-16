@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, type Ref } from 'vue';
+import { onMounted, ref, computed, type Ref } from 'vue';
 import type { ProcessUsage, ProcessInfo } from '@/types';
 import { useProcessStore } from '@/stores/process';
 import { formatDuration } from '@/utils/duration';
@@ -30,7 +30,7 @@ const props = defineProps<{
 const imgWidth = '45px';
 const imgHeight = '45px';
 const processInfo: Ref<ProcessInfo | null | undefined> = ref()
-const percentage = Math.floor((props.processUsage.durationMs / props.totaledDurationMs) * 100);
+const percentage = computed(() => Math.floor((props.processUsage.durationMs / props.totaledDurationMs) * 100))
 
 onMounted(async () => {
     processInfo.value = await processStore.getProcessInfo(props.processUsage.processName)
