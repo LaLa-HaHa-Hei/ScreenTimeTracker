@@ -1,12 +1,12 @@
 <template>
-  <el-container>
-    <el-header>
-      <Navbar />
-    </el-header>
-    <el-main>
-      <RouterView />
-    </el-main>
-  </el-container>
+    <el-container>
+        <el-header>
+            <Navbar />
+        </el-header>
+        <el-main>
+            <RouterView />
+        </el-main>
+    </el-container>
 </template>
 
 <script setup lang="ts">

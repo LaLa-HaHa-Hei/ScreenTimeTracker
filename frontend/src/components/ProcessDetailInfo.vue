@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col gap-1">
-        <div class="flex">
+        <div class="flex flex-row items-center">
             <img v-if="processInfo?.iconPath" :src='config.baseUrl + processInfo.iconPath' :width="imgWidth"
                 :height="imgHeight" alt="丢失" />
             <IconDefaultFileIcon v-if="!processInfo?.iconPath" :width="imgWidth" :height="imgHeight" />
