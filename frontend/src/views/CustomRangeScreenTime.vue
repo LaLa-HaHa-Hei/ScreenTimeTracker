@@ -39,10 +39,10 @@ import ProcessUsageList from '@/components/ProcessUsageList.vue';
 const route = useRoute();
 const router = useRouter();
 
-const dateRange = ref([])
 const displayedStartDate: Ref<DateOnly | null> = ref(route.params.startDate as any || null);
 const displayedEndDate: Ref<DateOnly | null> = ref(route.params.endDate as any || null);
 const limit: Ref<number> = ref(parseInt(route.params.limit as any) || 10);
+const dateRange = ref([displayedStartDate.value, displayedEndDate.value])
 
 const usageSummary: Ref<DateUsage[]> = ref([]);
 const topProcessessUsage: Ref<ProcessUsage[]> = ref([]);
