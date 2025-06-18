@@ -11,9 +11,9 @@ namespace WebApi
     public class Program
     {
         private static Mutex? _mutex;
-        private const string LogDirName = "WebApiLogs";
-        private static readonly string DataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
-        private static readonly string LogDirPath = Path.Combine(DataDirPath, LogDirName);
+        private static readonly string LogDirName = "WebApiLogs";
+        private static readonly string AbsluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
+        private static readonly string AbsluteLogDirPath = Path.Combine(AbsluteDataDirPath, LogDirName);
 
         public static void Main(string[] args)
         {
@@ -21,14 +21,14 @@ namespace WebApi
                 return;
 
             {// 创建文件夹
-                if (!Directory.Exists(DataDirPath))
-                    Directory.CreateDirectory(DataDirPath);
-                if (!Directory.Exists(LogDirPath))
-                    Directory.CreateDirectory(LogDirPath);
+                if (!Directory.Exists(AbsluteDataDirPath))
+                    Directory.CreateDirectory(AbsluteDataDirPath);
+                if (!Directory.Exists(AbsluteLogDirPath))
+                    Directory.CreateDirectory(AbsluteLogDirPath);
             }
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(LogDirPath, "log-.txt"),
+                .WriteTo.File(Path.Combine(AbsluteLogDirPath, "log-.txt"),
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 7)
                 .Enrich.FromLogContext()
@@ -53,13 +53,13 @@ namespace WebApi
             builder.Host.UseSerilog();
             builder.Services.AddControllers();
 
-            var dbPath = Path.Combine(DataDirPath, Shared.Constants.FilePaths.DbFileName);
+            var dbPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DbFilePath);
             builder.Services.AddDbContext<ScreenTimeContext>(options =>
                 options.UseSqlite($"Data Source={dbPath}"));
 
             builder.Services.AddSingleton(new AppOptions()
             {
-                DataDirPath = DataDirPath,
+                DataDirPath = Shared.Constants.FilePaths.DataDirPath,
                 DataRequestPath = Shared.Constants.Web.DataRequestPath
             });
 
@@ -82,7 +82,7 @@ namespace WebApi
             // 公开 DataDirPath 目录下的文件，访问路径为 /{DataDirPath}
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(DataDirPath),
+                FileProvider = new PhysicalFileProvider(AbsluteDataDirPath),
                 RequestPath = Shared.Constants.Web.DataRequestPath
             });
             app.UseStaticFiles(new StaticFileOptions
@@ -100,7 +100,7 @@ namespace WebApi
             // Vue3采用了History模式的路由
             app.MapFallbackToFile("index.html");
 
-            Log.Warning("Data directory: {DataDirPath}", DataDirPath);
+            Log.Warning("Data directory: {DataDirPath}", AbsluteDataDirPath);
             Log.Warning("Listening on: {BaseUrl}", Shared.Constants.Web.BaseUrl);
             app.Run();
 

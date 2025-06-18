@@ -14,9 +14,10 @@ namespace Tracker.Services
             ILogger<IconService> logger)
         {
             _iconDirPath = recorderOptions.IconDirPath;
+            string _absluteIconDirPath = Path.Combine(AppContext.BaseDirectory, _iconDirPath);
             _logger = logger;
-            if (!Directory.Exists(_iconDirPath))
-                Directory.CreateDirectory(_iconDirPath);
+            if (!Directory.Exists(_absluteIconDirPath))
+                Directory.CreateDirectory(_absluteIconDirPath);
         }
 
         public string? SaveIcon(string exePath, string processName)
@@ -27,7 +28,7 @@ namespace Tracker.Services
             {
                 using Icon icon = Icon.ExtractAssociatedIcon(exePath) ?? throw new Exception("No icon");
                 using Bitmap bmp = icon.ToBitmap();
-                bmp.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                bmp.Save(Path.Combine(AppContext.BaseDirectory, filePath), System.Drawing.Imaging.ImageFormat.Png);
                 return filePath;
             }
             catch (Exception ex)

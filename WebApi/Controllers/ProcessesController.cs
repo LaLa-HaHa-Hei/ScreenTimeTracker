@@ -32,7 +32,7 @@ namespace WebApi.Controllers
                 Alias = processInfo.Alias,
                 ExecutablePath = processInfo.ExecutablePath,
                 // 替换本地路径为 Web 请求路径
-                IconPath = processInfo.IconPath?.Replace(_options.DataDirPath, _options.DataRequestPath),
+                IconPath = processInfo.IconPath?.Replace(_options.DataDirPath, _options.DataRequestPath).Replace('\\', '/'),
                 Description = processInfo.Description
             };
         }

@@ -1,10 +1,11 @@
 obj/
 bin/
-屏幕使用时间/
-屏幕使用时间*.zip
-ScreenTimeTracker*.zip
+
 .vs/
 .vscode/
 
 frontend/node_modules/
 frontend/dist/
+
+ScreenTimeTracker/
+ScreenTimeTracker*.zip

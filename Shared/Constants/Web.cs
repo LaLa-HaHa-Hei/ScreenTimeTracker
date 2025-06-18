@@ -2,7 +2,8 @@
 {
     public static class Web
     {
-        public const string BaseUrl = "http://localhost:5123";
-        public const string DataRequestPath = "/Data";
+        public static readonly int Port = 5123;
+        public static readonly string BaseUrl = $"http://localhost:{Port}";
+        public static readonly string DataRequestPath = "/Data";
     }
 }

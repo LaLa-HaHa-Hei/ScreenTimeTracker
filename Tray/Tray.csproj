@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
 	  <SelfContained>false</SelfContained>
+	  <AssemblyName>$(SolutionName)</AssemblyName>
   </PropertyGroup>
 	
   <ItemGroup>

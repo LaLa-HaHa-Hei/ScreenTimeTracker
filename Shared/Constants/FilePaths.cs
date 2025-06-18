@@ -2,8 +2,8 @@
 {
     public static class FilePaths
     {
-        public const string DataDirPath = "Data";
-        public const string IconDirName = "Icons";
-        public const string DbFileName = "Data.db";
+        public static readonly string DataDirPath = "Data";
+        public static readonly string IconDirPath = Path.Combine(DataDirPath, "Icons");
+        public static readonly string DbFilePath = Path.Combine(DataDirPath, "Data.db");
     }
 }

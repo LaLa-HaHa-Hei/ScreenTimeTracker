@@ -18,9 +18,8 @@ namespace Tracker
         private static readonly string SettingsFileName = "TrackerSettings.json";
         private static int _intervalMs = 1000;
         private static int _saveThreshold = 10;
-        private static readonly string DataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
-        private static readonly string IconDirPath = Path.Combine(DataDirPath, Shared.Constants.FilePaths.IconDirName);
-        private static readonly string LogDirPath = Path.Combine(DataDirPath, LogDirName);
+        private static readonly string AbsluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
+        private static readonly string AbsluteLogDirPath = Path.Combine(AbsluteDataDirPath, LogDirName);
 
         static async Task<int> Main(string[] args)
         {
@@ -28,12 +27,13 @@ namespace Tracker
                 return 1;
 
             {// 创建需要的文件夹
-                if (!Directory.Exists(DataDirPath))
-                    Directory.CreateDirectory(DataDirPath);
-                if (!Directory.Exists(IconDirPath))
-                    Directory.CreateDirectory(IconDirPath);
-                if (!Directory.Exists(LogDirPath))
-                    Directory.CreateDirectory(LogDirPath);
+                if (!Directory.Exists(AbsluteDataDirPath))
+                    Directory.CreateDirectory(AbsluteDataDirPath);
+                string absluteIconDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.IconDirPath);
+                if (!Directory.Exists(absluteIconDirPath))
+                    Directory.CreateDirectory(absluteIconDirPath);
+                if (!Directory.Exists(AbsluteLogDirPath))
+                    Directory.CreateDirectory(AbsluteLogDirPath);
             }
 
             if (File.Exists(SettingsFileName))
@@ -64,7 +64,7 @@ namespace Tracker
                 .UseSerilog((context, services, loggerConfiguration) =>
                 {
                     loggerConfiguration
-                        .WriteTo.File(Path.Combine(LogDirPath, "log-.txt"),
+                        .WriteTo.File(Path.Combine(AbsluteLogDirPath, "log-.txt"),
                             rollingInterval: RollingInterval.Day,
                             retainedFileCountLimit: 7)
                         .Enrich.FromLogContext()
@@ -73,14 +73,14 @@ namespace Tracker
                 })
                 .ConfigureServices(services =>
                 {
-                    var dbPath = Path.Combine(DataDirPath, Shared.Constants.FilePaths.DbFileName);
+                    var dbPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DbFilePath);
                     services.AddDbContext<ScreenTimeContext>(options =>
                         options.UseSqlite($"Data Source={dbPath}"));
                     services.AddSingleton(new AppOptions()
                     {
                         IntervalMs = _intervalMs,
                         SaveThreshold = _saveThreshold,
-                        IconDirPath = IconDirPath
+                        IconDirPath = Shared.Constants.FilePaths.IconDirPath
                     });
                     services.AddSingleton<IForegroundWindowService, ForegroundWindowService>();
                     services.AddSingleton<IIconService, IconService>();

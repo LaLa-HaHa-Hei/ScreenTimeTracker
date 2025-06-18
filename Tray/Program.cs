@@ -1,14 +1,16 @@
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Text.Json;
 
 namespace Tray;
 
 static class Program
 {
-    private static readonly string SettingsFileName = "TraySettings.json";
-    private static string _trackerProcessName = "Tracker";
-    private static string _webApiProcessName = "WebApi";
-    private static bool _isFirstRun = false;
+    private static Mutex? _mutex;
+    private static readonly string _settingsFileName = "TraySettings.json";
+    private static string _trackerAppPath = Path.Combine(AppContext.BaseDirectory, "Tracker.exe");
+    private static string _webApiAppPath = Path.Combine(AppContext.BaseDirectory, "WebApi.exe");
+    private static readonly List<Process> _startedProcesses = [];
 
     /// <summary>
     ///  The main entry point for the application.
@@ -16,99 +18,51 @@ static class Program
     [STAThread]
     static void Main()
     {
+        if (!EnsureSingleInstance())
+        {
+            MessageBox.Show("程序已经在运行中。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
         // To customize application configuration such as set high DPI settings or default font,
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
 
-        if (!File.Exists("FirstRun.txt"))
+        // 检查要用的端口是否被占用
+        if (IsPortInUse(Shared.Constants.Web.Port))
         {
-            _isFirstRun = true;
-            Task.Run(() => MessageBox.Show("本程序运行后不会显示界面，注意不要重复运行！", "注意！", MessageBoxButtons.OK, MessageBoxIcon.Information));
-            File.Create("FirstRun.txt").Dispose();
-        }
-        if (File.Exists(SettingsFileName))
-        {
-            string jsonString = File.ReadAllText(SettingsFileName);
-            using JsonDocument doc = JsonDocument.Parse(jsonString);
-            JsonElement root = doc.RootElement;
-            if (root.TryGetProperty("TrackerProcessName", out var trackerProp) &&
-                root.TryGetProperty("WebApiProcessName", out var webApiProp))
-            {
-                string? trackerProcessName = trackerProp.GetString();
-                string? webApiProcessName = webApiProp.GetString();
 
-                if (!string.IsNullOrWhiteSpace(trackerProcessName) &&
-                    !string.IsNullOrWhiteSpace(webApiProcessName))
-                {
-                    _trackerProcessName = trackerProcessName;
-                    _webApiProcessName = webApiProcessName;
-                }
-                else
-                    WriteDefaultSettings();
-            }
-            else
-                WriteDefaultSettings();
-        }
-        else
-            WriteDefaultSettings();
-
-
-        var trackerProcess = new ProcessStartInfo
-        {
-            FileName = _trackerProcessName + ".exe",
-            UseShellExecute = false,
-        };
-        try
-        {
-            Process.Start(trackerProcess);
-        }
-        catch
-        {
-            MessageBox.Show($"{_trackerProcessName} 启动失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"端口{Shared.Constants.Web.Port}已被占用，请不要重复启动或关闭占用端口的程序！", "错误！", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
         }
 
-        var webApiProcess = new ProcessStartInfo
+        Application.ApplicationExit += OnApplicationExit;
+
+        InitializeSettings();
+
+        // 启动两个后台程序
+        if (!StartProcess(_trackerAppPath))
+            return;
+        if (!StartProcess(_webApiAppPath))
         {
-            FileName = _webApiProcessName + ".exe",
-            UseShellExecute = false,
-        };
-        try
-        {
-            Process.Start(webApiProcess);
+            OnApplicationExit(null, EventArgs.Empty); // 清理已启动的 tracker
+            return;
         }
-        catch
-        {
-            MessageBox.Show($"{_webApiProcessName} 启动失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+
         using NotifyIcon trayIcon = new()
         {
             Icon = Properties.Resources.Icon,
             Visible = true,
-            ContextMenuStrip = new()
+            ContextMenuStrip = new(),
+            Text = "屏幕使用时间"
         };
 
         trayIcon.ContextMenuStrip.Items.Add("显示界面", null, (_, _) =>
         {
             Process.Start(new ProcessStartInfo("cmd", $"/c start {Shared.Constants.Web.BaseUrl}") { CreateNoWindow = true });
         });
-        trayIcon.ContextMenuStrip.Items.Add("只退出托盘", null, (_, _) =>
+        trayIcon.ContextMenuStrip.Items.Add("退出", null, (_, _) =>
         {
-            if (_isFirstRun)
-            { 
-                DialogResult result = MessageBox.Show($"该操作将保留后台记录的程序的运行和后天服务器程序的运行。是否继续退出？", "注意！", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-                if (result != DialogResult.OK) return;
-            }
-            Application.Exit();
-        });
-        trayIcon.ContextMenuStrip.Items.Add("退出所有", null, (_, _) =>
-        {
-            if (_isFirstRun)
-            {
-                DialogResult result = MessageBox.Show($"该操作将杀死名为 {_trackerProcessName} 和 {_webApiProcessName} 的进程。如果发现误杀，请修改目录下这两个进程名对应exe的名字，并修改 {SettingsFileName} 中对应的进程名。是否继续退出？", "注意！", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-                if (result != DialogResult.OK) return;
-            }
-            KillProcessByName(_trackerProcessName);
-            KillProcessByName(_webApiProcessName);
             Application.Exit();
         });
 
@@ -120,30 +74,122 @@ static class Program
             }
         };
 
-
         Application.Run(); // 无窗体运行消息循环
     }
-    private static void KillProcessByName(string processName)
+
+    private static bool EnsureSingleInstance()
     {
-        Process[] processes = Process.GetProcessesByName(processName);
-        foreach (var process in processes)
+        _mutex = new Mutex(true, "TrayAppMutexName", out bool createdNew);
+        if (!createdNew)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private static bool StartProcess(string processPath)
+    {
+        var processInfo = new ProcessStartInfo
+        {
+            FileName = processPath,
+            UseShellExecute = false,
+        };
+
+        try
+        {
+            var process = Process.Start(processInfo);
+            if (process != null)
+            {
+                _startedProcesses.Add(process);
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"启动进程 {processPath} 时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        return false;
+    }
+
+    // 退出时结束掉启动的两个程序
+    private static void OnApplicationExit(object? sender, EventArgs e)
+    {
+        foreach (var process in _startedProcesses)
         {
             try
             {
-                process.Kill();
+                if (!process.HasExited)
+                    process.Kill();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"终止进程 {process.ProcessName} 出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        _mutex?.ReleaseMutex();
+        _mutex?.Dispose();
+    }
+
+    private static bool IsPortInUse(int port)
+    {
+        // 获取所有活跃的TCP连接
+        var properties = IPGlobalProperties.GetIPGlobalProperties();
+        var tcpListeners = properties.GetActiveTcpListeners();
+
+        // 检查端口是否在使用中
+        foreach (var listener in tcpListeners)
+        {
+            if (listener.Port == port)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void InitializeSettings()
+    {
+        if (File.Exists(_settingsFileName))
+        {
+            try
+            {
+                string jsonString = File.ReadAllText(_settingsFileName);
+                using JsonDocument doc = JsonDocument.Parse(jsonString);
+                JsonElement root = doc.RootElement;
+                if (root.TryGetProperty("TrackerAppPath", out var trackerProp) &&
+                    root.TryGetProperty("WebApiAppPath", out var webApiProp))
+                {
+                    string? trackerProcessName = trackerProp.GetString();
+                    string? webApiProcessName = webApiProp.GetString();
+
+                    if (!string.IsNullOrWhiteSpace(trackerProcessName) &&
+                        !string.IsNullOrWhiteSpace(webApiProcessName))
+                    {
+                        _trackerAppPath = Path.Combine(AppContext.BaseDirectory, trackerProcessName);
+                        _webApiAppPath = Path.Combine(AppContext.BaseDirectory, webApiProcessName);
+                    }
+                    else
+                        WriteDefaultSettings();
+                }
+                else
+                    WriteDefaultSettings();
             }
             catch
             {
-                MessageBox.Show($"终止进程 {processName} 失败。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                WriteDefaultSettings();
             }
         }
+        else
+            WriteDefaultSettings();
     }
+
     private static void WriteDefaultSettings()
     {
         string defaultSettings = @"{
-    ""TrackerProcessName"": ""Tracker"",
-    ""WebApiProcessName"": ""WebApi""
+    ""TrackerAppPath"": ""Tracker.exe"",
+    ""WebApiAppPath"": ""WebApi.exe""
 }";
-        File.WriteAllText(SettingsFileName, defaultSettings);
+        File.WriteAllText(_settingsFileName, defaultSettings);
     }
 }
