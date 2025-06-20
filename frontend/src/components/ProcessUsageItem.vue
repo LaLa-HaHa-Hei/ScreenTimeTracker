@@ -5,7 +5,7 @@
         <IconDefaultFileIcon v-if="!processInfo?.iconPath" :width="imgWidth" :height="imgHeight" />
         <div class="flex-1 flex flex-col">
             <div class="flex items-center justify-between">
-                <span>{{ processInfo?.alias || processInfo?.processName }}</span>
+                <span>{{ processInfo?.alias || processUsage.processName }}</span>
                 <span>{{ formatDuration(processUsage.durationMs) }}</span>
             </div>
             <el-progress class="mt-2" :percentage="percentage <= 100 ? percentage : 100" />

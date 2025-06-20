@@ -14,12 +14,12 @@ namespace Tracker
     class Program
     {
         private static Mutex? _mutex;
-        private const string LogDirName = "TrackererLogs";
-        private static readonly string SettingsFileName = "TrackerSettings.json";
+        private static readonly string _logDirPath = Path.Combine(Shared.Constants.FilePaths.DataDirPath, "TrackererLogs");
+        private static readonly string _settingsFilePath = Path.Combine(AppContext.BaseDirectory, "TrackerSettings.json");
         private static int _intervalMs = 1000;
         private static int _saveThreshold = 10;
-        private static readonly string AbsluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
-        private static readonly string AbsluteLogDirPath = Path.Combine(AbsluteDataDirPath, LogDirName);
+        private static readonly string _absluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
+        private static readonly string _absluteLogDirPath = Path.Combine(AppContext.BaseDirectory, _logDirPath);
 
         static async Task<int> Main(string[] args)
         {
@@ -27,18 +27,18 @@ namespace Tracker
                 return 1;
 
             {// 创建需要的文件夹
-                if (!Directory.Exists(AbsluteDataDirPath))
-                    Directory.CreateDirectory(AbsluteDataDirPath);
+                if (!Directory.Exists(_absluteDataDirPath))
+                    Directory.CreateDirectory(_absluteDataDirPath);
                 string absluteIconDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.IconDirPath);
                 if (!Directory.Exists(absluteIconDirPath))
                     Directory.CreateDirectory(absluteIconDirPath);
-                if (!Directory.Exists(AbsluteLogDirPath))
-                    Directory.CreateDirectory(AbsluteLogDirPath);
+                if (!Directory.Exists(_absluteLogDirPath))
+                    Directory.CreateDirectory(_absluteLogDirPath);
             }
 
-            if (File.Exists(SettingsFileName))
+            if (File.Exists(_settingsFilePath))
             {
-                string jsonString = File.ReadAllText(SettingsFileName);
+                string jsonString = File.ReadAllText(_settingsFilePath);
                 using JsonDocument doc = JsonDocument.Parse(jsonString);
                 JsonElement root = doc.RootElement;
                 if (root.TryGetProperty("IntervalMs", out var intervalProp) &&
@@ -64,7 +64,7 @@ namespace Tracker
                 .UseSerilog((context, services, loggerConfiguration) =>
                 {
                     loggerConfiguration
-                        .WriteTo.File(Path.Combine(AbsluteLogDirPath, "log-.txt"),
+                        .WriteTo.File(Path.Combine(_absluteLogDirPath, "log-.txt"),
                             rollingInterval: RollingInterval.Day,
                             retainedFileCountLimit: 7)
                         .Enrich.FromLogContext()
@@ -118,7 +118,7 @@ namespace Tracker
     ""IntervalMs"": 1000,
     ""SaveThreshold"": 10
 }";
-            File.WriteAllText(SettingsFileName, defaultSettings);
+            File.WriteAllText(_settingsFilePath, defaultSettings);
         }
     }
 }

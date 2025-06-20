@@ -11,9 +11,9 @@ namespace WebApi
     public class Program
     {
         private static Mutex? _mutex;
-        private static readonly string LogDirName = "WebApiLogs";
-        private static readonly string AbsluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
-        private static readonly string AbsluteLogDirPath = Path.Combine(AbsluteDataDirPath, LogDirName);
+        private static readonly string _absluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
+        private static readonly string _logDirPath = Path.Combine(Shared.Constants.FilePaths.DataDirPath, "WebApiLogs");
+        private static readonly string _absluteLogDirPath = Path.Combine(AppContext.BaseDirectory, _logDirPath);
 
         public static void Main(string[] args)
         {
@@ -21,14 +21,14 @@ namespace WebApi
                 return;
 
             {// 创建文件夹
-                if (!Directory.Exists(AbsluteDataDirPath))
-                    Directory.CreateDirectory(AbsluteDataDirPath);
-                if (!Directory.Exists(AbsluteLogDirPath))
-                    Directory.CreateDirectory(AbsluteLogDirPath);
+                if (!Directory.Exists(_absluteDataDirPath))
+                    Directory.CreateDirectory(_absluteDataDirPath);
+                if (!Directory.Exists(_absluteLogDirPath))
+                    Directory.CreateDirectory(_absluteLogDirPath);
             }
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(AbsluteLogDirPath, "log-.txt"),
+                .WriteTo.File(Path.Combine(_absluteLogDirPath, "log-.txt"),
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 7)
                 .Enrich.FromLogContext()
@@ -82,7 +82,7 @@ namespace WebApi
             // 公开 DataDirPath 目录下的文件，访问路径为 /{DataDirPath}
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(AbsluteDataDirPath),
+                FileProvider = new PhysicalFileProvider(_absluteDataDirPath),
                 RequestPath = Shared.Constants.Web.DataRequestPath
             });
             app.UseStaticFiles(new StaticFileOptions
@@ -100,7 +100,7 @@ namespace WebApi
             // Vue3采用了History模式的路由
             app.MapFallbackToFile("index.html");
 
-            Log.Warning("Data directory: {DataDirPath}", AbsluteDataDirPath);
+            Log.Warning("Data directory: {DataDirPath}", _absluteDataDirPath);
             Log.Warning("Listening on: {BaseUrl}", Shared.Constants.Web.BaseUrl);
             app.Run();
 

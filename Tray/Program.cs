@@ -7,7 +7,7 @@ namespace Tray;
 static class Program
 {
     private static Mutex? _mutex;
-    private static readonly string _settingsFileName = "TraySettings.json";
+    private static readonly string _settingsFilePath = Path.Combine(AppContext.BaseDirectory, "TraySettings.json");
     private static string _trackerAppPath = Path.Combine(AppContext.BaseDirectory, "Tracker.exe");
     private static string _webApiAppPath = Path.Combine(AppContext.BaseDirectory, "WebApi.exe");
     private static readonly List<Process> _startedProcesses = [];
@@ -150,11 +150,11 @@ static class Program
 
     private static void InitializeSettings()
     {
-        if (File.Exists(_settingsFileName))
+        if (File.Exists(_settingsFilePath))
         {
             try
             {
-                string jsonString = File.ReadAllText(_settingsFileName);
+                string jsonString = File.ReadAllText(_settingsFilePath);
                 using JsonDocument doc = JsonDocument.Parse(jsonString);
                 JsonElement root = doc.RootElement;
                 if (root.TryGetProperty("TrackerAppPath", out var trackerProp) &&
@@ -190,6 +190,6 @@ static class Program
     ""TrackerAppPath"": ""Tracker.exe"",
     ""WebApiAppPath"": ""WebApi.exe""
 }";
-        File.WriteAllText(_settingsFileName, defaultSettings);
+        File.WriteAllText(_settingsFilePath, defaultSettings);
     }
 }

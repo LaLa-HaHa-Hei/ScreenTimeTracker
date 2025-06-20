@@ -4,7 +4,7 @@
             <img v-if="processInfo?.iconPath" :src='config.baseUrl + processInfo.iconPath' :width="imgWidth"
                 :height="imgHeight" alt="丢失" />
             <IconDefaultFileIcon v-if="!processInfo?.iconPath" :width="imgWidth" :height="imgHeight" />
-            <span class="ml-2 text-lg font-bold">{{ processInfo?.processName }}</span>
+            <span class="ml-2 text-lg font-bold">{{ processName }}</span>
         </div>
         <div class="flex justify-center items-center">
             <span>别名：</span>
