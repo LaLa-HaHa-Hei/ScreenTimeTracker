@@ -1,112 +1,23 @@
-using System.Diagnostics;
-using Data;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
-using Serilog;
-using Serilog.Events;
-using WebApi.Options;
-
 namespace WebApi
 {
     public class Program
     {
         private static Mutex? _mutex;
-        private static readonly string _absluteDataDirPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DataDirPath);
-        private static readonly string _logDirPath = Path.Combine(Shared.Constants.FilePaths.DataDirPath, "WebApiLogs");
-        private static readonly string _absluteLogDirPath = Path.Combine(AppContext.BaseDirectory, _logDirPath);
-
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             if (!EnsureSingleInstance())
                 return;
 
-            {// 创建文件夹
-                if (!Directory.Exists(_absluteDataDirPath))
-                    Directory.CreateDirectory(_absluteDataDirPath);
-                if (!Directory.Exists(_absluteLogDirPath))
-                    Directory.CreateDirectory(_absluteLogDirPath);
-            }
+            var host = new WebApiHost();
+            await host.StartAsync(args);
 
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(_absluteLogDirPath, "log-.txt"),
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: 7)
-                .Enrich.FromLogContext()
-                .MinimumLevel.Warning()
-                .MinimumLevel.Override("WebApi", LogEventLevel.Information)
-                .CreateLogger();
+            await Task.Delay(Timeout.Infinite);
 
-            var builder = WebApplication.CreateBuilder(args);
-            builder.WebHost.UseUrls(Shared.Constants.Web.BaseUrl); // 设置监听地址和端口
-
-            // 允许跨域请求
-            builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(policy =>
-                {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
-                });
-            });
-
-            builder.Host.UseSerilog();
-            builder.Services.AddControllers();
-
-            var dbPath = Path.Combine(AppContext.BaseDirectory, Shared.Constants.FilePaths.DbFilePath);
-            builder.Services.AddDbContext<ScreenTimeContext>(options =>
-                options.UseSqlite($"Data Source={dbPath}"));
-
-            builder.Services.AddSingleton(new AppOptions()
-            {
-                DataDirPath = Shared.Constants.FilePaths.DataDirPath,
-                DataRequestPath = Shared.Constants.Web.DataRequestPath
-            });
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-                Process.Start(new ProcessStartInfo("cmd", $"/c start {Shared.Constants.Web.BaseUrl}/swagger/index.html") { CreateNoWindow = true });
-            }
-
-            // wwwroot为html目录
-            app.UseDefaultFiles();
-            // 公开 DataDirPath 目录下的文件，访问路径为 /{DataDirPath}
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(_absluteDataDirPath),
-                RequestPath = Shared.Constants.Web.DataRequestPath
-            });
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "wwwroot")),
-                RequestPath = ""
-            });
-
-            app.UseRouting();
-
-            app.UseCors();
-
-            app.MapControllers();
-
-            // Vue3采用了History模式的路由
-            app.MapFallbackToFile("index.html");
-
-            Log.Warning("Data directory: {DataDirPath}", _absluteDataDirPath);
-            Log.Warning("Listening on: {BaseUrl}", Shared.Constants.Web.BaseUrl);
-            app.Run();
+            await host.StopAsync();
 
             _mutex?.ReleaseMutex();
-        }
 
+        }
         private static bool EnsureSingleInstance()
         {
             _mutex = new Mutex(true, "ScreenTimeWebApiUniqueMutexName", out bool createdNew);

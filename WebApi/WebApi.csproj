@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <SelfContained>false</SelfContained>
 	<!-- 关闭默认内容项机制，因为默认会从工作目录寻找wwwroot，也不会复制wwwroot目录到输出目录 -->
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
