@@ -6,13 +6,17 @@
             </div>
         </template>
         <template #extra>
-            <div class="flex items-center">
-                <el-switch class="mr-3 theme-switch" :model-value="isDark" :active-action-icon="IconMoon"
+            <div class="flex items-center mx-3">
+                <IconClear @click="clearData()" class="mr-3 cursor-pointer" size="1.8em" />
+                <el-divider direction="vertical" />
+                <el-switch class="mx-3 theme-switch" :model-value="isDark" :active-action-icon="IconMoon"
                     :inactive-action-icon="IconSun" style="--el-switch-on-color: #262626; --el-switch-off-color: #fff"
                     @click="toggleDark()" />
-                <IconClear @click="clearData()" class="mr-3 cursor-pointer" size="1.8em" />
-                <a class="mr-1" href="https://github.com/LaLa-HaHa-Hei/ScreenTimeTracker" target="_blank">
-                    <IconGitHub width="1.8em" height="1.8em" />
+                <a class="mr-3 social-link" href="https://github.com/LaLa-HaHa-Hei/ScreenTimeTracker" target="_blank">
+                    <IconGitHub size="1.8em" />
+                </a>
+                <a class="social-link" href="https://qm.qq.com/q/VEbPwBma40" target="_blank">
+                    <IconQQ size="1.8em" />
                 </a>
             </div>
         </template>
@@ -29,6 +33,7 @@ import IconClear from './icons/IconClear.vue';
 import IconGitHub from './icons/IconGitHub.vue';
 import IconSun from './icons/IconSun.vue';
 import IconMoon from './icons/IconMoon.vue';
+import IconQQ from './icons/IconQQ.vue';
 
 const router = useRouter();
 const isDark = useDark()
@@ -64,6 +69,22 @@ const goBack = () => {
 
 <!-- 不能使用 scoped 否则全局的 .dark 类无法查找 -->
 <style>
+.social-link {
+    color: #767676;
+}
+
+.social-link :hover {
+    color: #213547;
+}
+
+.dark .social-link {
+    color: #979797;
+}
+
+.dark .social-link :hover {
+    color: #E1E1E1;
+}
+
 /* swtich 图标和圆点颜色 */
 .theme-switch .el-switch__core>.el-switch__action {
     color: #262626;
