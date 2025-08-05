@@ -1,5 +1,0 @@
-@import './base.css';
-@import "tailwindcss";
-
-/* tailwindcss 暗黑模式 */
-@custom-variant dark (&:where(.dark, .dark *));
