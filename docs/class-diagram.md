@@ -46,19 +46,24 @@ ScreenTimeTracker/
 ├── README.md
 ├── ScreenTimeTracker.sln
 ├── src/
-│   ├── ScreenTimeTracker.Application/  # 业务逻辑、DTOs、应用服务接口
-│   ├── ScreenTimeTracker.Domain/       # 领域实体、枚举、仓储接口
-│   ├── ScreenTimeTracker.Infrastructure/ # 数据访问、外部服务实现
-│   ├── ScreenTimeTracker.Tracker/      # 后台跟踪服务 (表现层)
-│   ├── ScreenTimeTracker.Tray/         # 托盘启动器
-│   └── ScreenTimeTracker.WebApi/       # Web API (表现层)
+│   ├── ScreenTimeTracker.Domain/               # 领域实体、枚举、仓储接口
+│   │   ├── Entities/
+│   │   ├── Enums/
+│   │   └── Interfaces/
+│   ├── ScreenTimeTracker.Application/          # 业务逻辑、DTOs、应用服务接口
+│   ├── ScreenTimeTracker.Infrastructure/       # 数据访问、外部服务实现
+│   ├── ScreenTimeTracker.Tracker/              # 后台跟踪服务 (表现层)
+│   ├── ScreenTimeTracker.Tray/                 # 托盘启动器
+│   └── ScreenTimeTracker.WebApi/               # Web API (表现层)
+├── tests/
+│   └── ScreenTimeTracker.*.Tests/               # 单元测试
 ├── frontend/
-│   └── screentime-tracker-frontend/    # Vue.js 前端项目
-├── docs/                                 # 项目文档
-└── tests/                                # 测试项目
-    ├── ScreenTimeTracker.Domain.Tests/     # 领域模型单元测试
-    ├── ScreenTimeTracker.Application.Tests/  # 应用服务单元测试 (可Mock仓储)
-    └── ScreenTimeTracker.Integration.Tests/  # (可选) 集成测试
+│   └── screentime-tracker-frontend/            # Vue.js 前端项目
+├── docs/
+│   ├── class-diagram.md                        # 类图设计文档
+│   └── api.md                                  # API文档
+└── publish/
+    └── ScreenTimeTracker/                      # 发布目录
 ```
 
 ## Domain 类图
@@ -206,6 +211,8 @@ classDiagram
 ```
 
 ## WebApi 类图
+保持轻量。  
+运行后调整工作目录为程序所在目录。  
 ```mermaid 
 classDiagram
     direction TB
@@ -232,8 +239,11 @@ classDiagram
 ```
 
 ## Tracker 类图
-每隔一小段时间获取一次顶层窗口的进程名作为正在使用的程序
-每隔几次获取顶层窗口的进程名，写入获取后写入到数据库，防止频繁调用数据库导致性能问题
+保持轻量。  
+运行后调整工作目录为程序所在目录。  
+每隔一小段时间获取一次顶层窗口的进程名作为正在使用的程序。  
+每隔几次获取顶层窗口的进程名，写入到数据库，防止频繁调用数据库导致性能问题。  
+暂时将限制用户指定的程序功能放入，后期相关逻辑较复杂时再考虑拆分为独立的ScreenTimeTracker.Enforcer.exe。  
 ```mermaid 
 classDiagram
     direction TB
@@ -278,4 +288,33 @@ classDiagram
 
     WindowsForegroundWindowService ..|> IForegroundWindowService : 实现
     WindowsToastNotificationService ..|> ScreenTimeTracker.Application.Interfaces.IUserNotificationService : 实现
+```
+
+## Tray 类图
+运行后调整工作目录为程序所在目录。  
+```mermaid 
+classDiagram
+    direction TB
+    namespace ScreenTimeTracker.Tray.ViewModels {
+        class TaskbarIconViewModel {
+        }
+    }
+```
+
+## appsettings.json
+```json
+{
+    "Tray": {
+        "WebApiExecutablePath": "./WebApi.exe",
+        "TrackerExecutablePath": "./Tracker.exe",
+        "OpenUIOnStartup": true,
+    },
+    "WebApi": {
+        "Port": 5123,
+    },
+    "Tracker": {
+        "GetTopProcessIntervalMilliseconds": 1000,
+        "ProcessInfoRefreshIntervalMinutes": 600
+    },
+}
 ```
