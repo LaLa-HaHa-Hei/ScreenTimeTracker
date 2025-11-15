@@ -10,5 +10,4 @@ QQ群：745018774
 
 - [**架构总览 (Architecture Overview)**](./docs/architecture-overview.md): 了解项目的高层架构、分层和模块依赖。
 - [**详细设计 (Detailed Design)**](./docs/detailed-design.md): 查看各层的详细类图和实现细节。
-- [**配置说明 (Configuration)**](./docs/configuration.md): 理解 `appsettings.json` 中各项配置的含义。
 - [**API 文档 (API Reference)**](./docs/api.md): WebApi的接口文档。

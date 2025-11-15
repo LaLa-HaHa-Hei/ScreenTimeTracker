@@ -1,0 +1,28 @@
+{
+    "DefaultUIUrl": "http://localhost:5124",
+    "OpenUIOnStartup": true,
+    "WebApiExecutablePath":"./ScreenTimeTracker.WebApi.exe",
+    "WorkerServiceExecutablePath":"./ScreenTimeTracker.WorkerService.exe",
+    "Serilog": {
+        "MinimumLevel": {
+            "Default": "Information",
+            "Override": {
+                "Microsoft": "Warning",
+                "System": "Warning"
+            }
+        },
+        "Enrich": [
+            "FromLogContext"
+        ],
+        "WriteTo": [
+            {
+                "Name": "File",
+                "Args": {
+                    "path": "./Logs/Tray/log-.txt",
+                    "rollingInterval": "Day",
+                    "retainedFileCountLimit": 7
+                }
+            }
+        ]
+    }
+}

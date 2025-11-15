@@ -1,0 +1,7 @@
+GetForegroundWindow
+
+GetWindowThreadProcessId
+
+GetLastInputInfo
+
+GetTickCount

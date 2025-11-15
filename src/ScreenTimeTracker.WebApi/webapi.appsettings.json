@@ -1,0 +1,32 @@
+{
+    "AllowedHosts": "*",
+    "Kestrel": {
+        "Endpoints": {
+            "Http": {
+                "Url": "http://localhost:5124"
+            }
+        }
+    },
+    "Serilog": {
+        "MinimumLevel": {
+            "Default": "Information",
+            "Override": {
+                "Microsoft": "Warning",
+                "System": "Warning"
+            }
+        },
+        "Enrich": [
+            "FromLogContext"
+        ],
+        "WriteTo": [
+            {
+                "Name": "File",
+                "Args": {
+                    "path": "./Logs/WebApi/log-.txt",
+                    "rollingInterval": "Day",
+                    "retainedFileCountLimit": 7
+                }
+            }
+        ]
+    }
+}

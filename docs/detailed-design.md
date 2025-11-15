@@ -1,66 +1,54 @@
+# 设计细节
+
 ## Domain
 ```mermaid 
 classDiagram
-    direction TB
     namespace ScreenTimeTracker.Domain.Entities {
-        class Usage {
-            + string ProcessName
-            + DateOnly Date
-            + int Hour
-            + long DurationMs
-        }
         class ProcessInfo {
-            + string Name
-            + string? Alias
-            + string? CategoryName
-            + string? ExecutablePath
-            + string? IconPath
-            + string? Description
-            + DateTime LastUpdated
+            +Guid Id
+            +string Name
+            +string? Alias
+            +bool AutoUpdate
+            +DateTime LastAutoUpdated
+            +string? ExecutablePath
+            +string? IconPath
+            +string? Description
         }
-        class ProcessRule {
-            + int Id
-            + string ProcessName
-            + ProcessRuleType RuleType
-            + string? TimeLimitJson
-            + int? AllowedMinutes
+        class ActivityInterval {
+            +Guid Id
+            +ProcessInfo TrackedProcess
+            +DateTime Timestamp
+            +TimeSpan Duration
         }
-        class Category {
-            + string Name
-        }
-        class Setting {
-             + string Key
-             + string Value
-        }
-    }
-    ProcessInfo ..> Category : FK_CategoryName
-    ProcessRule ..> ProcessInfo : FK_ProcessName
-
-    namespace ScreenTimeTracker.Domain.Enums {
-         class ProcessRuleType {
-            <<enumeration>>
-            Whitelist
-            DailyTimeLimit
-            ScheduleLimit
+        class HourlySummary {
+            +ProcessInfo TrackedProcess
+            +DateTime Hour
+            +TimeSpan TotalDuration
         }
     }
 
     namespace ScreenTimeTracker.Domain.Interfaces {
-        class IUsageRepository {
+        class IActivityIntervalRepository {
             <<interface>>
-            + GetUsagesAsync(DateOnly start, DateOnly end) Task~IEnumerable~Usage~~
-            + AddOrUpdateUsagesAsync(IEnumerable~Usage~ usages) Task
+            +AddAsync(ActivityInterval interval) Task
+            +UpdateRangeAsync(IEnumerable<ActivityInterval> intervals) Task
+            +RemoveRangeAsync(IEnumerable<ActivityInterval> intervals) Task
+            +GetByTimestampBeforeAsync(DateTime timestamp) Task~IEnumerable~ActivityInterval~~
+            +GetNonIdleByTimestampAfterAsync(DateTime timestamp) Task~IEnumerable~ActivityInterval~~
+        }
+        class IHourlySummaryRepository {
+            <<interface>>
+            +AddAsync(HourlySummary summary) Task
+            +UpdateAsync(HourlySummary hourlySummary) Task
+            +GetByProcessAndHourAsync(ProcessInfo process, DateTime hour) Task~HourlySummary?~
         }
         class IProcessInfoRepository {
             <<interface>>
-            + GetByNameAsync(string name) Task~ProcessInfo?~
-            + AddOrUpdateAsync(ProcessInfo processInfo) Task
-        }
-        class IProcessRuleRepository {
-            <<interface>>
-            + GetRuleForProcessAsync(string processName) Task~ProcessRule?~
-            + GetAllRulesAsync() Task~IEnumerable~ProcessRule~~
-            %% ... 其他CRUD方法 ...
+            +AddAsync(ProcessInfo processInfo) Task
+            +GetByIdAsync(Guid id) Task~ProcessInfo?~
+            +GetByNameAsync(string name) Task~ProcessInfo?~
+            +UpdateAsync(ProcessInfo processInfo) Task
+            +GetAllAsync() Task~IEnumerable~ProcessInfo~~
         }
     }
 ```
@@ -69,166 +57,260 @@ classDiagram
 ```mermaid 
 classDiagram
     direction TB
-    namespace ScreenTimeTracker.Application.Services {
-        class IUsageTrackingService {
-            <<interface>>
-            + TrackAsync(string processName, string? exePath, TimeSpan duration) Task
+    namespace ScreenTimeTracker.Application.Configuration {
+        class TrackerOptions {
+            +readonly static string SectionName
+            +double PollingIntervalMilliseconds
+            +double ProcessInfoStaleThresholdMinutes
+            +required string ProcessIconDirPath
+            +double IdleTimeoutMinutes
         }
-        class UsageTrackingService {
-            - IUsageRepository _usageRepo
-            - IProcessRuleRepository _ruleRepo
-            - IUserNotificationService _notificationSvc
-            + TrackAsync(string processName, string? exePath, TimeSpan duration) Task
+        class AggregationOptions {
+            +readonly static string SectionName
+            +double PollingIntervalMinutes
         }
     }
-        note for UsageTrackingService "实现了核心跟踪逻辑:<br/>1. 检查白名单规则<br/>2. 记录使用时长<br/>3. 检查时间限制并触发通知"
-
     namespace ScreenTimeTracker.Application.DTOs {
-        class UsageDto {
-            + string ProcessName
-            + long TotalDurationMs
+        class ExecutableMetadata {
+            <<record>>
+            +string? Description,
+            +byte[]? IconBytes,
+            +string? FileExtension
         }
         class ProcessInfoDto {
-             + string Name
-             + string? Alias
-             + string? CategoryName
+            <<record>>
+            +Guid Id
+            +string? Alias
+            +bool AutoUpdate
+            +string? IconPath
+            +string? Description
+        }
+        class ProcessUsageRankEntry {
+            <<record>>
+            +Guid ProcessId
+            +string ProcessName
+            +string? ProcessAlias
+            +TimeSpan TotalDuration
+        }
+        class UpdateProcessInfoDto {
+            +Guid ProcessId
+            +string? Alias
+            +bool AutoUpdate
+            +string? ExecutablePath
+            +string? IconPath
+            +string? Description
         }
     }
-
+    namespace ScreenTimeTracker.Application.Features {
+        class Processes.Queries.GetAllProcessesQueryHandler {
+        }
+        class Processes.Queries.GetProcessByIdQueryHandler {
+        }
+        class Processes.Queries.GetProcessIconByIdQueryHandler {
+        }
+        class Processes.Commands.UpdateProcessInfoCommandHandler {
+        }
+    }
     namespace ScreenTimeTracker.Application.Interfaces {
-        class IUserNotificationService {
+        class IExecutableMetadataProvider {
             <<interface>>
-            + ShowTimeLimitWarningAsync(string processName, TimeSpan timeRemaining) Task
+            +GetMetadataAsync(string executablePath) Task~ExecutableMetadata?~
+        }
+        class IForegroundWindowService{
+            <<interface>>
+            +GetForegroundProcess() Task~ProcessInfo?~
+        }
+        class IIdleTimeProvider {
+            <<interface>>
+            +GetSystemIdleTimeAsync() Task~TimeSpan~
+        }
+        class IUsageReportQueries {
+            <<interface>>
+            +GetTotalHourlyUsageForDayAsync(DateOnly date) Task~IDictionary~int,TimeSpan~~
+            +GetRankedProcessUsageForDayAsync(DateOnly date) Task~IEnumerable~ProcessUsageRankEntry~~
+            +GetProcessHourlyDistributionForDayAsync(DateOnly date, Guid processId) Task~IDictionary~int,TimeSpan~~
+            +GetTotalDailyUsageForPeriodAsync(DateOnly startDate, DateOnly endDate) Task~IDictionary~DateOnly,TimeSpan~~
+            +GetRankedProcessUsageForPeriodAsync(DateOnly startDate, DateOnly endDate) Task~IEnumerable~ProcessUsageRankEntry~~
+            +GetProcessDailyDistributionForPeriodAsync(DateOnly startDate, DateOnly endDate, Guid processId) Task~IDictionary~DateOnly,TimeSpan~~
+        }
+        class IProcessQueries {
+            <<interface>>
+            +GetAllProcessesAsync(CancellationToken cancellationToken) Task~IEnumerable~ProcessInfoDto~~
+            +GetProcessIconByIdAsync(Guid processId, CancellationToken cancellationToken) Task~string?~
+            +GetProcessByIdAsync(Guid id, CancellationToken cancellationToken) Task~ProcessInfoDto?~
         }
     }
-        note for IUserNotificationService "依赖倒置的范例：<br/>由外层(Tracker)实现此接口,<br/>供本层(Application)调用。"
+    namespace ScreenTimeTracker.Application.Services {
+        class AggregationService {
+            -IOptions<TrackerOptions> _options
+            +SummarizeHourlyDataAsync()
+        }
+        class TrackerService {
+            -IForegroundWindowService _foregroundWindowService
+            -IIdleTimeProvider _idleTimeProvider
+            -IOptions<TrackerOptions> _options
+            +RecordActivityIntervalAsync() Task
+        }
+        class ProcessManagementService {
+            -IProcessInfoRepository _processInfoRepository
+            -IExecutableMetadataProvider _executableMetadataProvider
+            -SaveProcessIconAsync(string executablePath, string processName) string
+            +GetIdleProcessAsync() Task~ProcessInfo~
+            +GetUnknownProcessAsync() Task~ProcessInfo~
+            +EnsureProcessInfoExistsAsync(Process process) Task~ProcessInfo~
+        }
+    }
+    class DependencyInjection {
+        +AddApplicationServices(IServiceCollection services) IServiceCollection
+    }
 
-    %% Dependencies
-    UsageTrackingService ..|> IUsageTrackingService
-    UsageTrackingService ..> ScreenTimeTracker.Domain.Interfaces.IUsageRepository : 注入
-    UsageTrackingService ..> ScreenTimeTracker.Domain.Interfaces.IProcessRuleRepository : 注入
-    UsageTrackingService ..> IUserNotificationService : 注入
+    TrackerService ..> ProcessManagementService
+    TrackerService ..> IForegroundWindowService
+    TrackerService ..> IIdleTimeProvider
+    ProcessManagementService ..> IExecutableMetadataProvider
+    Processes.Queries.GetAllProcessesQueryHandler ..> IProcessQueries
 ```
 
 ## Infrastructure
 ```mermaid 
 classDiagram
+    direction LR
+    namespace ScreenTimeTracker.Infrastructure.Interfaces {
+        class IDbContextInitializer {
+            <<interface>>
+            +InitializeAsync()
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Configuration {
+        class PersistenceOptions {
+            +readonly static string SectionName
+            +string DBFilePath
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Configurations {
+        class XxxEntityConfiguration {
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.DbContexts {
+        class ScreenTimeDbContext {
+        }
+        class ScreenTimeDbContextFactory {
+            +CreateDbContext() ScreenTimeDbContext
+        }
+        class ScreenTimeDbContextInitializer {
+            +InitialiseAsync() Task
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Mapper {
+        class XxxMapper {
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Models {
+        class ActivityIntervalEntity {
+            +Guid Id
+            +Guid ProcessInfoEntityId
+            +virtual required ProcessInfoEntity ProcessInfoEntity
+            +DateTime Timestamp
+            +int TotalDurationMilliseconds
+        }
+        class HourlySummaryEntity {
+            +required Guid ProcessInfoEntityId
+            +virtual required ProcessInfoEntity ProcessInfoEntity
+            +required DateTime Hour
+            +int TotalDurationMilliseconds
+        }
+        class ProcessInfoEntity {
+            +Guid Id
+            +required string Name
+            +string? Alias
+            +bool AutoUpdate
+            +DateTime LastAutoUpdated
+            +string? ExecutablePath
+            +string? IconPath
+            +string? Description
+            +virtual ICollection<HourlySummaryEntity> HourlySummaries
+            +virtual ICollection<ActivityIntervalEntity> ActivityIntervals
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Persistence.Queries {
+        class UsageReportQueries {
+        }
+        class ProcessQueries {
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Persistence.Repositories {
+        class SqliteActivityIntervalRepository {
+        }
+        class SqliteHourlySummaryRepository {
+        }
+        class SqliteProcessInfoRepository {
+        }
+    }
+    namespace ScreenTimeTracker.Infrastructure.Plantform {
+        class Windows.ExecutableMetadataProvider {
+        }
+        class Windows.ForegroundWindowService {
+        }
+        class Windows.IdleTimeProvider {
+        }
+    }
+    class DependencyInjection {
+        +AddInfrastructureServices(IServiceCollection services, IConfiguration configuration) IServiceCollection
+    }
+
+    ScreenTimeDbContextInitializer ..|> IDbContextInitializer
+```
+
+## WorkerService
+```mermaid 
+classDiagram
     direction TB
-    class ScreenTimeDbContext {
-        + DbSet~Usage~ Usages
-        + DbSet~ProcessInfo~ ProcessInfos
-        + DbSet~ProcessRule~ ProcessRules
-        # OnConfiguring(DbContextOptionsBuilder options) void
-    }
-    note for ScreenTimeDbContext "使用 Entity Framework Core。<br/>连接字符串在表现层配置并注入。"
-
-    namespace ScreenTimeTracker.Infrastructure.Repositories {
-        class UsageRepository {
-            - ScreenTimeDbContext _context
-            + GetUsagesAsync(DateOnly start, DateOnly end) Task~IEnumerable~Usage~~
-            + AddOrUpdateUsagesAsync(IEnumerable~Usage~ usages) Task
+    namespace ScreenTimeTracker.WorkerService {
+        class Program {
         }
-        class ProcessInfoRepository {
-            - ScreenTimeDbContext _context
-            + GetByNameAsync(string name) Task~ProcessInfo?~
-            + AddOrUpdateAsync(ProcessInfo processInfo) Task
+        class TrackerWorker {
+            -TrackerService _trackerService;
+            -PeriodicTimer _timer;
+            +ExecuteAsync(CancellationToken stoppingToken) Task
+        }
+        class AggregationWorker {
+            -AggregationService _aggregationService;
+            -PeriodicTimer _timer;
+            +ExecuteAsync(CancellationToken stoppingToken) Task
         }
     }
 
-    %% Dependencies
-    UsageRepository ..|> ScreenTimeTracker.Domain.Interfaces.IUsageRepository : 实现
-    ProcessInfoRepository ..|> ScreenTimeTracker.Domain.Interfaces.IProcessInfoRepository : 实现
-    UsageRepository ..> ScreenTimeDbContext : 注入
-    ProcessInfoRepository ..> ScreenTimeDbContext : 注入
 ```
 
 ## WebApi
-保持轻量。  
-运行后调整工作目录为程序所在目录。  
 ```mermaid 
 classDiagram
     direction TB
     class Program {
         + static Main(string[] args) void
     }
-    note for Program "配置依赖注入(DI),<br/>中间件管道(Middleware),<br/>和API路由。"
-
     namespace ScreenTimeTracker.WebApi.Controllers {
-        class UsageController {
-            - IUsageQueryService _usageQueryService  // 来自Application层
-            + GetUsages(DateOnly startDate, DateOnly endDate) Task~IActionResult~
+        class ProcessesController {
         }
-        class ProcessRuleController {
-            - IProcessRuleService _ruleService // 来自Application层
-            + CreateRule(CreateRuleDto dto) Task~IActionResult~
+        class UsageReportsController{
         }
     }
-    note for UsageController "控制器不包含业务逻辑，<br/>仅负责模型验证、调用服务和返回HTTP响应。"
-
-    %% Dependencies
-    UsageController ..> ScreenTimeTracker.Application.Services.IUsageQueryService : 注入
-    ProcessRuleController ..> ScreenTimeTracker.Application.Services.IProcessRuleService : 注入
-```
-
-## Tracker
-保持轻量。  
-运行后调整工作目录为程序所在目录。  
-每隔一小段时间获取一次顶层窗口的进程名作为正在使用的程序。  
-每隔几次获取顶层窗口的进程名，写入到数据库，防止频繁调用数据库导致性能问题。  
-暂时将限制用户指定的程序功能放入，后期相关逻辑较复杂时再考虑拆分为独立的ScreenTimeTracker.Enforcer.exe。  
-```mermaid 
-classDiagram
-    direction TB
-    namespace ScreenTimeTracker.Tracker {
-        class Program {
-            + static Main(string[] args) void
-        }
-
-        class TrackingWorker {
-            <<BackgroundService>>
-            - readonly IServiceScopeFactory _scopeFactory
-            - readonly IForegroundWindowService _foregroundWindowService
-            # override ExecuteAsync(CancellationToken stoppingToken) Task
-            - TrackCurrentProcess(object? state) void
-        }
-    }
-        note for Program "配置依赖注入(DI),<br/>并将TrackingWorker注册为托管服务。"
-        note for TrackingWorker "使用IServiceScopeFactory<br/>为每次跟踪操作创建新的依赖注入作用域。"
-
-    namespace ScreenTimeTracker.Tracker.Services {
-        class IForegroundWindowService { <<interface>> + GetForegroundProcess() Process? }
-        class WindowsForegroundWindowService { + GetForegroundProcess() Process? }
-        class WindowsToastNotificationService {
-            + ShowTimeLimitWarningAsync(string processName, TimeSpan timeRemaining) Task
-        }
-    }
-
-    %% --- 外部依赖 (来自其他项目) ---
-    namespace ScreenTimeTracker.Application.Services {
-        class IUsageTrackingService { <<interface>> }
-    }
-    namespace ScreenTimeTracker.Application.Interfaces {
-        class IUserNotificationService { <<interface>> }
-    }
-
-    %% --- 依赖关系 ---
-    Program ..> TrackingWorker : 注册并启动
-
-    TrackingWorker ..> IForegroundWindowService : 注入并使用
-    TrackingWorker ..> IServiceScopeFactory : 注入
-    TrackingWorker ..> ScreenTimeTracker.Application.Services.IUsageTrackingService : (在Scope内)调用
-
-    WindowsForegroundWindowService ..|> IForegroundWindowService : 实现
-    WindowsToastNotificationService ..|> ScreenTimeTracker.Application.Interfaces.IUserNotificationService : 实现
 ```
 
 ## Tray
-运行后调整工作目录为程序所在目录。  
 ```mermaid 
 classDiagram
     direction TB
-    namespace ScreenTimeTracker.Tray.ViewModels {
-        class TaskbarIconViewModel {
+    namespace ScreenTimeTracker.Tray {
+        class Program {
+        }
+        class StartupManager {
+            +EnableStartup(string appName, string appPath) void
+            +DisableStartup(string appName) void
+            +IsStartupEnabled(string appName) Task~bool~
+        }
+        class ChildProcessManager {
+            +AddProcess(Process process) void
         }
     }
 ```
