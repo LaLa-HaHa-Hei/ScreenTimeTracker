@@ -1,8 +1,9 @@
 {
-    "AggregationSettings": {
-        "PollingIntervalMinutes": 10
-    },
     "Serilog": {
+        "Using": [
+            "Serilog.Sinks.Console",
+            "Serilog.Sinks.File"
+        ],
         "MinimumLevel": {
             "Default": "Information",
             "Override": {

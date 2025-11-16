@@ -16,6 +16,7 @@ namespace ScreenTimeTracker.Application.Services
         private readonly IForegroundWindowService _foregroundWindowService = foregroundWindowService;
         private readonly IIdleTimeProvider _idleTimeProvider = idleTimeProvider;
         private readonly IOptions<TrackerOptions> _options = options;
+        private bool _wasPreviouslyIdle = false;
 
         public async Task RecordActivityIntervalAsync()
         {
@@ -27,23 +28,35 @@ namespace ScreenTimeTracker.Application.Services
             TimeSpan idleTime = await _idleTimeProvider.GetSystemIdleTimeAsync();
             ProcessInfo processInfo;
 
-            // 检查用户空闲，并把空闲开始到现在的记录为空闲时间
+            // 检查用户是否空闲
             if (idleTime >= TimeSpan.FromMinutes(_options.Value.IdleTimeoutMinutes))
             {
                 processInfo = await processManagementService.EnsureIdleProcessInfoExistsAsync();
 
-                DateTime idleStartTime = now.Add(-idleTime);
-                IEnumerable<ActivityInterval> activeIntervals = await activityIntervalRepository.GetNonIdleByTimestampAfterAsync(idleStartTime);
-
-                await activityIntervalRepository.UpdateRangeAsync(activeIntervals.Select(i =>
+                // 如果之前不是空闲，把真实空闲到现在的全标记为空闲
+                if (!_wasPreviouslyIdle)
                 {
-                    i.UpdateProcess(processInfo);
-                    return i;
-                }));
+                    _wasPreviouslyIdle = true;
+                    DateTime idleStartTime = now.Add(-idleTime);
+                    _logger.LogInformation("System has become idle. Change all active intervals from {IdleStartTime} to now to idle.", idleStartTime.ToString("HH:mm:ss"));
+                    IEnumerable<ActivityInterval> activeIntervals = await activityIntervalRepository.GetNonIdleByTimestampAfterAsync(idleStartTime);
+
+                    await activityIntervalRepository.UpdateRangeAsync(activeIntervals.Select(i =>
+                    {
+                        i.UpdateProcess(processInfo);
+                        return i;
+                    }));
+                }
+
             }
-            // 添加新记录
+            // 不是空闲，添加新记录
             else
             {
+                if (_wasPreviouslyIdle)
+                {
+                    _wasPreviouslyIdle = false;
+                    _logger.LogInformation("System has become active.");
+                }
                 Process? process = await _foregroundWindowService.GetForegroundProcessAsync();
                 processInfo = await processManagementService.EnsureProcessInfoExistsAsync(process);
             }

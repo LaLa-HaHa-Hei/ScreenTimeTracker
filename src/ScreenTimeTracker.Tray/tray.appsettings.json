@@ -4,6 +4,9 @@
     "WebApiExecutablePath":"./ScreenTimeTracker.WebApi.exe",
     "WorkerServiceExecutablePath":"./ScreenTimeTracker.WorkerService.exe",
     "Serilog": {
+        "Using": [
+            "Serilog.Sinks.File"
+        ],
         "MinimumLevel": {
             "Default": "Information",
             "Override": {

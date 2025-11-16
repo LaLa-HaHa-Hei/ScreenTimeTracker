@@ -9,6 +9,9 @@
         "PollingIntervalMinutes": 20
     },
     "Serilog": {
+        "Using": [
+            "Serilog.Sinks.File"
+        ],
         "MinimumLevel": {
             "Default": "Information",
             "Override": {

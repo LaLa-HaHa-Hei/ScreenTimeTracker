@@ -7,6 +7,7 @@ using Windows.Win32.System.JobObjects;
 
 namespace ScreenTimeTracker.Tray
 {
+#pragma warning disable CA1416 // 验证平台兼容性
     public static class ChildProcessManager
     {
         private static bool _initialized;
@@ -49,4 +50,5 @@ namespace ScreenTimeTracker.Tray
             }
         }
     }
+#pragma warning restore CA1416 // 验证平台兼容性
 }

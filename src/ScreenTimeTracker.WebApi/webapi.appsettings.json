@@ -8,6 +8,9 @@
         }
     },
     "Serilog": {
+        "Using": [
+            "Serilog.Sinks.File"
+        ],
         "MinimumLevel": {
             "Default": "Information",
             "Override": {

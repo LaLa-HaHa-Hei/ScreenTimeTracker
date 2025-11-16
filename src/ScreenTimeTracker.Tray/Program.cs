@@ -12,6 +12,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace ScreenTimeTracker.Tray
 {
+#pragma warning disable CA1416 // 验证平台兼容性
     public class Program()
     {
         private const string AppName = "ScreenTimeTracker";
@@ -127,10 +128,18 @@ namespace ScreenTimeTracker.Tray
                 return;
             }
             _icon = new Icon(iconStream);
-            _trayIcon = new TrayIconWithContextMenu
+            _trayIcon = new TrayIconWithContextMenu()
             {
                 Icon = _icon.Handle,
                 ToolTip = "Screen Time Tracker",
+            };
+
+            _trayIcon.MessageWindow.MouseEventReceived += (sender, e) =>
+            {
+                if (e.MouseEvent == MouseEvent.IconLeftMouseUp)
+                {
+                    OpenUI();
+                }
             };
 
             _startUpMenuItem = new PopupMenuItem("开启自启动", (_, _) => ToogleStartup())
@@ -181,4 +190,5 @@ namespace ScreenTimeTracker.Tray
                 PInvoke.MessageBox(default, "切换失败，可能因为权限不足，请以管理员身份运行", "错误！", MESSAGEBOX_STYLE.MB_OK);
         }
     }
+#pragma warning restore CA1416 // 验证平台兼容性
 }

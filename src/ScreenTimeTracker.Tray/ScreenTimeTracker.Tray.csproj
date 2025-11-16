@@ -2,25 +2,16 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources/Icon.ico</ApplicationIcon>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <PublishSingleFile>true</PublishSingleFile>
-    <PublishDir>$(MSBuildProjectDirectory)\..\publish\</PublishDir>
   </PropertyGroup>
 
   <ItemGroup>
     <None Update="tray.appsettings*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  
-  <ItemGroup>
     <EmbeddedResource Include="Resources\Icon.ico" />
   </ItemGroup>
 
