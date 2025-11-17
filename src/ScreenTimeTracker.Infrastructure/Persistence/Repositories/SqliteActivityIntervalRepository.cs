@@ -56,6 +56,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<ActivityInterval>> GetByTimestampBeforeAsync(DateTime timestamp)
         {
             var entities = await _dbContext.ActivityIntervals
+                .AsNoTracking()
                 .Include(e => e.ProcessInfoEntity)
                 .Where(x => x.Timestamp < timestamp)
                 .ToListAsync();
@@ -65,6 +66,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<ActivityInterval>> GetNonIdleByTimestampAfterAsync(DateTime timestamp)
         {
             var entities = await _dbContext.ActivityIntervals
+                .AsNoTracking()
                 .Include(e => e.ProcessInfoEntity)
                 .Where(x => x.Timestamp >= timestamp && x.ProcessInfoEntityId != ProcessInfo.IdleProcessId)
                 .ToListAsync();

@@ -8,3 +8,18 @@ export interface ProcessInfo {
     iconPath: string | null
     description: string | null
 }
+
+export interface ProcessUsageRankEntry {
+    processId: string
+    processName: string
+    processAlias: string | null
+    processIconPath: string | null
+    totalDuration: string
+    percentage: number
+}
+
+export interface UpdateProcessRequest {
+    alias: string | null
+    autoUpdate: boolean
+    iconPath: string | null
+}

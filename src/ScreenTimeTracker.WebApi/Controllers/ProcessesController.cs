@@ -9,11 +9,12 @@ using ScreenTimeTracker.WebApi.DTOs.Processes;
 namespace ScreenTimeTracker.WebApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class ProcessesController(IProcessInfoRepository processInfoRepository, IProcessQueries processQueries) : ControllerBase
+[Route("api/processes")]
+public class ProcessesController(IProcessInfoRepository processInfoRepository, IProcessQueries processQueries, IUsageReportQueries usageReportQueries) : ControllerBase
 {
     private readonly IProcessInfoRepository _processInfoRepository = processInfoRepository;
     private readonly IProcessQueries _processQueries = processQueries;
+    private readonly IUsageReportQueries _usageReportQueries = usageReportQueries;
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ProcessInfoDto>), StatusCodes.Status200OK)]
@@ -51,43 +52,15 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
         return NoContent();
     }
 
-    [HttpPut("{id:guid}/alias")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateProcessAliasAsync(Guid id, [FromBody] UpdateAliasRequest updateDto)
+    public async Task<IActionResult> UpdateProcessAsync(Guid id, [FromBody] UpdateProcessRequest updateDto)
     {
         var processInfo = await _processInfoRepository.GetByIdAsync(id);
         if (processInfo is null)
             return NotFound();
-        Console.WriteLine(updateDto.Alias);
-        processInfo.UpdateUserDetails(updateDto.Alias, processInfo.AutoUpdate, processInfo.IconPath);
-        Console.WriteLine(processInfo.Alias);
-        await _processInfoRepository.UpdateAsync(processInfo);
-        return NoContent();
-    }
-
-    [HttpPut("{id:guid}/auto-update")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateProcessAutoUpdateAsync(Guid id, [FromBody] UpdateAutoUpdateRequest updateDto)
-    {
-        var processInfo = await _processInfoRepository.GetByIdAsync(id);
-        if (processInfo is null)
-            return NotFound();
-        processInfo.UpdateUserDetails(processInfo.Alias, updateDto.AutoUpdate, processInfo.IconPath);
-        await _processInfoRepository.UpdateAsync(processInfo);
-        return NoContent();
-    }
-
-    [HttpPut("{id:guid}/icon-path")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateProcessIconPathAsync(Guid id, [FromBody] UpdateIconPathRequest updateDto)
-    {
-        var processInfo = await _processInfoRepository.GetByIdAsync(id);
-        if (processInfo is null)
-            return NotFound();
-        processInfo.UpdateUserDetails(processInfo.Alias, processInfo.AutoUpdate, updateDto.IconPath);
+        processInfo.UpdateUserDetails(updateDto.Alias, updateDto.AutoUpdate, updateDto.IconPath);
         await _processInfoRepository.UpdateAsync(processInfo);
         return NoContent();
     }
@@ -101,7 +74,7 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
         string? iconPath;
         try
         {
-            iconPath = await _processQueries.GetProcessIconByIdAsync(id);
+            iconPath = await _processQueries.GetProcessIconPathByIdAsync(id);
         }
         catch (NotFoundException)
         {
@@ -115,5 +88,17 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
         if (!provider.TryGetContentType(iconPath, out var contentType))
             contentType = "image/png";
         return PhysicalFile(iconPath, contentType);
+    }
+
+    [HttpGet("{id:guid}/usage-distribution/hourly")]
+    public async Task<IDictionary<int, TimeSpan>> ProcessHourlyDistributionForDay(Guid id, [FromQuery] DateOnly date)
+    {
+        return await _usageReportQueries.GetProcessHourlyDistributionForDayAsync(date, id);
+    }
+
+    [HttpGet("{id:guid}/usage-distribution/daily")]
+    public async Task<IDictionary<DateOnly, TimeSpan>> ProcessDailyDistributionForPeriod(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+    {
+        return await _usageReportQueries.GetProcessDailyDistributionForPeriodAsync(startDate, endDate, id);
     }
 }

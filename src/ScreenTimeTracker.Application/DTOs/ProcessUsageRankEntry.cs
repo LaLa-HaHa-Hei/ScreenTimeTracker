@@ -4,6 +4,8 @@ namespace ScreenTimeTracker.Application.DTOs
         Guid ProcessId,
         string ProcessName,
         string? ProcessAlias,
-        TimeSpan TotalDuration
+        string? ProcessIconPath,
+        string TotalDuration,
+        int Percentage
     );
 }

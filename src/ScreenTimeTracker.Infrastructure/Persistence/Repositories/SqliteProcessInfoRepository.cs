@@ -20,13 +20,17 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Repositories
 
         public async Task<ProcessInfo?> GetByIdAsync(Guid id)
         {
-            ProcessInfoEntity? entity = await _dbContext.ProcessInfos.FindAsync(id);
+            ProcessInfoEntity? entity = await _dbContext.ProcessInfos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == id);
             return entity is null ? null : ProcessInfoMapper.Map(entity);
         }
 
         public async Task<ProcessInfo?> GetByNameAsync(string name)
         {
-            ProcessInfoEntity? entity = await _dbContext.ProcessInfos.FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+            ProcessInfoEntity? entity = await _dbContext.ProcessInfos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
             return entity is null ? null : ProcessInfoMapper.Map(entity);
         }
 

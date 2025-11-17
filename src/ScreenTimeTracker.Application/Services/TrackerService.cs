@@ -28,7 +28,7 @@ namespace ScreenTimeTracker.Application.Services
             TimeSpan idleTime = await _idleTimeProvider.GetSystemIdleTimeAsync();
             ProcessInfo processInfo;
 
-            // 检查用户是否空闲
+            // 空闲时间超过阈值，标记为空闲进程
             if (idleTime >= TimeSpan.FromMinutes(_options.Value.IdleTimeoutMinutes))
             {
                 processInfo = await processManagementService.EnsureIdleProcessInfoExistsAsync();
@@ -38,7 +38,7 @@ namespace ScreenTimeTracker.Application.Services
                 {
                     _wasPreviouslyIdle = true;
                     DateTime idleStartTime = now.Add(-idleTime);
-                    _logger.LogInformation("System has become idle. Change all active intervals from {IdleStartTime} to now to idle.", idleStartTime.ToString("HH:mm:ss"));
+                    _logger.LogInformation("System has become idle. IdleStartTime: {IdleStartTime}.", idleStartTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
                     IEnumerable<ActivityInterval> activeIntervals = await activityIntervalRepository.GetNonIdleByTimestampAfterAsync(idleStartTime);
 
                     await activityIntervalRepository.UpdateRangeAsync(activeIntervals.Select(i =>
@@ -49,7 +49,7 @@ namespace ScreenTimeTracker.Application.Services
                 }
 
             }
-            // 不是空闲，添加新记录
+            // 不是空闲，获取顶层窗口对应进程
             else
             {
                 if (_wasPreviouslyIdle)

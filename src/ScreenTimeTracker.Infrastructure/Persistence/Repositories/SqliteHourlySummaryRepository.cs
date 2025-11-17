@@ -31,6 +31,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Repositories
         public async Task<HourlySummary?> GetByProcessAndHourAsync(ProcessInfo process, DateTime hour)
         {
             var entity = await _dbContext.HourlySummaries
+                .AsNoTracking()
                 .Include(e => e.ProcessInfoEntity)
                 .FirstOrDefaultAsync(e => e.ProcessInfoEntityId == process.Id && e.Hour == hour);
             return entity is null ? null : HourlySummaryMapper.Map(entity);

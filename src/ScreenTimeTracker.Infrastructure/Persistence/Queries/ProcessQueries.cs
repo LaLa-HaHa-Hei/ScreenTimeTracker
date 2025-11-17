@@ -27,7 +27,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<string?> GetProcessIconByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<string?> GetProcessIconPathByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var processInfo = await _dbContext.ProcessInfos.FindAsync([id], cancellationToken);
             return processInfo?.IconPath;

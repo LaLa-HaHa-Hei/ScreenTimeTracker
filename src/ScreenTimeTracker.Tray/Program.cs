@@ -150,6 +150,13 @@ namespace ScreenTimeTracker.Tray
             {
                 Items =
                 {
+                    new PopupMenuItem("打开程序目录", (_, _) => {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = AppContext.BaseDirectory,
+                            UseShellExecute = true
+                        });
+                    }),
                     _startUpMenuItem,
                     new PopupMenuSeparator(),
                     new PopupMenuItem("显示", (_, _) => OpenUI()),
