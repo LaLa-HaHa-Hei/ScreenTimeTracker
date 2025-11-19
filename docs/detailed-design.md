@@ -13,17 +13,28 @@ classDiagram
             +string? ExecutablePath
             +string? IconPath
             +string? Description
+            +Reconstitute(xxx xxx, ...) ProcessInfo
+            +UpdateUserDetails(string? alias, bool autoUpdate, string? iconPath)
+            +UpdateSystemDetails(string? executablePath, string? iconPath, string? description)
+            +Guid UnknownProcessId
+            +string UnknownProcessName
+            +Guid IdleProcessId
+            +string IdleProcessName
         }
         class ActivityInterval {
             +Guid Id
             +ProcessInfo TrackedProcess
             +DateTime Timestamp
             +TimeSpan Duration
+            +Reconstitute(xxx xxx, ...) ActivityInterval
+            +UpdateProcess(ProcessInfo processInfo)
         }
         class HourlySummary {
             +ProcessInfo TrackedProcess
             +DateTime Hour
             +TimeSpan TotalDuration
+            +Reconstitute(xxx xxx, ...) HourlySummary
+            +AddDuration(TimeSpan duration)
         }
     }
 
@@ -48,7 +59,7 @@ classDiagram
             +GetByIdAsync(Guid id) Task~ProcessInfo?~
             +GetByNameAsync(string name) Task~ProcessInfo?~
             +UpdateAsync(ProcessInfo processInfo) Task
-            +GetAllAsync() Task~IEnumerable~ProcessInfo~~
+            +DeleteAsync(Guid id) Task
         }
     }
 ```
@@ -82,6 +93,8 @@ classDiagram
             +Guid Id
             +string? Alias
             +bool AutoUpdate
+            +string LastAutoUpdated
+            +string? ExecutablePath
             +string? IconPath
             +string? Description
         }
@@ -90,25 +103,9 @@ classDiagram
             +Guid ProcessId
             +string ProcessName
             +string? ProcessAlias
+            +string? ProcessIconPath
             +TimeSpan TotalDuration
-        }
-        class UpdateProcessInfoDto {
-            +Guid ProcessId
-            +string? Alias
-            +bool AutoUpdate
-            +string? ExecutablePath
-            +string? IconPath
-            +string? Description
-        }
-    }
-    namespace ScreenTimeTracker.Application.Features {
-        class Processes.Queries.GetAllProcessesQueryHandler {
-        }
-        class Processes.Queries.GetProcessByIdQueryHandler {
-        }
-        class Processes.Queries.GetProcessIconByIdQueryHandler {
-        }
-        class Processes.Commands.UpdateProcessInfoCommandHandler {
+            +int Percentage
         }
     }
     namespace ScreenTimeTracker.Application.Interfaces {
@@ -126,12 +123,11 @@ classDiagram
         }
         class IUsageReportQueries {
             <<interface>>
-            +GetTotalHourlyUsageForDayAsync(DateOnly date) Task~IDictionary~int,TimeSpan~~
-            +GetRankedProcessUsageForDayAsync(DateOnly date) Task~IEnumerable~ProcessUsageRankEntry~~
-            +GetProcessHourlyDistributionForDayAsync(DateOnly date, Guid processId) Task~IDictionary~int,TimeSpan~~
-            +GetTotalDailyUsageForPeriodAsync(DateOnly startDate, DateOnly endDate) Task~IDictionary~DateOnly,TimeSpan~~
-            +GetRankedProcessUsageForPeriodAsync(DateOnly startDate, DateOnly endDate) Task~IEnumerable~ProcessUsageRankEntry~~
-            +GetProcessDailyDistributionForPeriodAsync(DateOnly startDate, DateOnly endDate, Guid processId) Task~IDictionary~DateOnly,TimeSpan~~
+            +GetRankedProcessUsageForPeriodAsync(DateOnly startDate, DateOnly endDate, int topN, IEnumerable~Guid~? excludedProcessIds) Task~IEnumerable~ProcessUsageRankEntry~~
+            +GetTotalHourlyUsageForDayAsync(DateOnly date, IEnumerable~Guid~? excludedProcessIds) Task~IDictionary~int,long~~
+            +GetTotalDailyUsageForPeriodAsync(DateOnly startDate, DateOnly endDate, IEnumerable~Guid~? excludedProcessIds) Task~IDictionary~DateOnly,long~~
+            +GetProcessHourlyDistributionForDayAsync(DateOnly date, Guid processId) Task~IDictionary~int,long~~
+            +GetProcessDailyDistributionForPeriodAsync(DateOnly startDate, DateOnly endDate, Guid processId) Task~IDictionary~DateOnly,long~~
         }
         class IProcessQueries {
             <<interface>>
@@ -142,19 +138,12 @@ classDiagram
     }
     namespace ScreenTimeTracker.Application.Services {
         class AggregationService {
-            -IOptions<TrackerOptions> _options
             +SummarizeHourlyDataAsync()
         }
         class TrackerService {
-            -IForegroundWindowService _foregroundWindowService
-            -IIdleTimeProvider _idleTimeProvider
-            -IOptions<TrackerOptions> _options
             +RecordActivityIntervalAsync() Task
         }
         class ProcessManagementService {
-            -IProcessInfoRepository _processInfoRepository
-            -IExecutableMetadataProvider _executableMetadataProvider
-            -SaveProcessIconAsync(string executablePath, string processName) string
             +GetIdleProcessAsync() Task~ProcessInfo~
             +GetUnknownProcessAsync() Task~ProcessInfo~
             +EnsureProcessInfoExistsAsync(Process process) Task~ProcessInfo~
@@ -293,6 +282,13 @@ classDiagram
         class ProcessesController {
         }
         class UsageReportsController{
+        }
+    }
+    namespace ScreenTimeTracker.WebApi.DTOs {
+        class UpdateProcessInfoDto {
+            +string? Alias
+            +bool AutoUpdate
+            +string? IconPath
         }
     }
 ```
