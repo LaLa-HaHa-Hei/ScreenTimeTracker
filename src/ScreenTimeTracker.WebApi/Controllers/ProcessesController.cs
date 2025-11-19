@@ -91,13 +91,13 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
     }
 
     [HttpGet("{id:guid}/usage-distribution/hourly")]
-    public async Task<IDictionary<int, TimeSpan>> ProcessHourlyDistribution(Guid id, [FromQuery] DateOnly date)
+    public async Task<IDictionary<int, long>> ProcessHourlyDistribution(Guid id, [FromQuery] DateOnly date)
     {
         return await _usageReportQueries.GetProcessHourlyDistributionForDayAsync(date, id);
     }
 
     [HttpGet("{id:guid}/usage-distribution/daily")]
-    public async Task<IDictionary<DateOnly, TimeSpan>> ProcessDailyDistribution(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+    public async Task<IDictionary<DateOnly, long>> ProcessDailyDistribution(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
     {
         return await _usageReportQueries.GetProcessDailyDistributionForPeriodAsync(startDate, endDate, id);
     }

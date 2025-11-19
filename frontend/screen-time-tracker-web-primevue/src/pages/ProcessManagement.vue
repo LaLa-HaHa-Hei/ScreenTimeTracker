@@ -89,7 +89,7 @@
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="alias" class="mb-3 block font-bold">别名</label>
-                    <InputText class="w-full" id="alias" v-model="editingProcess.alias" />
+                    <InputText fluid id="alias" v-model="editingProcess.alias" />
                 </div>
                 <div>
                     <label class="mb-3 block font-bold">自动更新信息</label>
@@ -97,7 +97,7 @@
                 </div>
                 <div>
                     <label for="iconPath" class="mb-3 block font-bold">图标路径</label>
-                    <InputText class="w-full" id="iconPath" v-model="editingProcess.iconPath" />
+                    <InputText fluid id="iconPath" v-model="editingProcess.iconPath" />
                 </div>
             </div>
 

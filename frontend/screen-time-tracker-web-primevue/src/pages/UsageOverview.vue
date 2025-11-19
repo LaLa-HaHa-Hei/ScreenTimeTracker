@@ -20,68 +20,57 @@
         </div>
         <div class="mt-2 flex justify-center">
             <div :class="{ hidden: selectedTimeRange?.value !== 'Daily' }">
-                <div class="time-stepper">
-                    <Button
-                        @click="displayPreviousDay"
-                        rounded
-                        icon="pi pi-angle-left"
-                        variant="text"
-                    />
-                    <span> {{ dailyText }}</span>
-                    <Button
-                        @click="displayNextDay"
-                        :disabled="dailyDayDiff === 0"
-                        rounded
-                        icon="pi pi-angle-right"
-                        variant="text"
-                    />
-                </div>
-            </div>
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Weekly' }">
-                <div class="time-stepper">
-                    <Button
-                        @click="displayPreviousWeek"
-                        rounded
-                        icon="pi pi-angle-left"
-                        variant="text"
-                    />
-                    <span>{{ weeklyText }}</span>
-                    <Button
-                        @click="displayNextWeek"
-                        :disabled="weeklyWeekDiff === 0"
-                        rounded
-                        icon="pi pi-angle-right"
-                        variant="text"
-                    />
-                </div>
-            </div>
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Monthly' }">
-                <div class="time-stepper">
-                    <Button
-                        @click="displayPreviousMonth"
-                        rounded
-                        icon="pi pi-angle-left"
-                        variant="text"
-                    />
-                    <span>{{ monthlyText }}</span>
-                    <Button
-                        @click="displayNextMonth"
-                        :disabled="monthlyMonthDiff === 0"
-                        rounded
-                        icon="pi pi-angle-right"
-                        variant="text"
-                    />
-                </div>
-            </div>
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Custom' }">
-                <DatePicker
-                    v-model="dateRange"
-                    selectionMode="range"
-                    :manualInput="false"
-                    placeholder="选择日期范围"
+                <Stepper
+                    class="w-70"
+                    :text="dailyText"
+                    :onLeftClick="displayPreviousDay"
+                    :onRightClick="displayNextDay"
                 />
             </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Weekly' }">
+                <Stepper
+                    class="w-70"
+                    :text="weeklyText"
+                    :onLeftClick="displayPreviousWeek"
+                    :onRightClick="displayNextWeek"
+                />
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Monthly' }">
+                <Stepper
+                    class="w-70"
+                    :text="monthlyText"
+                    :onLeftClick="displayPreviousMonth"
+                    :onRightClick="displayNextMonth"
+                />
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Custom' }">
+                <div class="w-70">
+                    <DatePicker
+                        fluid
+                        dateFormat="yy/mm/dd"
+                        v-model="customDateRange"
+                        selectionMode="range"
+                        :manualInput="true"
+                        placeholder="选择日期范围"
+                    />
+                </div>
+            </div>
         </div>
+        <!-- 数据展示区 -->
+        <TotalUsageChart
+            class="mt-5"
+            :startDate="startDate"
+            :endDate="endDate"
+            :mode="
+                selectedTimeRange?.value === 'Daily'
+                    ? 'Hour'
+                    : selectedTimeRange?.value === 'Weekly'
+                      ? 'Week'
+                      : 'Day'
+            "
+            :excludedProcesses="excludedProcessIds"
+        />
+
         <div class="mt-5 flex justify-end">
             <Select v-model="topN" :options="[5, 10, 15, 20]" />
         </div>
@@ -101,6 +90,8 @@ import type { ProcessInfo } from '@/types'
 import { getAllProcesses } from '@/api'
 import { StorageKey } from '@/constants/storageKeys'
 import ProcessUsageRank from '@/components/ProcessUsageRank.vue'
+import TotalUsageChart from '@/components/TotalUsageChart.vue'
+import Stepper from '@/components/Stepper.vue'
 
 const timeRangeOptions = [
     { label: '日', value: 'Daily' },
@@ -149,7 +140,18 @@ const monthlyText = computed(() => {
         return `${monthlyStartDay.value.getMonth() + 1}/${monthlyStartDay.value.getDate()} - ${monthlyEndDay.value.getMonth() + 1}/${monthlyEndDay.value.getDate()}`
 })
 
-const dateRange = ref()
+const customDateRange = ref([
+    new Date(localStorage.getItem(StorageKey.USAGE_OVERVIEW_CUSTOM_START_DATE) || Date.now()),
+    new Date(localStorage.getItem(StorageKey.USAGE_OVERVIEW_CUSTOM_END_DATE) || Date.now()),
+])
+
+watch(customDateRange, () => {
+    if (!customDateRange.value[0] || !customDateRange.value[1]) return
+    localStorage.setItem(StorageKey.USAGE_OVERVIEW_CUSTOM_START_DATE, startDate.value.toISOString())
+    localStorage.setItem(StorageKey.USAGE_OVERVIEW_CUSTOM_END_DATE, endDate.value.toISOString())
+    startDate.value = customDateRange.value[0]
+    endDate.value = customDateRange.value[1]
+})
 
 function displayPreviousMonth() {
     monthlyMonthDiff.value++
@@ -162,8 +164,15 @@ function displayPreviousMonth() {
 function displayNextMonth() {
     if (monthlyMonthDiff.value === 0) return
     monthlyMonthDiff.value--
-    monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
-    monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
+    if (monthlyMonthDiff.value === 0) {
+        monthlyEndDay.value = new Date()
+        monthlyStartDay.value = isLastDayOfMonth(monthlyEndDay.value)
+            ? getFirstDayOfMonth(monthlyEndDay.value)
+            : new Date(monthlyEndDay.value.getTime() - 30 * 24 * 60 * 60 * 1000)
+    } else {
+        monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
+        monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
+    }
     startDate.value = new Date(monthlyStartDay.value)
     endDate.value = new Date(monthlyEndDay.value)
 }
@@ -182,9 +191,11 @@ function getFirstDayOfMonth(date: Date) {
 }
 
 function getPreviousSunday(date: Date, n: number = 1) {
-    const sunday = new Date(date)
-    sunday.setDate(sunday.getDate() - sunday.getDay() - 7 * n)
-    return sunday
+    const result = new Date(date)
+    const dayOfWeek = result.getDay()
+    const daysToSubtract = (dayOfWeek === 0 ? 7 : dayOfWeek) + 7 * (n - 1)
+    result.setDate(result.getDate() - daysToSubtract)
+    return result
 }
 
 function displayPreviousWeek() {
@@ -202,12 +213,17 @@ function displayPreviousWeek() {
 function displayNextWeek() {
     if (weeklyWeekDiff.value === 0) return
     weeklyWeekDiff.value--
-    weeklyEndDay.value = getPreviousSunday(today, weeklyWeekDiff.value)
-    weeklyStartDay.value = new Date(
-        weeklyEndDay.value.getFullYear(),
-        weeklyEndDay.value.getMonth(),
-        weeklyEndDay.value.getDate() - 6,
-    )
+    if (weeklyWeekDiff.value === 0) {
+        weeklyEndDay.value = new Date()
+        weeklyStartDay.value = new Date(weeklyEndDay.value.getTime() - 6 * 24 * 60 * 60 * 1000)
+    } else {
+        weeklyEndDay.value = getPreviousSunday(today, weeklyWeekDiff.value)
+        weeklyStartDay.value = new Date(
+            weeklyEndDay.value.getFullYear(),
+            weeklyEndDay.value.getMonth(),
+            weeklyEndDay.value.getDate() - 6,
+        )
+    }
     startDate.value = new Date(weeklyStartDay.value)
     endDate.value = new Date(weeklyEndDay.value)
 }
@@ -246,6 +262,9 @@ watch(selectedTimeRange, () => {
         startDate.value = new Date(monthlyStartDay.value)
         endDate.value = new Date(monthlyEndDay.value)
     } else {
+        if (!customDateRange.value[0] || !customDateRange.value[1]) return
+        startDate.value = new Date(customDateRange.value[0])
+        endDate.value = new Date(customDateRange.value[1])
     }
 })
 
@@ -283,6 +302,6 @@ onMounted(async () => {
     width: 250px;
     max-width: 100%;
     border-radius: 9999px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--p-content-border-color);
 }
 </style>

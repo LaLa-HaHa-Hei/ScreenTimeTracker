@@ -17,13 +17,13 @@ public class UsageReportsController(IUsageReportQueries usageReportQueries) : Co
     }
 
     [HttpGet("summaries/hourly")]
-    public async Task<IDictionary<int, TimeSpan>> TotalHourlyUsage([FromQuery] DateOnly date, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
+    public async Task<IDictionary<int, long>> TotalHourlyUsage([FromQuery] DateOnly date, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
         return await _usageReportQueries.GetTotalHourlyUsageForDayAsync(date, excludedProcessIds);
     }
 
     [HttpGet("summaries/daily")]
-    public async Task<IDictionary<DateOnly, TimeSpan>> TotalDailyUsage([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
+    public async Task<IDictionary<DateOnly, long>> TotalDailyUsage([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
         return await _usageReportQueries.GetTotalDailyUsageForPeriodAsync(startDate, endDate, excludedProcessIds);
     }

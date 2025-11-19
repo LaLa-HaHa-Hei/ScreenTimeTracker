@@ -73,9 +73,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
                 var duration = usage.TotalDurationMilliseconds;
                 var timeSpan = TimeSpan.FromMilliseconds(duration);
                 var totalHours = (int)timeSpan.TotalHours;
-                var formattedDuration = totalHours > 0 ?
-                    $"{totalHours}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}" :
-                    $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+                var formattedDuration = $"{totalHours}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
 
                 return new ProcessUsageRankEntry(
                     processInfo.Id,
@@ -87,7 +85,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
                 );
             })];
         }
-        public async Task<IDictionary<int, TimeSpan>> GetTotalHourlyUsageForDayAsync(
+        public async Task<IDictionary<int, long>> GetTotalHourlyUsageForDayAsync(
             DateOnly date,
             IEnumerable<Guid>? excludedProcessIds = null)
         {
@@ -124,11 +122,11 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
 
             return hourlyUsage.ToDictionary(
                 h => h.Hour,
-                h => TimeSpan.FromMilliseconds(h.TotalMilliseconds)
+                h => h.TotalMilliseconds / 1000
             );
         }
 
-        public async Task<IDictionary<DateOnly, TimeSpan>> GetTotalDailyUsageForPeriodAsync(
+        public async Task<IDictionary<DateOnly, long>> GetTotalDailyUsageForPeriodAsync(
             DateOnly startDate,
             DateOnly endDate,
             IEnumerable<Guid>? excludedProcessIds = null)
@@ -166,11 +164,11 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
 
             return dailyUsage.ToDictionary(
                 d => DateOnly.FromDateTime(d.Date),
-                d => TimeSpan.FromMilliseconds(d.TotalMilliseconds)
+                d => d.TotalMilliseconds / 1000
             );
         }
 
-        public async Task<IDictionary<DateOnly, TimeSpan>> GetProcessDailyDistributionForPeriodAsync(DateOnly startDate, DateOnly endDate, Guid processId)
+        public async Task<IDictionary<DateOnly, long>> GetProcessDailyDistributionForPeriodAsync(DateOnly startDate, DateOnly endDate, Guid processId)
         {
             var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
             var end = endDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).AddDays(1);
@@ -196,11 +194,11 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
 
             return dailyUsage.ToDictionary(
                 d => DateOnly.FromDateTime(d.Date),
-                d => TimeSpan.FromMilliseconds(d.TotalMilliseconds)
+                d => d.TotalMilliseconds / 1000
             );
         }
 
-        public async Task<IDictionary<int, TimeSpan>> GetProcessHourlyDistributionForDayAsync(DateOnly date, Guid processId)
+        public async Task<IDictionary<int, long>> GetProcessHourlyDistributionForDayAsync(DateOnly date, Guid processId)
         {
             var start = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
             var end = start.AddDays(1);
@@ -226,7 +224,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
 
             return hourlyUsage.ToDictionary(
                 h => h.Hour,
-                h => TimeSpan.FromMilliseconds(h.TotalMilliseconds)
+                h => h.TotalMilliseconds / 1000
             );
         }
     }

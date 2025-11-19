@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen w-full">
+    <div class="app min-h-screen w-full">
         <header class="fixed top-0 right-0 left-0 z-100 h-15">
             <AppHeader />
         </header>

@@ -1,5 +1,267 @@
 <template>
-    <div class="h-full w-full">
-        <h1>Process Detail</h1>
+    <div class="w-full">
+        <div class="flex flex-row justify-between">
+            <SelectButton
+                v-model="selectedTimeRange"
+                optionLabel="label"
+                :options="timeRangeOptions"
+                :allowEmpty="false"
+            />
+            <span>
+                <label class="mr-2">查看的进程</label>
+                <Select
+                    v-model="selectedProcess"
+                    :options="processes"
+                    optionLabel="name"
+                    filter
+                    :maxSelectedLabels="3"
+                />
+            </span>
+        </div>
+        <div class="mt-2 flex justify-center">
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Daily' }">
+                <Stepper
+                    class="w-70"
+                    :text="dailyText"
+                    :onLeftClick="displayPreviousDay"
+                    :onRightClick="displayNextDay"
+                />
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Weekly' }">
+                <Stepper
+                    class="w-70"
+                    :text="weeklyText"
+                    :onLeftClick="displayPreviousWeek"
+                    :onRightClick="displayNextWeek"
+                />
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Monthly' }">
+                <Stepper
+                    class="w-70"
+                    :text="monthlyText"
+                    :onLeftClick="displayPreviousMonth"
+                    :onRightClick="displayNextMonth"
+                />
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Custom' }">
+                <div class="w-70">
+                    <DatePicker
+                        fluid
+                        dateFormat="yy/mm/dd"
+                        v-model="customDateRange"
+                        selectionMode="range"
+                        :manualInput="true"
+                        placeholder="选择日期范围"
+                    />
+                </div>
+            </div>
+        </div>
+        <ProcessUsageChart
+            v-if="selectedProcess?.id"
+            :process="selectedProcess.id"
+            :startDate="startDate"
+            :endDate="endDate"
+            :mode="
+                selectedTimeRange?.value === 'Daily'
+                    ? 'Hour'
+                    : selectedTimeRange?.value === 'Weekly'
+                      ? 'Week'
+                      : 'Day'
+            "
+        />
     </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, watch, computed } from 'vue'
+import type { ProcessInfo } from '@/types'
+import { getAllProcesses } from '@/api'
+import { StorageKey } from '@/constants/storageKeys'
+import Stepper from '@/components/Stepper.vue'
+import ProcessUsageChart from '@/components/ProcessUsageChart.vue'
+
+const timeRangeOptions = [
+    { label: '日', value: 'Daily' },
+    { label: '周', value: 'Weekly' },
+    { label: '月', value: 'Monthly' },
+    { label: '自定义', value: 'Custom' },
+]
+const selectedTimeRange = ref(timeRangeOptions[0])
+const processes = ref<{ name: string; id: string }[]>([])
+const selectedProcess = ref<{ name: string; id: string }>()
+const today = new Date()
+const startDate = ref(new Date())
+const endDate = ref(new Date())
+
+const dailyDayDiff = ref(0)
+const dailyDay = ref(new Date())
+const dailyText = computed(() => {
+    if (dailyDayDiff.value === 0) return '今天'
+    else if (dailyDayDiff.value === 1) return '昨天'
+    else return `${dailyDay.value.getMonth() + 1}/${dailyDay.value.getDate()}`
+})
+
+const weeklyWeekDiff = ref(0)
+const weeklyEndDay = ref(new Date())
+const weeklyStartDay = ref(new Date(weeklyEndDay.value.getTime() - 6 * 24 * 60 * 60 * 1000))
+const weeklyText = computed(() => {
+    if (weeklyWeekDiff.value === 0) return '本周'
+    else if (weeklyWeekDiff.value === 1) return '上周'
+    else
+        return `${weeklyStartDay.value.getMonth() + 1}/${weeklyStartDay.value.getDate()} - ${weeklyEndDay.value.getMonth() + 1}/${weeklyEndDay.value.getDate()}`
+})
+
+const monthlyMonthDiff = ref(0)
+const monthlyEndDay = ref(new Date())
+const monthlyStartDay = ref(
+    isLastDayOfMonth(monthlyEndDay.value)
+        ? getFirstDayOfMonth(monthlyEndDay.value)
+        : new Date(monthlyEndDay.value.getTime() - 30 * 24 * 60 * 60 * 1000),
+)
+const monthlyText = computed(() => {
+    if (monthlyMonthDiff.value === 0) return '本月'
+    else if (monthlyMonthDiff.value === 1) return '上月'
+    else
+        return `${monthlyStartDay.value.getMonth() + 1}/${monthlyStartDay.value.getDate()} - ${monthlyEndDay.value.getMonth() + 1}/${monthlyEndDay.value.getDate()}`
+})
+
+const customDateRange = ref([
+    new Date(localStorage.getItem(StorageKey.PROCESS_DETAIL_CUSTOM_START_DATE) || Date.now()),
+    new Date(localStorage.getItem(StorageKey.PROCESS_DETAIL_CUSTOM_END_DATE) || Date.now()),
+])
+
+watch(customDateRange, () => {
+    if (!customDateRange.value[0] || !customDateRange.value[1]) return
+    localStorage.setItem(StorageKey.USAGE_OVERVIEW_CUSTOM_START_DATE, startDate.value.toISOString())
+    localStorage.setItem(StorageKey.USAGE_OVERVIEW_CUSTOM_END_DATE, endDate.value.toISOString())
+    startDate.value = customDateRange.value[0]
+    endDate.value = customDateRange.value[1]
+})
+
+function displayPreviousMonth() {
+    monthlyMonthDiff.value++
+    monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
+    monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
+    startDate.value = new Date(monthlyStartDay.value)
+    endDate.value = new Date(monthlyEndDay.value)
+}
+
+function displayNextMonth() {
+    if (monthlyMonthDiff.value === 0) return
+    monthlyMonthDiff.value--
+    if (monthlyMonthDiff.value === 0) {
+        monthlyEndDay.value = new Date()
+        monthlyStartDay.value = isLastDayOfMonth(monthlyEndDay.value)
+            ? getFirstDayOfMonth(monthlyEndDay.value)
+            : new Date(monthlyEndDay.value.getTime() - 30 * 24 * 60 * 60 * 1000)
+    } else {
+        monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
+        monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
+    }
+    startDate.value = new Date(monthlyStartDay.value)
+    endDate.value = new Date(monthlyEndDay.value)
+}
+
+function isLastDayOfMonth(date: Date) {
+    const nextDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+    return nextDay.getDate() === 1
+}
+
+function getPreviousMonthLastDay(date: Date, n: number = 1) {
+    return new Date(date.getFullYear(), date.getMonth() - n + 1, 0)
+}
+
+function getFirstDayOfMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function getPreviousSunday(date: Date, n: number = 1) {
+    const result = new Date(date)
+    const dayOfWeek = result.getDay()
+    const daysToSubtract = (dayOfWeek === 0 ? 7 : dayOfWeek) + 7 * (n - 1)
+    result.setDate(result.getDate() - daysToSubtract)
+    return result
+}
+
+function displayPreviousWeek() {
+    weeklyWeekDiff.value++
+    weeklyEndDay.value = getPreviousSunday(today, weeklyWeekDiff.value)
+    weeklyStartDay.value = new Date(
+        weeklyEndDay.value.getFullYear(),
+        weeklyEndDay.value.getMonth(),
+        weeklyEndDay.value.getDate() - 6,
+    )
+    startDate.value = new Date(weeklyStartDay.value)
+    endDate.value = new Date(weeklyEndDay.value)
+}
+
+function displayNextWeek() {
+    if (weeklyWeekDiff.value === 0) return
+    weeklyWeekDiff.value--
+    if (weeklyWeekDiff.value === 0) {
+        weeklyEndDay.value = new Date()
+        weeklyStartDay.value = new Date(weeklyEndDay.value.getTime() - 6 * 24 * 60 * 60 * 1000)
+    } else {
+        weeklyEndDay.value = getPreviousSunday(today, weeklyWeekDiff.value)
+        weeklyStartDay.value = new Date(
+            weeklyEndDay.value.getFullYear(),
+            weeklyEndDay.value.getMonth(),
+            weeklyEndDay.value.getDate() - 6,
+        )
+    }
+    startDate.value = new Date(weeklyStartDay.value)
+    endDate.value = new Date(weeklyEndDay.value)
+}
+
+function displayPreviousDay() {
+    dailyDayDiff.value++
+    dailyDay.value = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - dailyDayDiff.value,
+    )
+    startDate.value = new Date(dailyDay.value)
+    endDate.value = new Date(dailyDay.value)
+}
+
+function displayNextDay() {
+    if (dailyDayDiff.value === 0) return
+    dailyDayDiff.value--
+    dailyDay.value = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - dailyDayDiff.value,
+    )
+    startDate.value = new Date(dailyDay.value)
+    endDate.value = new Date(dailyDay.value)
+}
+
+watch(selectedTimeRange, () => {
+    if (selectedTimeRange.value?.value === 'Daily') {
+        startDate.value = new Date(dailyDay.value)
+        endDate.value = new Date(dailyDay.value)
+    } else if (selectedTimeRange.value?.value === 'Weekly') {
+        startDate.value = new Date(weeklyStartDay.value)
+        endDate.value = new Date(weeklyEndDay.value)
+    } else if (selectedTimeRange.value?.value === 'Monthly') {
+        startDate.value = new Date(monthlyStartDay.value)
+        endDate.value = new Date(monthlyEndDay.value)
+    } else {
+        if (!customDateRange.value[0] || !customDateRange.value[1]) return
+        startDate.value = new Date(customDateRange.value[0])
+        endDate.value = new Date(customDateRange.value[1])
+    }
+})
+
+async function loadProcessesWithSelected() {
+    const res = await getAllProcesses()
+    processes.value = res.data.map((p: ProcessInfo) => ({ name: p.alias || p.name, id: p.id }))
+    const selectedProcessId =
+        localStorage.getItem(StorageKey.PROCESS_DETAIL_SELECTED_PROCESS) || null
+    selectedProcess.value = processes.value.filter((p) => p.id === selectedProcessId)[0]
+}
+
+onMounted(async () => {
+    await loadProcessesWithSelected()
+})
+</script>
