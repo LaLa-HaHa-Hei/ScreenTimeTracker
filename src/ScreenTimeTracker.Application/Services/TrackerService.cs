@@ -23,7 +23,7 @@ namespace ScreenTimeTracker.Application.Services
             using var scope = _scopeFactory.CreateScope();
             var activityIntervalRepository = scope.ServiceProvider.GetRequiredService<IActivityIntervalRepository>();
             var processManagementService = scope.ServiceProvider.GetRequiredService<ProcessManagementService>();
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var duration = TimeSpan.FromMilliseconds(_options.Value.PollingIntervalMilliseconds);
             TimeSpan idleTime = await _idleTimeProvider.GetSystemIdleTimeAsync();
             ProcessInfo processInfo;

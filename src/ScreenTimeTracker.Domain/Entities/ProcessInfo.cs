@@ -7,7 +7,7 @@ namespace ScreenTimeTracker.Domain.Entities
         public string? Alias { get; private set; }
         public bool AutoUpdate { get; private set; } = true;
         // 最后一次自动更新进程信息的日期
-        public DateTime LastAutoUpdated { get; private set; } = DateTime.UtcNow;
+        public DateTime LastAutoUpdated { get; private set; } = DateTime.Now;
         // 自动更新开启后，将更新下面信息，否则不会
         public string? ExecutablePath { get; private set; }
         public string? IconPath { get; private set; }
@@ -42,7 +42,7 @@ namespace ScreenTimeTracker.Domain.Entities
             IconPath = iconPath;
             Description = description;
 
-            LastAutoUpdated = DateTime.UtcNow;
+            LastAutoUpdated = DateTime.Now;
         }
 
         public static readonly Guid UnknownProcessId = new("00000000-0000-0000-0000-000000000001");

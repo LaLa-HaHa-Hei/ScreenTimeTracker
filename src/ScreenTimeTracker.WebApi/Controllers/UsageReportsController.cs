@@ -11,20 +11,20 @@ public class UsageReportsController(IUsageReportQueries usageReportQueries) : Co
     private readonly IUsageReportQueries _usageReportQueries = usageReportQueries;
 
     [HttpGet("ranks/processes")]
-    public async Task<IEnumerable<ProcessUsageRankEntry>> ProcessUsageRankEntryForPeriod([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] int topN = 10)
+    public async Task<IEnumerable<ProcessUsageRankEntry>> ProcessUsageRankEntryForPeriod([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] int topN = 10, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
-        return await _usageReportQueries.GetRankedProcessUsageForPeriodAsync(startDate, endDate, topN);
+        return await _usageReportQueries.GetRankedProcessUsageForPeriodAsync(startDate, endDate, topN, excludedProcessIds);
     }
 
     [HttpGet("summaries/hourly")]
-    public async Task<IDictionary<int, TimeSpan>> TotalHourlyUsageForDay([FromQuery] DateOnly date)
+    public async Task<IDictionary<int, TimeSpan>> TotalHourlyUsage([FromQuery] DateOnly date, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
-        return await _usageReportQueries.GetTotalHourlyUsageForDayAsync(date);
+        return await _usageReportQueries.GetTotalHourlyUsageForDayAsync(date, excludedProcessIds);
     }
 
     [HttpGet("summaries/daily")]
-    public async Task<IDictionary<DateOnly, TimeSpan>> TotalDailyUsageForPeriod([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+    public async Task<IDictionary<DateOnly, TimeSpan>> TotalDailyUsage([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
-        return await _usageReportQueries.GetTotalDailyUsageForPeriodAsync(startDate, endDate);
+        return await _usageReportQueries.GetTotalDailyUsageForPeriodAsync(startDate, endDate, excludedProcessIds);
     }
 }

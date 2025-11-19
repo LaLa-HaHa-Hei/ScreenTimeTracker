@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources/Icon.ico</ApplicationIcon>
+    <PublishDir>..\..\publish\</PublishDir>
   </PropertyGroup>
 
   <ItemGroup>

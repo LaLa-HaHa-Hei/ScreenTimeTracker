@@ -58,7 +58,15 @@ namespace ScreenTimeTracker.Application.Services
             if (existing is not null)
                 return existing;
 
-            ProcessInfo processInfo = new(ProcessInfo.UnknownProcessId, ProcessInfo.UnknownProcessName);
+            ProcessInfo processInfo = ProcessInfo.Reconstitute(
+                id: ProcessInfo.UnknownProcessId,
+                name: ProcessInfo.UnknownProcessName,
+                alias: null,
+                autoUpdate: false,
+                lastAutoUpdated: DateTime.Now,
+                executablePath: null,
+                iconPath: null,
+                description: null);
             await _processInfoRepository.AddAsync(processInfo);
             return processInfo;
         }
@@ -69,7 +77,15 @@ namespace ScreenTimeTracker.Application.Services
             if (existing is not null)
                 return existing;
 
-            ProcessInfo processInfo = new(ProcessInfo.IdleProcessId, ProcessInfo.IdleProcessName);
+            ProcessInfo processInfo = ProcessInfo.Reconstitute(
+                id: ProcessInfo.IdleProcessId,
+                name: ProcessInfo.IdleProcessName,
+                alias: null,
+                autoUpdate: false,
+                lastAutoUpdated: DateTime.Now,
+                executablePath: null,
+                iconPath: null,
+                description: null);
             await _processInfoRepository.AddAsync(processInfo);
             return processInfo;
         }
@@ -86,7 +102,7 @@ namespace ScreenTimeTracker.Application.Services
             if (existing is not null)
             {
                 // 检查是否需要更新
-                if (existing.AutoUpdate && (DateTime.UtcNow - existing.LastAutoUpdated) > TimeSpan.FromMinutes(_trackerOptions.Value.ProcessInfoStaleThresholdMinutes))
+                if (existing.AutoUpdate && (DateTime.Now - existing.LastAutoUpdated) > TimeSpan.FromMinutes(_trackerOptions.Value.ProcessInfoStaleThresholdMinutes))
                 {
                     await UpdateProcessInfoAsync(existing, GetExecutablePath(process));
                     await _processInfoRepository.UpdateAsync(existing);

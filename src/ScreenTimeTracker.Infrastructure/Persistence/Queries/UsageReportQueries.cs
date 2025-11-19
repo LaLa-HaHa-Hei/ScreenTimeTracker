@@ -9,25 +9,31 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
     {
         private readonly ScreenTimeDbContext _dbContext = dbContext;
 
-        public async Task<IEnumerable<ProcessUsageRankEntry>> GetRankedProcessUsageForPeriodAsync(DateOnly startDate, DateOnly endDate, int topN = 10)
+        public async Task<IEnumerable<ProcessUsageRankEntry>> GetRankedProcessUsageForPeriodAsync(DateOnly startDate, DateOnly endDate, int topN = 10, IEnumerable<Guid>? excludedProcessIds = null)
         {
-            var start = startDate.ToDateTime(TimeOnly.MinValue);
-            var end = endDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+            var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+            var end = endDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).AddDays(1);
 
-            // 将两个查询源定义为 IQueryable，并投影为统一的结构
-            // 这一步不会执行数据库查询
             var summaryQuery = _dbContext.HourlySummaries
                 .AsNoTracking()
-                .Where(h => h.Hour >= start && h.Hour < end)
-                .Select(h => new { ProcessId = h.ProcessInfoEntityId, Duration = (long)h.TotalDurationMilliseconds });
+                .Where(h => h.Hour >= start && h.Hour < end);
             var intervalQuery = _dbContext.ActivityIntervals
                 .AsNoTracking()
-                .Where(a => a.Timestamp >= start && a.Timestamp < end)
-                .Select(a => new { ProcessId = a.ProcessInfoEntityId, Duration = (long)a.DurationMilliseconds });
+                .Where(a => a.Timestamp >= start && a.Timestamp < end);
+
+            if (excludedProcessIds?.Any() == true)
+            {
+                summaryQuery = summaryQuery.Where(s => !excludedProcessIds.Contains(s.ProcessInfoEntityId));
+                intervalQuery = intervalQuery.Where(i => !excludedProcessIds.Contains(i.ProcessInfoEntityId));
+            }
+
+            // 投影为统一结构
+            var projectedSummaryQuery = summaryQuery.Select(h => new { ProcessId = h.ProcessInfoEntityId, Duration = (long)h.TotalDurationMilliseconds });
+            var projectedIntervalQuery = intervalQuery.Select(a => new { ProcessId = a.ProcessInfoEntityId, Duration = (long)a.DurationMilliseconds });
 
             // 合并两个 IQueryable，然后进行分组和求和。
             // 查询尚未执行。
-            var combinedUsageQuery = summaryQuery.Concat(intervalQuery)
+            var combinedUsageQuery = projectedSummaryQuery.Concat(projectedIntervalQuery)
                 .GroupBy(u => u.ProcessId)
                 .Select(g => new
                 {
@@ -66,7 +72,10 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
                 var processInfo = processInfos[usage.ProcessId];
                 var duration = usage.TotalDurationMilliseconds;
                 var timeSpan = TimeSpan.FromMilliseconds(duration);
-                var formattedDuration = $"{timeSpan.TotalHours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+                var totalHours = (int)timeSpan.TotalHours;
+                var formattedDuration = totalHours > 0 ?
+                    $"{totalHours}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}" :
+                    $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
 
                 return new ProcessUsageRankEntry(
                     processInfo.Id,
@@ -78,23 +87,33 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
                 );
             })];
         }
-
-        public async Task<IDictionary<int, TimeSpan>> GetTotalHourlyUsageForDayAsync(DateOnly date)
+        public async Task<IDictionary<int, TimeSpan>> GetTotalHourlyUsageForDayAsync(
+            DateOnly date,
+            IEnumerable<Guid>? excludedProcessIds = null)
         {
-            var start = date.ToDateTime(TimeOnly.MinValue);
+            var start = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
             var end = start.AddDays(1);
 
+            // 定义查询源
             var summaryQuery = _dbContext.HourlySummaries
                 .AsNoTracking()
-                .Where(h => h.Hour >= start && h.Hour < end)
-                .Select(h => new { Hour = h.Hour.Hour, Milliseconds = (long)h.TotalDurationMilliseconds });
+                .Where(h => h.Hour >= start && h.Hour < end);
 
             var intervalQuery = _dbContext.ActivityIntervals
                 .AsNoTracking()
-                .Where(a => a.Timestamp >= start && a.Timestamp < end)
-                .Select(a => new { Hour = a.Timestamp.Hour, Milliseconds = (long)a.DurationMilliseconds });
+                .Where(a => a.Timestamp >= start && a.Timestamp < end);
 
-            var hourlyUsage = await summaryQuery.Concat(intervalQuery)
+            // 应用排除筛选
+            if (excludedProcessIds?.Any() == true)
+            {
+                summaryQuery = summaryQuery.Where(s => !excludedProcessIds.Contains(s.ProcessInfoEntityId));
+                intervalQuery = intervalQuery.Where(i => !excludedProcessIds.Contains(i.ProcessInfoEntityId));
+            }
+
+            // 投影、合并、分组和求和
+            var hourlyUsage = await summaryQuery
+                .Select(h => new { Hour = h.Hour.Hour, Milliseconds = (long)h.TotalDurationMilliseconds })
+                .Concat(intervalQuery.Select(a => new { Hour = a.Timestamp.Hour, Milliseconds = (long)a.DurationMilliseconds }))
                 .GroupBy(u => u.Hour)
                 .Select(g => new
                 {
@@ -109,22 +128,34 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
             );
         }
 
-        public async Task<IDictionary<DateOnly, TimeSpan>> GetTotalDailyUsageForPeriodAsync(DateOnly startDate, DateOnly endDate)
+        public async Task<IDictionary<DateOnly, TimeSpan>> GetTotalDailyUsageForPeriodAsync(
+            DateOnly startDate,
+            DateOnly endDate,
+            IEnumerable<Guid>? excludedProcessIds = null)
         {
-            var start = startDate.ToDateTime(TimeOnly.MinValue);
-            var end = endDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+            var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+            var end = endDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).AddDays(1);
 
+            // 定义查询源
             var summaryQuery = _dbContext.HourlySummaries
                 .AsNoTracking()
-                .Where(h => h.Hour >= start && h.Hour < end)
-                .Select(h => new { Date = h.Hour.Date, Milliseconds = (long)h.TotalDurationMilliseconds });
+                .Where(h => h.Hour >= start && h.Hour < end);
 
             var intervalQuery = _dbContext.ActivityIntervals
                 .AsNoTracking()
-                .Where(a => a.Timestamp >= start && a.Timestamp < end)
-                .Select(a => new { Date = a.Timestamp.Date, Milliseconds = (long)a.DurationMilliseconds });
+                .Where(a => a.Timestamp >= start && a.Timestamp < end);
 
-            var dailyUsage = await summaryQuery.Concat(intervalQuery)
+            // 应用排除筛选
+            if (excludedProcessIds?.Any() == true)
+            {
+                summaryQuery = summaryQuery.Where(s => !excludedProcessIds.Contains(s.ProcessInfoEntityId));
+                intervalQuery = intervalQuery.Where(i => !excludedProcessIds.Contains(i.ProcessInfoEntityId));
+            }
+
+            // 投影、合并、分组和求和
+            var dailyUsage = await summaryQuery
+                .Select(h => new { Date = h.Hour.Date, Milliseconds = (long)h.TotalDurationMilliseconds })
+                .Concat(intervalQuery.Select(a => new { Date = a.Timestamp.Date, Milliseconds = (long)a.DurationMilliseconds }))
                 .GroupBy(u => u.Date)
                 .Select(g => new
                 {
@@ -141,8 +172,8 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
 
         public async Task<IDictionary<DateOnly, TimeSpan>> GetProcessDailyDistributionForPeriodAsync(DateOnly startDate, DateOnly endDate, Guid processId)
         {
-            var start = startDate.ToDateTime(TimeOnly.MinValue);
-            var end = endDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+            var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+            var end = endDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).AddDays(1);
 
             var summaryQuery = _dbContext.HourlySummaries
                 .AsNoTracking()
@@ -171,7 +202,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
 
         public async Task<IDictionary<int, TimeSpan>> GetProcessHourlyDistributionForDayAsync(DateOnly date, Guid processId)
         {
-            var start = date.ToDateTime(TimeOnly.MinValue);
+            var start = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
             var end = start.AddDays(1);
 
             var summaryQuery = _dbContext.HourlySummaries

@@ -1,13 +1,11 @@
 <template>
     <div class="h-full w-full">
-        <Button @click="loadProcesses" label="刷新进程列表" />
-
         <DataTable
             :value="processes"
             v-model:filters="filters"
             paginator
-            :rows="5"
-            :rowsPerPageOptions="[5, 10, 20, 50]"
+            v-model:rows="rowsPerPage"
+            :rowsPerPageOptions="[5, 10, 20, 40, 80]"
             showGridlines
             stripedRows
             removableSort
@@ -37,9 +35,22 @@
                 </template>
             </Column>
             <Column field="description" header="描述" sortable></Column>
-            <Column field="autoUpdate" header="自动更新信息" sortable>
+            <Column field="autoUpdate" header="自动更新信息">
                 <template #body="{ data }">
-                    <span>{{ data.autoUpdate ? '是' : '否' }}</span>
+                    <i
+                        class="pi"
+                        :class="{
+                            'pi-check-circle text-green-500': data.autoUpdate,
+                            'pi-times-circle text-red-400': !data.autoUpdate,
+                        }"
+                    ></i>
+                </template>
+                <template #filter="{ filterModel }">
+                    <Checkbox
+                        v-model="filterModel.value"
+                        :indeterminate="filterModel.value === null"
+                        binary
+                    />
                 </template>
             </Column>
             <Column class="min-w-20" field="lastAutoUpdated" header="上次自动更新时间" sortable />
@@ -48,16 +59,54 @@
             <Column header="操作">
                 <template #body="{ data }">
                     <Button
+                        icon="pi pi-pencil"
+                        variant="outlined"
+                        rounded
+                        class="mr-2"
+                        @click="editProcess(data)"
+                    />
+                    <Button
                         rounded
                         icon="pi pi-trash"
                         severity="danger"
                         variant="outlined"
-                        @click="deleteProcess(data)"
+                        @click="confirmDeleteProcess(data)"
                     />
                 </template>
                 ></Column
             >
         </DataTable>
+
+        <Dialog
+            v-model:visible="editProductDialog"
+            :style="{ width: '450px' }"
+            header="进程信息"
+            :modal="true"
+        >
+            <template #header>
+                <span class="text-lg font-bold">{{ editingProcess.name }} 进程信息</span>
+            </template>
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="alias" class="mb-3 block font-bold">别名</label>
+                    <InputText class="w-full" id="alias" v-model="editingProcess.alias" />
+                </div>
+                <div>
+                    <label class="mb-3 block font-bold">自动更新信息</label>
+                    <ToggleSwitch v-model="editingProcess.autoUpdate" />
+                </div>
+                <div>
+                    <label for="iconPath" class="mb-3 block font-bold">图标路径</label>
+                    <InputText class="w-full" id="iconPath" v-model="editingProcess.iconPath" />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="取消" icon="pi pi-times" text @click="editProductDialog = false" />
+                <Button label="保存" icon="pi pi-check" @click="saveProcess" />
+            </template>
+        </Dialog>
+
         <ConfirmDialog />
     </div>
 </template>
@@ -65,12 +114,20 @@
 <script setup lang="ts">
 import { useConfirm } from 'primevue/useconfirm'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
-import { getAllProcesses, getProcessIconUrl, updateProcessById, deleteProcessById } from '@/api'
-import { ref, onMounted } from 'vue'
+import { getAllProcesses, getProcessIconUrl, updateProcess, deleteProcess } from '@/api'
+import { ref, onMounted, watch } from 'vue'
 import type { ProcessInfo } from '@/types'
 import defaultFileIcon from '@/assets/defaultFileIcon.svg'
+import { useToast } from 'primevue/usetoast'
+import { StorageKey } from '@/constants/storageKeys'
 
+const toast = useToast()
 const confirm = useConfirm()
+const rowsPerPage = ref(
+    Number(localStorage.getItem(StorageKey.PROCESS_MANAGEMENT_ROWS_PER_PAGE) || '5'),
+)
+const editProductDialog = ref(false)
+const editingProcess = ref<ProcessInfo>({} as ProcessInfo)
 const processes = ref<ProcessInfo[]>([])
 const filters = ref({
     name: {
@@ -81,9 +138,41 @@ const filters = ref({
         operator: FilterOperator.AND,
         constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
     },
+    autoUpdate: { value: null, matchMode: FilterMatchMode.EQUALS },
 })
 
-function deleteProcess(data: ProcessInfo) {
+watch(rowsPerPage, () => {
+    localStorage.setItem(StorageKey.PROCESS_MANAGEMENT_ROWS_PER_PAGE, rowsPerPage.value.toString())
+})
+
+function editProcess(data: ProcessInfo) {
+    editingProcess.value = { ...data }
+    if (editingProcess.value.alias === null) editingProcess.value.alias = ''
+    if (editingProcess.value.iconPath === null) editingProcess.value.iconPath = ''
+    editProductDialog.value = true
+}
+
+function saveProcess() {
+    if (editingProcess.value.alias === '') editingProcess.value.alias = null
+    if (editingProcess.value.iconPath === '') editingProcess.value.iconPath = null
+
+    updateProcess(editingProcess.value.id, {
+        alias: editingProcess.value.alias,
+        autoUpdate: editingProcess.value.autoUpdate,
+        iconPath: editingProcess.value.iconPath,
+    }).then((result) => {
+        if (result.status == 204) {
+            processes.value = processes.value.map((p) =>
+                p.id === editingProcess.value.id ? editingProcess.value : p,
+            )
+            toast.add({ severity: 'success', summary: '成功', detail: '进程更新', life: 3000 })
+        }
+    })
+
+    editProductDialog.value = false
+}
+
+function confirmDeleteProcess(data: ProcessInfo) {
     confirm.require({
         message: '删除进程 ' + data.name + ' 也将删除所有相关数据，是否继续？',
         header: '确认删除',
@@ -98,7 +187,7 @@ function deleteProcess(data: ProcessInfo) {
             severity: 'danger',
         },
         accept: () => {
-            deleteProcessById(data.id).then((result) => {
+            deleteProcess(data.id).then((result) => {
                 if (result.status == 204) {
                     processes.value = processes.value.filter((p) => p.id !== data.id)
                 }

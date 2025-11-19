@@ -30,18 +30,6 @@ builder.Services.AddControllers();
 // 文档url：/openapi/v1.json
 builder.Services.AddOpenApi();
 
-// 跨域
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy
-            .AllowAnyOrigin()      // 允许任何来源
-            .AllowAnyMethod()      // 允许任何 HTTP 方法：GET、POST、PUT、DELETE...
-            .AllowAnyHeader();     // 允许任何 Header
-    });
-});
-
 var app = builder.Build();
 
 // 初始化持久化层
@@ -54,7 +42,10 @@ if (app.Environment.IsDevelopment())
 }
 
 // 启用跨域
-app.UseCors("AllowAll");
+app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 
 app.UseAuthorization();
 

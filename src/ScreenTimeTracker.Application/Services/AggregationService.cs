@@ -19,7 +19,7 @@ namespace ScreenTimeTracker.Application.Services
             var activityIntervalRepository = scope.ServiceProvider.GetRequiredService<IActivityIntervalRepository>();
             var hourlySummaryRepository = scope.ServiceProvider.GetRequiredService<IHourlySummaryRepository>();
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             DateTime adjusted = now.AddMinutes(-_trackerOptions.Value.IdleTimeoutMinutes);
             DateTime dataFreezeTime = new(adjusted.Year, adjusted.Month, adjusted.Day, adjusted.Hour, 0, 0);
 

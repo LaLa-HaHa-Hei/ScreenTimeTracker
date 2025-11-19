@@ -27,7 +27,7 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProcessInfoDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetProcessByIdAsync(Guid id)
+    public async Task<IActionResult> GetProcessAsync(Guid id)
     {
         ProcessInfoDto? processDto = await _processQueries.GetProcessByIdAsync(id);
         if (processDto is null)
@@ -69,7 +69,7 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetProcessIconByIdAsync(Guid id)
+    public async Task<IActionResult> GetProcessIconAsync(Guid id)
     {
         string? iconPath;
         try
@@ -91,13 +91,13 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
     }
 
     [HttpGet("{id:guid}/usage-distribution/hourly")]
-    public async Task<IDictionary<int, TimeSpan>> ProcessHourlyDistributionForDay(Guid id, [FromQuery] DateOnly date)
+    public async Task<IDictionary<int, TimeSpan>> ProcessHourlyDistribution(Guid id, [FromQuery] DateOnly date)
     {
         return await _usageReportQueries.GetProcessHourlyDistributionForDayAsync(date, id);
     }
 
     [HttpGet("{id:guid}/usage-distribution/daily")]
-    public async Task<IDictionary<DateOnly, TimeSpan>> ProcessDailyDistributionForPeriod(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+    public async Task<IDictionary<DateOnly, TimeSpan>> ProcessDailyDistribution(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
     {
         return await _usageReportQueries.GetProcessDailyDistributionForPeriodAsync(startDate, endDate, id);
     }

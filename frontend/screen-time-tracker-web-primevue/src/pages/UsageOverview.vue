@@ -1,53 +1,107 @@
 <template>
     <div class="w-full">
-        <SelectButton
-            v-model="selectedTimeRange"
-            optionLabel="label"
-            :options="timeRangeOptions"
-            :allowEmpty="false"
-        />
-        <div class="mt-5 flex justify-end">
-            <Select v-model="topN" :options="topNOptions" />
+        <div class="flex flex-row justify-between">
+            <SelectButton
+                v-model="selectedTimeRange"
+                optionLabel="label"
+                :options="timeRangeOptions"
+                :allowEmpty="false"
+            />
+            <span>
+                <label class="mr-2">排除的进程</label>
+                <MultiSelect
+                    v-model="excludedProcesses"
+                    :options="processes"
+                    optionLabel="name"
+                    filter
+                    :maxSelectedLabels="3"
+                />
+            </span>
         </div>
-        <Listbox
-            :options="processUsageRanks"
-            optionLabel="processName"
-            class="mt-2 w-full"
-            listStyle="max-height: 100%"
-        >
-            <template #option="slotProps">
-                <div class="flex w-full flex-row items-center gap-5">
-                    <Image
-                        :src="
-                            slotProps.option.processIconPath
-                                ? getProcessIconUrl(slotProps.option.processId)
-                                : defaultFileIcon
-                        "
-                        alt="Icon"
-                        imageClass="min-w-8 w-8 h-8 min-h-8"
+        <div class="mt-2 flex justify-center">
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Daily' }">
+                <div class="time-stepper">
+                    <Button
+                        @click="displayPreviousDay"
+                        rounded
+                        icon="pi pi-angle-left"
+                        variant="text"
                     />
-                    <div class="flex-auto">
-                        <div class="flex flex-row justify-between">
-                            <div>
-                                {{ slotProps.option.processAlias || slotProps.option.processName }}
-                            </div>
-                            <div>{{ slotProps.option.totalDuration }}</div>
-                        </div>
-                        <ProgressBar :value="slotProps.option.percentage" />
-                    </div>
+                    <span> {{ dailyText }}</span>
+                    <Button
+                        @click="displayNextDay"
+                        :disabled="dailyDayDiff === 0"
+                        rounded
+                        icon="pi pi-angle-right"
+                        variant="text"
+                    />
                 </div>
-            </template>
-        </Listbox>
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Weekly' }">
+                <div class="time-stepper">
+                    <Button
+                        @click="displayPreviousWeek"
+                        rounded
+                        icon="pi pi-angle-left"
+                        variant="text"
+                    />
+                    <span>{{ weeklyText }}</span>
+                    <Button
+                        @click="displayNextWeek"
+                        :disabled="weeklyWeekDiff === 0"
+                        rounded
+                        icon="pi pi-angle-right"
+                        variant="text"
+                    />
+                </div>
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Monthly' }">
+                <div class="time-stepper">
+                    <Button
+                        @click="displayPreviousMonth"
+                        rounded
+                        icon="pi pi-angle-left"
+                        variant="text"
+                    />
+                    <span>{{ monthlyText }}</span>
+                    <Button
+                        @click="displayNextMonth"
+                        :disabled="monthlyMonthDiff === 0"
+                        rounded
+                        icon="pi pi-angle-right"
+                        variant="text"
+                    />
+                </div>
+            </div>
+            <div :class="{ hidden: selectedTimeRange?.value !== 'Custom' }">
+                <DatePicker
+                    v-model="dateRange"
+                    selectionMode="range"
+                    :manualInput="false"
+                    placeholder="选择日期范围"
+                />
+            </div>
+        </div>
+        <div class="mt-5 flex justify-end">
+            <Select v-model="topN" :options="[5, 10, 15, 20]" />
+        </div>
+        <ProcessUsageRank
+            class="mt-2"
+            :startDate="startDate"
+            :endDate="endDate"
+            :topN="topN"
+            :excludedProcesses="excludedProcessIds"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import type { ProcessUsageRankEntry } from '@/types/process'
-import { getProcessUsageRankEntryForPeriod, getProcessIconUrl } from '@/api'
-import defaultFileIcon from '@/assets/defaultFileIcon.svg'
+import { ref, onMounted, watch, computed } from 'vue'
+import type { ProcessInfo } from '@/types'
+import { getAllProcesses } from '@/api'
+import { StorageKey } from '@/constants/storageKeys'
+import ProcessUsageRank from '@/components/ProcessUsageRank.vue'
 
-const processUsageRanks = ref<ProcessUsageRankEntry[]>([])
 const timeRangeOptions = [
     { label: '日', value: 'Daily' },
     { label: '周', value: 'Weekly' },
@@ -55,18 +109,180 @@ const timeRangeOptions = [
     { label: '自定义', value: 'Custom' },
 ]
 const selectedTimeRange = ref(timeRangeOptions[0])
-const startDate = ref('2025-11-16')
-const endDate = ref('2025-11-17')
-const topNOptions = [5, 10, 15, 20]
-const topN = ref(10)
+const topN = ref(Number(localStorage.getItem(StorageKey.USAGE_OVERVIEW_TOP_N) || 10))
+const processes = ref<{ name: string; id: string }[]>([])
+const excludedProcesses = ref<{ name: string; id: string }[]>([])
+const excludedProcessIds = ref<string[]>([])
+const today = new Date()
+const startDate = ref(new Date())
+const endDate = ref(new Date())
 
-function loadProcessUsageRanks() {
-    getProcessUsageRankEntryForPeriod(startDate.value, endDate.value, topN.value).then((res) => {
-        processUsageRanks.value = res.data
-    })
+const dailyDayDiff = ref(0)
+const dailyDay = ref(new Date())
+const dailyText = computed(() => {
+    if (dailyDayDiff.value === 0) return '今天'
+    else if (dailyDayDiff.value === 1) return '昨天'
+    else return `${dailyDay.value.getMonth() + 1}/${dailyDay.value.getDate()}`
+})
+
+const weeklyWeekDiff = ref(0)
+const weeklyEndDay = ref(new Date())
+const weeklyStartDay = ref(new Date(weeklyEndDay.value.getTime() - 6 * 24 * 60 * 60 * 1000))
+const weeklyText = computed(() => {
+    if (weeklyWeekDiff.value === 0) return '本周'
+    else if (weeklyWeekDiff.value === 1) return '上周'
+    else
+        return `${weeklyStartDay.value.getMonth() + 1}/${weeklyStartDay.value.getDate()} - ${weeklyEndDay.value.getMonth() + 1}/${weeklyEndDay.value.getDate()}`
+})
+
+const monthlyMonthDiff = ref(0)
+const monthlyEndDay = ref(new Date())
+const monthlyStartDay = ref(
+    isLastDayOfMonth(monthlyEndDay.value)
+        ? getFirstDayOfMonth(monthlyEndDay.value)
+        : new Date(monthlyEndDay.value.getTime() - 30 * 24 * 60 * 60 * 1000),
+)
+const monthlyText = computed(() => {
+    if (monthlyMonthDiff.value === 0) return '本月'
+    else if (monthlyMonthDiff.value === 1) return '上月'
+    else
+        return `${monthlyStartDay.value.getMonth() + 1}/${monthlyStartDay.value.getDate()} - ${monthlyEndDay.value.getMonth() + 1}/${monthlyEndDay.value.getDate()}`
+})
+
+const dateRange = ref()
+
+function displayPreviousMonth() {
+    monthlyMonthDiff.value++
+    monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
+    monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
+    startDate.value = new Date(monthlyStartDay.value)
+    endDate.value = new Date(monthlyEndDay.value)
 }
 
+function displayNextMonth() {
+    if (monthlyMonthDiff.value === 0) return
+    monthlyMonthDiff.value--
+    monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
+    monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
+    startDate.value = new Date(monthlyStartDay.value)
+    endDate.value = new Date(monthlyEndDay.value)
+}
+
+function isLastDayOfMonth(date: Date) {
+    const nextDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+    return nextDay.getDate() === 1
+}
+
+function getPreviousMonthLastDay(date: Date, n: number = 1) {
+    return new Date(date.getFullYear(), date.getMonth() - n + 1, 0)
+}
+
+function getFirstDayOfMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function getPreviousSunday(date: Date, n: number = 1) {
+    const sunday = new Date(date)
+    sunday.setDate(sunday.getDate() - sunday.getDay() - 7 * n)
+    return sunday
+}
+
+function displayPreviousWeek() {
+    weeklyWeekDiff.value++
+    weeklyEndDay.value = getPreviousSunday(today, weeklyWeekDiff.value)
+    weeklyStartDay.value = new Date(
+        weeklyEndDay.value.getFullYear(),
+        weeklyEndDay.value.getMonth(),
+        weeklyEndDay.value.getDate() - 6,
+    )
+    startDate.value = new Date(weeklyStartDay.value)
+    endDate.value = new Date(weeklyEndDay.value)
+}
+
+function displayNextWeek() {
+    if (weeklyWeekDiff.value === 0) return
+    weeklyWeekDiff.value--
+    weeklyEndDay.value = getPreviousSunday(today, weeklyWeekDiff.value)
+    weeklyStartDay.value = new Date(
+        weeklyEndDay.value.getFullYear(),
+        weeklyEndDay.value.getMonth(),
+        weeklyEndDay.value.getDate() - 6,
+    )
+    startDate.value = new Date(weeklyStartDay.value)
+    endDate.value = new Date(weeklyEndDay.value)
+}
+
+function displayPreviousDay() {
+    dailyDayDiff.value++
+    dailyDay.value = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - dailyDayDiff.value,
+    )
+    startDate.value = new Date(dailyDay.value)
+    endDate.value = new Date(dailyDay.value)
+}
+
+function displayNextDay() {
+    if (dailyDayDiff.value === 0) return
+    dailyDayDiff.value--
+    dailyDay.value = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - dailyDayDiff.value,
+    )
+    startDate.value = new Date(dailyDay.value)
+    endDate.value = new Date(dailyDay.value)
+}
+
+watch(selectedTimeRange, () => {
+    if (selectedTimeRange.value?.value === 'Daily') {
+        startDate.value = new Date(dailyDay.value)
+        endDate.value = new Date(dailyDay.value)
+    } else if (selectedTimeRange.value?.value === 'Weekly') {
+        startDate.value = new Date(weeklyStartDay.value)
+        endDate.value = new Date(weeklyEndDay.value)
+    } else if (selectedTimeRange.value?.value === 'Monthly') {
+        startDate.value = new Date(monthlyStartDay.value)
+        endDate.value = new Date(monthlyEndDay.value)
+    } else {
+    }
+})
+
+async function loadProcessesWithExclusions() {
+    const res = await getAllProcesses()
+    processes.value = res.data.map((p: ProcessInfo) => ({ name: p.alias || p.name, id: p.id }))
+    excludedProcessIds.value =
+        localStorage.getItem(StorageKey.USAGE_OVERVIEW_EXCLUDED_PROCESSES)?.split(',') || []
+    excludedProcesses.value = processes.value.filter((p) => excludedProcessIds.value.includes(p.id))
+}
+
+watch(excludedProcesses, () => {
+    excludedProcessIds.value = excludedProcesses.value.map((p) => p.id)
+    localStorage.setItem(
+        StorageKey.USAGE_OVERVIEW_EXCLUDED_PROCESSES,
+        excludedProcessIds.value.join(','),
+    )
+})
+
+watch(topN, () => {
+    localStorage.setItem(StorageKey.USAGE_OVERVIEW_TOP_N, topN.value.toString())
+})
+
 onMounted(async () => {
-    loadProcessUsageRanks()
+    await loadProcessesWithExclusions()
 })
 </script>
+
+<style scoped>
+.time-stepper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 250px;
+    max-width: 100%;
+    border-radius: 9999px;
+    border: 1px solid #e5e7eb;
+}
+</style>
