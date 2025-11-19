@@ -17,7 +17,14 @@ public class TrackerWorker(ILogger<TrackerWorker> logger, TrackerService tracker
 
         while (await _timer.WaitForNextTickAsync(stoppingToken))
         {
-            await _trackerService.RecordActivityIntervalAsync();
+            try
+            {
+                await _trackerService.RecordActivityIntervalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error recording activity interval.");
+            }
         }
 
         _logger.LogInformation("TrackerWorker is stopping.");

@@ -1,6 +1,6 @@
 {
     "DefaultUIUrl": "http://localhost:5124",
-    "OpenUIOnStartup": true,
+    "OpenUIOnStartup": false,
     "WebApiExecutablePath":"./ScreenTimeTracker.WebApi.exe",
     "WorkerServiceExecutablePath":"./ScreenTimeTracker.WorkerService.exe",
     "Serilog": {

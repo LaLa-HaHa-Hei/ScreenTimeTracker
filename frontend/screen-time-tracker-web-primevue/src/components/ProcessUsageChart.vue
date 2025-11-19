@@ -26,6 +26,10 @@ const chartOptions = ref<ChartOptions<'bar'>>({
     responsive: true,
     maintainAspectRatio: true,
     aspectRatio: 3 / 1,
+    animation: {
+        duration: 1000,
+        easing: 'easeOutQuart',
+    },
     plugins: {
         legend: {
             display: false,
@@ -53,7 +57,7 @@ const chartOptions = ref<ChartOptions<'bar'>>({
             ticks: {
                 color: '#64748b',
                 callback: (value: number | string) => formatSeconds(Number(value)),
-                maxTicksLimit: 2,
+                maxTicksLimit: 3,
             },
             grid: {
                 color: '#e2e8f0',
@@ -108,7 +112,7 @@ function updateChartColorOptions() {
                 ticks: {
                     color: textColorSecondary,
                     callback: (value: number | string) => formatSeconds(Number(value)),
-                    maxTicksLimit: 2,
+                    maxTicksLimit: 3,
                 },
                 grid: {
                     color: surfaceBorder,

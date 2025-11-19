@@ -52,6 +52,7 @@
             </div>
         </div>
         <ProcessUsageChart
+            class="mt-5"
             v-if="selectedProcess?.id"
             :process="selectedProcess.id"
             :startDate="startDate"
@@ -257,10 +258,15 @@ watch(selectedTimeRange, () => {
 async function loadProcessesWithSelected() {
     const res = await getAllProcesses()
     processes.value = res.data.map((p: ProcessInfo) => ({ name: p.alias || p.name, id: p.id }))
-    const selectedProcessId =
-        localStorage.getItem(StorageKey.PROCESS_DETAIL_SELECTED_PROCESS) || null
+    const selectedProcessId = localStorage.getItem(StorageKey.PROCESS_DETAIL_SELECTED_PROCESS)
+    if (!selectedProcessId) return
     selectedProcess.value = processes.value.filter((p) => p.id === selectedProcessId)[0]
 }
+
+watch(selectedProcess, () => {
+    if (!selectedProcess.value) return
+    localStorage.setItem(StorageKey.PROCESS_DETAIL_SELECTED_PROCESS, selectedProcess.value.id)
+})
 
 onMounted(async () => {
     await loadProcessesWithSelected()

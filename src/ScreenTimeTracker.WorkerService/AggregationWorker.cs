@@ -19,9 +19,14 @@ public class AggregationWorker(ILogger<AggregationWorker> logger, AggregationSer
 
         while (await _timer.WaitForNextTickAsync(stoppingToken))
         {
-            // _logger.LogInformation("Start summarizing hourly data.");
-            await _aggregationService.SummarizeHourlyDataAsync();
-            // _logger.LogInformation("Finish summarizing hourly data.");
+            try
+            {
+                await _aggregationService.SummarizeHourlyDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error summarizing hourly data.");
+            }
         }
 
         _logger.LogInformation("AggregationWorker is stopping.");
