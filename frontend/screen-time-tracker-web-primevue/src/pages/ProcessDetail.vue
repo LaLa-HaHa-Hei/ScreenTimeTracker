@@ -19,41 +19,36 @@
             </span>
         </div>
         <div class="mt-2 flex justify-center">
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Daily' }">
-                <Stepper
-                    class="w-70"
-                    :text="dailyText"
-                    :onLeftClick="displayPreviousDay"
-                    :onRightClick="displayNextDay"
+            <Stepper
+                v-show="selectedTimeRange?.value === 'Daily'"
+                class="w-70"
+                :text="dailyText"
+                :onLeftClick="displayPreviousDay"
+                :onRightClick="displayNextDay"
+            />
+            <Stepper
+                v-show="selectedTimeRange?.value === 'Weekly'"
+                class="w-70"
+                :text="weeklyText"
+                :onLeftClick="displayPreviousWeek"
+                :onRightClick="displayNextWeek"
+            />
+            <Stepper
+                v-show="selectedTimeRange?.value === 'Monthly'"
+                class="w-70"
+                :text="monthlyText"
+                :onLeftClick="displayPreviousMonth"
+                :onRightClick="displayNextMonth"
+            />
+            <div v-show="selectedTimeRange?.value === 'Custom'" class="w-70">
+                <DatePicker
+                    fluid
+                    dateFormat="yy/mm/dd"
+                    v-model="customDateRange"
+                    selectionMode="range"
+                    :manualInput="true"
+                    placeholder="选择日期范围"
                 />
-            </div>
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Weekly' }">
-                <Stepper
-                    class="w-70"
-                    :text="weeklyText"
-                    :onLeftClick="displayPreviousWeek"
-                    :onRightClick="displayNextWeek"
-                />
-            </div>
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Monthly' }">
-                <Stepper
-                    class="w-70"
-                    :text="monthlyText"
-                    :onLeftClick="displayPreviousMonth"
-                    :onRightClick="displayNextMonth"
-                />
-            </div>
-            <div :class="{ hidden: selectedTimeRange?.value !== 'Custom' }">
-                <div class="w-70">
-                    <DatePicker
-                        fluid
-                        dateFormat="yy/mm/dd"
-                        v-model="customDateRange"
-                        selectionMode="range"
-                        :manualInput="true"
-                        placeholder="选择日期范围"
-                    />
-                </div>
             </div>
         </div>
         <ProcessUsageChart
@@ -132,10 +127,16 @@ const customDateRange = ref([
 
 watch(customDateRange, () => {
     if (!customDateRange.value[0] || !customDateRange.value[1]) return
-    localStorage.setItem(StorageKey.USAGE_OVERVIEW_CUSTOM_START_DATE, startDate.value.toISOString())
-    localStorage.setItem(StorageKey.USAGE_OVERVIEW_CUSTOM_END_DATE, endDate.value.toISOString())
     startDate.value = customDateRange.value[0]
     endDate.value = customDateRange.value[1]
+    localStorage.setItem(
+        StorageKey.PROCESS_DETAIL_CUSTOM_START_DATE,
+        customDateRange.value[0].toISOString(),
+    )
+    localStorage.setItem(
+        StorageKey.PROCESS_DETAIL_CUSTOM_END_DATE,
+        customDateRange.value[1].toISOString(),
+    )
 })
 
 function displayPreviousMonth() {

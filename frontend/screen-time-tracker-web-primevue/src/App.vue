@@ -30,7 +30,6 @@
 </template>
 
 <script setup lang="ts">
-import { useDark } from '@vueuse/core'
 import AppHeader from '@/components/AppHeader.vue'
 import AppMenu from '@/components/AppMenu.vue'
 import Tabs from 'primevue/tabs'
@@ -41,10 +40,6 @@ import UsageOverview from '@/pages/UsageOverview.vue'
 import ProcessDetail from '@/pages/ProcessDetail.vue'
 import ProcessManagement from '@/pages/ProcessManagement.vue'
 import AboutProject from '@/pages/AboutProject.vue'
-
-useDark({
-    disableTransition: false,
-})
 
 const tabStore = useTabStore()
 </script>

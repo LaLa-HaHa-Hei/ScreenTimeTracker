@@ -23,12 +23,6 @@
                     class="aspect-square"
                     @click="toggleDark()"
                 />
-                <Button
-                    icon="pi pi-palette"
-                    variant="outlined"
-                    size="small"
-                    class="aspect-square"
-                />
             </div>
         </template>
     </Toolbar>
@@ -37,12 +31,7 @@
 <script lang="ts" setup>
 import Toolbar from 'primevue/toolbar'
 import Button from 'primevue/button'
-import { useDark, useToggle } from '@vueuse/core'
-
-const isDark = useDark({
-    disableTransition: false,
-})
-const toggleDark = useToggle(isDark)
+import { isDark, toggleDark } from '@/composables/darkMode'
 
 function openGithub() {
     window.open('https://github.com/LaLa-HaHa-Hei/ScreenTimeTracker', '_blank')

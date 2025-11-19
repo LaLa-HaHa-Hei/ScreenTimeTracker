@@ -41,6 +41,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseStaticFiles();
+app.UseStaticFiles();
+
 // 启用跨域
 app.UseCors(builder => builder
     .AllowAnyOrigin()
@@ -50,6 +53,8 @@ app.UseCors(builder => builder
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapFallbackToFile("index.html");
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("Starting WebApi host.");

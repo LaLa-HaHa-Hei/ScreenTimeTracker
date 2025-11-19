@@ -9,7 +9,7 @@ import { watch, ref, nextTick } from 'vue'
 import { getProcessHourlyDistribution, getProcessDailyDistribution } from '@/api'
 import { formatSeconds } from '@/utils'
 import type { ChartData, ChartOptions } from 'chart.js'
-import { useDark } from '@vueuse/core'
+import { isDark } from '@/composables/darkMode'
 
 interface Props {
     startDate: Date
@@ -53,7 +53,7 @@ const chartOptions = ref<ChartOptions<'bar'>>({
             ticks: {
                 color: '#64748b',
                 callback: (value: number | string) => formatSeconds(Number(value)),
-                maxTicksLimit: 4,
+                maxTicksLimit: 2,
             },
             grid: {
                 color: '#e2e8f0',
@@ -62,7 +62,6 @@ const chartOptions = ref<ChartOptions<'bar'>>({
         },
     },
 })
-const isDark = useDark()
 
 watch(
     isDark,
@@ -109,7 +108,7 @@ function updateChartColorOptions() {
                 ticks: {
                     color: textColorSecondary,
                     callback: (value: number | string) => formatSeconds(Number(value)),
-                    maxTicksLimit: 4,
+                    maxTicksLimit: 2,
                 },
                 grid: {
                     color: surfaceBorder,

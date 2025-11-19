@@ -17,6 +17,10 @@ export default defineConfig({
             resolvers: [PrimeVueResolver()],
         }),
     ],
+    build: {
+        outDir: '../../src/ScreenTimeTracker.WebApi/wwwroot',
+        emptyOutDir: true,
+    },
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url)),
