@@ -21,7 +21,7 @@
                         <div>
                             {{ slotProps.option.processAlias || slotProps.option.processName }}
                         </div>
-                        <div>{{ slotProps.option.totalDuration }}</div>
+                        <div>{{ formatSeconds(slotProps.option.totalDuration) }}</div>
                     </div>
                     <ProgressBar :value="slotProps.option.percentage" />
                 </div>
@@ -35,6 +35,7 @@ import type { ProcessUsageRankEntry } from '@/types'
 import { ref, watch } from 'vue'
 import { getProcessUsageRankEntry, getProcessIconUrl } from '@/api'
 import defaultFileIcon from '@/assets/defaultFileIcon.svg'
+import { formatSeconds } from '@/utils'
 
 interface Props {
     startDate: Date

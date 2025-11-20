@@ -71,16 +71,13 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Queries
             {
                 var processInfo = processInfos[usage.ProcessId];
                 var duration = usage.TotalDurationMilliseconds;
-                var timeSpan = TimeSpan.FromMilliseconds(duration);
-                var totalHours = (int)timeSpan.TotalHours;
-                var formattedDuration = $"{totalHours}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
 
                 return new ProcessUsageRankEntry(
                     processInfo.Id,
                     processInfo.Name,
                     processInfo.Alias,
                     processInfo.IconPath,
-                    formattedDuration,
+                    duration / 1000,
                     (int)(duration * 100 / totalMilliseconds)
                 );
             })];

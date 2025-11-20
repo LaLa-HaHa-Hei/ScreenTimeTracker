@@ -21,11 +21,11 @@ namespace ScreenTimeTracker.Tray
         private static TrayIconWithContextMenu _trayIcon = null!;
         private static PopupMenuItem _startUpMenuItem = null!;
         private static ConfigurationManager _configuration = null!;
+        private static Mutex? _mutex;
 
         public static void Main(string[] args)
         {
-
-            Mutex _mutex = new(true, "ScreenTimeTrackerTrayUniqueMutexName", out bool createdNew);
+            _mutex = new(true, "ScreenTimeTrackerTrayUniqueMutexName", out bool createdNew);
             if (!createdNew)
             {
                 PInvoke.MessageBox(default, "程序已经启动，请查看托盘处", "注意！", MESSAGEBOX_STYLE.MB_OK);
@@ -127,30 +127,39 @@ namespace ScreenTimeTracker.Tray
                 _logger.LogError("Failed to load tray icon.");
                 return;
             }
+
             _icon = new Icon(iconStream);
+            CreateTrayIcon();
+        }
+
+        private static void CreateTrayIcon()
+        {
+            if (_trayIcon != null)
+            {
+                _trayIcon.MessageWindow.TaskbarCreated -= OnTaskbarCreated;
+                _trayIcon.MessageWindow.MouseEventReceived -= OnMouseEvent;
+            }
+
             _trayIcon = new TrayIconWithContextMenu()
             {
                 Icon = _icon.Handle,
                 ToolTip = "Screen Time Tracker",
             };
 
-            _trayIcon.MessageWindow.MouseEventReceived += (sender, e) =>
-            {
-                if (e.MouseEvent == MouseEvent.IconLeftMouseUp)
-                {
-                    OpenUI();
-                }
-            };
+            _trayIcon.MessageWindow.MouseEventReceived += OnMouseEvent;
+            _trayIcon.MessageWindow.TaskbarCreated += OnTaskbarCreated;
 
             _startUpMenuItem = new PopupMenuItem("开启自启动", (_, _) => ToogleStartup())
             {
                 Checked = StartupManager.IsStartupEnabled(AppName)
             };
+
             _trayIcon.ContextMenu = new PopupMenu
             {
                 Items =
                 {
-                    new PopupMenuItem("打开程序目录", (_, _) => {
+                    new PopupMenuItem("打开程序目录", (_, _) =>
+                    {
                         Process.Start(new ProcessStartInfo
                         {
                             FileName = AppContext.BaseDirectory,
@@ -167,7 +176,31 @@ namespace ScreenTimeTracker.Tray
                     }),
                 },
             };
+
             _trayIcon.Create();
+        }
+
+        private static void OnMouseEvent(object? sender, MessageWindow.MouseEventReceivedEventArgs e)
+        {
+            if (e.MouseEvent == MouseEvent.IconLeftMouseUp)
+            {
+                OpenUI();
+            }
+        }
+
+        private static void OnTaskbarCreated(object? sender, EventArgs e)
+        {
+            _logger.LogWarning("Taskbar recreated, recreating tray icon...");
+            try
+            {
+                _trayIcon?.Dispose();
+                CreateTrayIcon();
+                _logger.LogInformation("Tray icon recreated successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to recreate tray icon.");
+            }
         }
 
         private static void ToogleStartup()

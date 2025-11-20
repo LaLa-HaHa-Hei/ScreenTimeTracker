@@ -14,7 +14,7 @@ export interface ProcessUsageRankEntry {
     processName: string
     processAlias: string | null
     processIconPath: string | null
-    totalDuration: string
+    totalDuration: number
     percentage: number
 }
 

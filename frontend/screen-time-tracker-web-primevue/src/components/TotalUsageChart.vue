@@ -1,5 +1,11 @@
 <template>
     <div class="card">
+        <div class="flex flex-row justify-center text-lg font-bold">
+            总时长：
+            <span>
+                {{ totalUsage }}
+            </span>
+        </div>
         <Chart type="bar" class="aspect-3/1 w-full" :data="chartData" :options="chartOptions" />
     </div>
 </template>
@@ -21,6 +27,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const chartData = ref<ChartData<'bar'>>()
+const totalUsage = ref<string>('')
 let maxYValue = 1
 const chartOptions = ref<ChartOptions<'bar'>>({
     responsive: true,
@@ -138,11 +145,13 @@ async function loadTotalUsage() {
                 },
             ],
         }
+        const usageList = Object.values(res.data) as number[]
         if (chartOptions.value?.scales?.y) {
-            maxYValue = Math.max(...(Object.values(res.data) as number[]))
+            maxYValue = Math.max(...usageList)
             maxYValue = maxYValue <= 0 ? 1 : maxYValue
             chartOptions.value.scales.y.max = maxYValue
         }
+        totalUsage.value = formatSeconds(usageList.reduce((sum, curr) => sum + curr, 0))
     } else if (props.mode === 'Week') {
         const res = await getTotalDailyUsage(
             dateToString(props.startDate),
@@ -158,11 +167,13 @@ async function loadTotalUsage() {
                 },
             ],
         }
+        const usageList = Object.values(res.data) as number[]
         if (chartOptions.value?.scales?.y) {
-            maxYValue = Math.max(...(Object.values(res.data) as number[]))
+            maxYValue = Math.max(...usageList)
             maxYValue = maxYValue <= 0 ? 1 : maxYValue
             chartOptions.value.scales.y.max = maxYValue
         }
+        totalUsage.value = formatSeconds(usageList.reduce((sum, curr) => sum + curr, 0))
     } else {
         const res = await getTotalDailyUsage(
             dateToString(props.startDate),
@@ -178,11 +189,13 @@ async function loadTotalUsage() {
                 },
             ],
         }
+        const usageList = Object.values(res.data) as number[]
         if (chartOptions.value?.scales?.y) {
-            maxYValue = Math.max(...(Object.values(res.data) as number[]))
+            maxYValue = Math.max(...usageList)
             maxYValue = maxYValue <= 0 ? 1 : maxYValue
             chartOptions.value.scales.y.max = maxYValue
         }
+        totalUsage.value = formatSeconds(usageList.reduce((sum, curr) => sum + curr, 0))
     }
 }
 
