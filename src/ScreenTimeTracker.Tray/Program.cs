@@ -136,6 +136,7 @@ namespace ScreenTimeTracker.Tray
         {
             if (_trayIcon != null)
             {
+                _logger.LogInformation("Recreating tray icon.");
                 _trayIcon.MessageWindow.TaskbarCreated -= OnTaskbarCreated;
                 _trayIcon.MessageWindow.MouseEventReceived -= OnMouseEvent;
             }

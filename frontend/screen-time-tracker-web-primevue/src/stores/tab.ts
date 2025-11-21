@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
-interface TabInfoItem {
+export interface TabInfoItem {
     name: string
     title: string
 }

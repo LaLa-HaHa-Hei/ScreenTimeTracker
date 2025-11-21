@@ -24,8 +24,8 @@ declare module 'vue' {
     Image: typeof import('primevue/image')['default']
     InputText: typeof import('primevue/inputtext')['default']
     Listbox: typeof import('primevue/listbox')['default']
+    Menu: typeof import('primevue/menu')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
-    ProcessUsageChart: typeof import('./src/components/ProcessUsageChart.vue')['default']
     ProcessUsageRank: typeof import('./src/components/ProcessUsageRank.vue')['default']
     ProgressBar: typeof import('primevue/progressbar')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
@@ -34,6 +34,6 @@ declare module 'vue' {
     SelectButton: typeof import('primevue/selectbutton')['default']
     Stepper: typeof import('./src/components/Stepper.vue')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
-    TotalUsageChart: typeof import('./src/components/TotalUsageChart.vue')['default']
+    UsageBarChart: typeof import('./src/components/UsageBarChart.vue')['default']
   }
 }

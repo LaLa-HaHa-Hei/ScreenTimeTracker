@@ -1,17 +1,30 @@
 <template>
-    <Listbox
-        v-model="tabStore.currentTab"
-        :options="tabStore.tabArray"
-        optionLabel="title"
-        class="w-full"
-    />
+    <Menu :model="tabStore.tabArray">
+        <template #item="{ item }">
+            <div
+                class="cursor-pointer px-3 py-2"
+                :class="{ active: item === tabStore.currentTab }"
+                @click.stop="open(item as TabInfoItem)"
+            >
+                {{ item.title }}
+            </div>
+        </template>
+    </Menu>
 </template>
 
 <script lang="ts" setup>
-import Listbox from 'primevue/listbox'
-import { useTabStore } from '@/stores/tab'
+import { useTabStore, type TabInfoItem } from '@/stores/tab'
 
 const tabStore = useTabStore()
+
+function open(item: TabInfoItem) {
+    tabStore.currentTab = item
+}
 </script>
 
-<style scoped></style>
+<style scoped>
+.active {
+    background: var(--p-list-option-selected-background);
+    color: var(--p-list-option-selected-color);
+}
+</style>

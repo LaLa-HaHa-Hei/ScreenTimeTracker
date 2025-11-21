@@ -104,7 +104,7 @@ classDiagram
             +string ProcessName
             +string? ProcessAlias
             +string? ProcessIconPath
-            +TimeSpan TotalDuration
+            +long TotalDuration
             +int Percentage
         }
     }

@@ -51,18 +51,18 @@
                 />
             </div>
         </div>
-        <!-- 数据展示区 -->
-        <TotalUsageChart
+        <UsageBarChart
             class="mt-5"
             :startDate="startDate"
             :endDate="endDate"
-            :mode="
+            :xAxisType="
                 selectedTimeRange?.value === 'Daily'
                     ? 'Hour'
                     : selectedTimeRange?.value === 'Weekly'
                       ? 'Week'
                       : 'Day'
             "
+            mode="Total"
             :excludedProcesses="excludedProcessIds"
         />
 
@@ -85,7 +85,7 @@ import type { ProcessInfo } from '@/types'
 import { getAllProcesses } from '@/api'
 import { StorageKey } from '@/constants/storageKeys'
 import ProcessUsageRank from '@/components/ProcessUsageRank.vue'
-import TotalUsageChart from '@/components/TotalUsageChart.vue'
+import UsageBarChart from '@/components/UsageBarChart.vue'
 import Stepper from '@/components/Stepper.vue'
 
 const timeRangeOptions = [
@@ -115,7 +115,7 @@ const weeklyWeekDiff = ref(0)
 const weeklyEndDay = ref(new Date())
 const weeklyStartDay = ref(new Date(weeklyEndDay.value.getTime() - 6 * 24 * 60 * 60 * 1000))
 const weeklyText = computed(() => {
-    if (weeklyWeekDiff.value === 0) return '本周'
+    if (weeklyWeekDiff.value === 0) return '近7天'
     else if (weeklyWeekDiff.value === 1) return '上周'
     else
         return `${weeklyStartDay.value.getMonth() + 1}/${weeklyStartDay.value.getDate()} - ${weeklyEndDay.value.getMonth() + 1}/${weeklyEndDay.value.getDate()}`
@@ -123,13 +123,9 @@ const weeklyText = computed(() => {
 
 const monthlyMonthDiff = ref(0)
 const monthlyEndDay = ref(new Date())
-const monthlyStartDay = ref(
-    isLastDayOfMonth(monthlyEndDay.value)
-        ? getFirstDayOfMonth(monthlyEndDay.value)
-        : new Date(monthlyEndDay.value.getTime() - 30 * 24 * 60 * 60 * 1000),
-)
+const monthlyStartDay = ref(new Date(monthlyEndDay.value.getTime() - 31 * 24 * 60 * 60 * 1000))
 const monthlyText = computed(() => {
-    if (monthlyMonthDiff.value === 0) return '本月'
+    if (monthlyMonthDiff.value === 0) return '近31天'
     else if (monthlyMonthDiff.value === 1) return '上月'
     else
         return `${monthlyStartDay.value.getMonth() + 1}/${monthlyStartDay.value.getDate()} - ${monthlyEndDay.value.getMonth() + 1}/${monthlyEndDay.value.getDate()}`
@@ -167,20 +163,13 @@ function displayNextMonth() {
     monthlyMonthDiff.value--
     if (monthlyMonthDiff.value === 0) {
         monthlyEndDay.value = new Date()
-        monthlyStartDay.value = isLastDayOfMonth(monthlyEndDay.value)
-            ? getFirstDayOfMonth(monthlyEndDay.value)
-            : new Date(monthlyEndDay.value.getTime() - 30 * 24 * 60 * 60 * 1000)
+        monthlyStartDay.value = new Date(monthlyEndDay.value.getTime() - 31 * 24 * 60 * 60 * 1000)
     } else {
         monthlyEndDay.value = getPreviousMonthLastDay(today, monthlyMonthDiff.value)
         monthlyStartDay.value = getFirstDayOfMonth(monthlyEndDay.value)
     }
     startDate.value = new Date(monthlyStartDay.value)
     endDate.value = new Date(monthlyEndDay.value)
-}
-
-function isLastDayOfMonth(date: Date) {
-    const nextDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
-    return nextDay.getDate() === 1
 }
 
 function getPreviousMonthLastDay(date: Date, n: number = 1) {
