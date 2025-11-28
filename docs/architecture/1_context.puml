@@ -1,0 +1,18 @@
+@startuml Context
+!include common.puml
+
+title System Context Diagram for ScreenTimeTracker
+
+Person(user, "电脑用户", "想要了解自己在各种软件上花费了多少时间的人。")
+
+System(system, "ScreenTimeTracker", "记录活动窗口，统计应用使用时长，提供可视化报表。")
+
+System_Ext(os, "Operating System", "Windows (Win32 API)\n提供当前活动窗口进程名称，输入空闲时间。")
+
+' 用户与系统的交互
+Rel(user, system, "查看统计报表 / 配置轮询间隔")
+
+' 系统与外部的交互
+Rel(system, os, "轮询活动窗口状态", "Win32 API")
+
+@enduml

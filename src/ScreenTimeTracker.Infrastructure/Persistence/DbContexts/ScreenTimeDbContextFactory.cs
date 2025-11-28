@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using ScreenTimeTracker.Infrastructure.Persistence.Configuration;
+using ScreenTimeTracker.Infrastructure.Persistence.Options;
 
 
 namespace ScreenTimeTracker.Infrastructure.Persistence.DbContexts
@@ -9,7 +9,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.DbContexts
     {
         public ScreenTimeDbContext CreateDbContext(string[] args)
         {
-            var options = new PersistenceOptions();
+            var options = new DatabaseOptions();
             var optionsBuilder = new DbContextOptionsBuilder<ScreenTimeDbContext>();
 
             optionsBuilder.UseSqlite($"Data Source={options.DBFilePath}");

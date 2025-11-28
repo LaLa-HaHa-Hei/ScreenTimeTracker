@@ -3,7 +3,7 @@
 ## Domain
 ```mermaid 
 classDiagram
-    namespace ScreenTimeTracker.Domain.Entities {
+    namespace ScreenTimeTracker.DomainLayer.Entities {
         class ProcessInfo {
             +Guid Id
             +string Name
@@ -36,9 +36,23 @@ classDiagram
             +Reconstitute(xxx xxx, ...) HourlySummary
             +AddDuration(TimeSpan duration)
         }
+        class UserConfig {
+            +TrackerSettings TrackerSettings
+            +AggregationSettings AggregationSettings
+        }
+        class TrackerSettings {
+            +double PollingIntervalMilliseconds
+            +double ProcessInfoStaleThresholdMinutes
+            +required string ProcessIconDirPath
+            +double IdleTimeoutMinutes
+        }
+        class AggregationSettings {
+            +readonly static string SectionName
+            +double PollingIntervalMinutes
+        }
     }
 
-    namespace ScreenTimeTracker.Domain.Interfaces {
+    namespace ScreenTimeTracker.DomainLayer.Interfaces {
         class IActivityIntervalRepository {
             <<interface>>
             +AddAsync(ActivityInterval interval) Task
@@ -68,20 +82,7 @@ classDiagram
 ```mermaid 
 classDiagram
     direction TB
-    namespace ScreenTimeTracker.Application.Configuration {
-        class TrackerOptions {
-            +readonly static string SectionName
-            +double PollingIntervalMilliseconds
-            +double ProcessInfoStaleThresholdMinutes
-            +required string ProcessIconDirPath
-            +double IdleTimeoutMinutes
-        }
-        class AggregationOptions {
-            +readonly static string SectionName
-            +double PollingIntervalMinutes
-        }
-    }
-    namespace ScreenTimeTracker.Application.DTOs {
+    namespace ScreenTimeTracker.ApplicationLayer.DTOs {
         class ExecutableMetadata {
             <<record>>
             +string? Description,
@@ -108,7 +109,7 @@ classDiagram
             +int Percentage
         }
     }
-    namespace ScreenTimeTracker.Application.Interfaces {
+    namespace ScreenTimeTracker.ApplicationLayer.Interfaces {
         class IExecutableMetadataProvider {
             <<interface>>
             +GetMetadataAsync(string executablePath) Task~ExecutableMetadata?~
@@ -135,8 +136,13 @@ classDiagram
             +GetProcessIconByIdAsync(Guid processId, CancellationToken cancellationToken) Task~string?~
             +GetProcessByIdAsync(Guid id, CancellationToken cancellationToken) Task~ProcessInfoDto?~
         }
+        class IUserConfigRepository {
+            <<interface>>
+            +GetConfig() UserConfig
+            +SaveConfig(UserConfig config)
+        }
     }
-    namespace ScreenTimeTracker.Application.Services {
+    namespace ScreenTimeTracker.ApplicationLayer.Services {
         class AggregationService {
             +SummarizeHourlyDataAsync()
         }
@@ -148,6 +154,15 @@ classDiagram
             +GetUnknownProcessAsync() Task~ProcessInfo~
             +EnsureProcessInfoExistsAsync(Process process) Task~ProcessInfo~
         }
+        class UserConfigService {
+            +GetTrackerSettings() TrackerSettings
+            +UpdateTrackerSettings(TrackerSettings settings)
+            +ResetTrackerSettings()
+            +GetAggregationSettings() AggregationSettings
+            +UpdateAggregationSettings(AggregationSettings settings)
+            +ResetAggregationSettings()
+            +ResetAllSettings()
+        }
     }
     class DependencyInjection {
         +AddApplicationServices(IServiceCollection services) IServiceCollection
@@ -156,6 +171,7 @@ classDiagram
     TrackerService ..> ProcessManagementService
     TrackerService ..> IForegroundWindowService
     TrackerService ..> IIdleTimeProvider
+    UserConfigService ..> IUserConfigRepository
     ProcessManagementService ..> IExecutableMetadataProvider
     Processes.Queries.GetAllProcessesQueryHandler ..> IProcessQueries
 ```
@@ -170,8 +186,8 @@ classDiagram
             +InitializeAsync()
         }
     }
-    namespace ScreenTimeTracker.Infrastructure.Configuration {
-        class PersistenceOptions {
+    namespace ScreenTimeTracker.Infrastructure.Options {
+        class DatabaseOptions {
             +readonly static string SectionName
             +string DBFilePath
         }
@@ -233,6 +249,8 @@ classDiagram
         class SqliteHourlySummaryRepository {
         }
         class SqliteProcessInfoRepository {
+        }
+        class JsonUserConfigRepository {
         }
     }
     namespace ScreenTimeTracker.Infrastructure.Plantform {

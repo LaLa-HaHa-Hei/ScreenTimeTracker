@@ -11,7 +11,7 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Models
         public string? IconPath { get; set; }
         public string? Description { get; set; }
 
-        public virtual ICollection<HourlySummaryEntity> HourlySummaries { get; set; } = [];
-        public virtual ICollection<ActivityIntervalEntity> ActivityIntervals { get; set; } = [];
+        public ICollection<HourlySummaryEntity> HourlySummaries { get; set; } = [];
+        public ICollection<ActivityIntervalEntity> ActivityIntervals { get; set; } = [];
     }
 }

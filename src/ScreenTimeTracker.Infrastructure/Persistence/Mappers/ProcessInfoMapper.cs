@@ -1,4 +1,4 @@
-using ScreenTimeTracker.Domain.Entities;
+using ScreenTimeTracker.DomainLayer.Entities;
 using ScreenTimeTracker.Infrastructure.Persistence.Models;
 
 namespace ScreenTimeTracker.Infrastructure.Persistence.Mappers

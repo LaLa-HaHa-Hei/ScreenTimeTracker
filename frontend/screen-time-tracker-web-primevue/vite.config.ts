@@ -18,7 +18,7 @@ export default defineConfig({
         }),
     ],
     build: {
-        outDir: '../../src/ScreenTimeTracker.WebApi/wwwroot',
+        outDir: '../../src/ScreenTimeTracker.Desktop/wwwroot',
         emptyOutDir: true,
     },
     resolve: {

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.Domain.Entities;
-using ScreenTimeTracker.Domain.Interfaces;
+using ScreenTimeTracker.DomainLayer.Entities;
+using ScreenTimeTracker.DomainLayer.Interfaces;
 using ScreenTimeTracker.Infrastructure.Persistence.DbContexts;
 using ScreenTimeTracker.Infrastructure.Persistence.Mappers;
 using ScreenTimeTracker.Infrastructure.Persistence.Models;

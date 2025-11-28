@@ -1,10 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/ScreenTimeTracker.Application/ScreenTimeTracker.Application.csproj" />
-    <Project Path="src/ScreenTimeTracker.Domain/ScreenTimeTracker.Domain.csproj" />
+    <Project Path="src/ScreenTimeTracker.ApplicationLayer/ScreenTimeTracker.ApplicationLayer.csproj" />
+    <Project Path="src/ScreenTimeTracker.Desktop/ScreenTimeTracker.Desktop.csproj" />
+    <Project Path="src/ScreenTimeTracker.DomainLayer/ScreenTimeTracker.DomainLayer.csproj" />
     <Project Path="src/ScreenTimeTracker.Infrastructure/ScreenTimeTracker.Infrastructure.csproj" />
-    <Project Path="src/ScreenTimeTracker.Tray/ScreenTimeTracker.Tray.csproj" />
-    <Project Path="src/ScreenTimeTracker.WebApi/ScreenTimeTracker.WebApi.csproj" />
-    <Project Path="src/ScreenTimeTracker.WorkerService/ScreenTimeTracker.WorkerService.csproj" />
   </Folder>
 </Solution>
