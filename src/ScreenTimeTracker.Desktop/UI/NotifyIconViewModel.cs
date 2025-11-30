@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,10 +19,16 @@ public partial class NotifyIconViewModel(ILogger<NotifyIconViewModel> logger, IS
     [ObservableProperty]
     private bool _isStartupEnabled = startupManager.IsStartupEnabled(AppName);
 
+    [RelayCommand]
+    public static void OpenAppDirectory()
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = AppContext.BaseDirectory,
+            UseShellExecute = true
+        });
+    }
 
-    /// <summary>
-    /// Toggles the startup setting for the application.
-    /// </summary>
     [RelayCommand]
     public void ToggleStartup()
     {
@@ -32,7 +39,7 @@ public partial class NotifyIconViewModel(ILogger<NotifyIconViewModel> logger, IS
         }
         else
         {
-            MessageBox.Show("该功能会修改系统配置，删除程序前请务必关闭，否则将导致残留！", "警告！", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("该功能会修改系统配置，删除程序前请务必关闭，否则将导致残留！\n修改可执行文件名后自启动将失效，需要重新启用", "警告！", MessageBoxButton.OK, MessageBoxImage.Warning);
             string? exePath = Process.GetCurrentProcess().MainModule?.FileName;
             if (string.IsNullOrEmpty(exePath))
             {
@@ -50,30 +57,6 @@ public partial class NotifyIconViewModel(ILogger<NotifyIconViewModel> logger, IS
             MessageBox.Show("切换失败，可能因为权限不足，请以管理员身份运行", "错误！", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
-    /// <summary>
-    /// Shows a window, if none is already open.
-    /// </summary>
-    [RelayCommand]
-    public static void ShowWindow()
-    {
-        if (Application.Current.MainWindow is null)
-            Application.Current.MainWindow = new MainWindow();
-
-        Application.Current.MainWindow.Show();
-    }
-
-    /// <summary>
-    /// Hides the main window.
-    /// </summary>
-    [RelayCommand]
-    public static void HideWindow()
-    {
-        Application.Current.MainWindow?.Hide();
-    }
-
-    /// <summary>
-    /// Shuts down the application.
-    /// </summary>
     [RelayCommand]
     public static void ExitApplication()
     {

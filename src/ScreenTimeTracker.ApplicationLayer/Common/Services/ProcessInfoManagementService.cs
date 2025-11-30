@@ -2,7 +2,6 @@ using Mediator;
 using Microsoft.Extensions.Logging;
 using ScreenTimeTracker.ApplicationLayer.Common.DTOs;
 using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
-using ScreenTimeTracker.ApplicationLayer.Features.Configuration.Queries.GetTrackerSettings;
 using ScreenTimeTracker.DomainLayer.Entities;
 using ScreenTimeTracker.DomainLayer.Interfaces;
 using System.ComponentModel;
@@ -11,16 +10,16 @@ using System.Diagnostics;
 
 namespace ScreenTimeTracker.ApplicationLayer.Common.Services;
 
-internal class ProcessManagementService(ILogger<ProcessManagementService> logger, IProcessInfoRepository processInfoRepository, IExecutableMetadataProvider processInfoProvider, IMediator mediator)
+internal class ProcessInfoManagementService(ILogger<ProcessInfoManagementService> logger, IProcessInfoRepository processInfoRepository, IExecutableMetadataProvider processInfoProvider, IUserConfigurationRepository userConfigurationRepository)
 {
-    private readonly ILogger<ProcessManagementService> _logger = logger;
+    private readonly ILogger<ProcessInfoManagementService> _logger = logger;
     private readonly IProcessInfoRepository _processInfoRepository = processInfoRepository;
     private readonly IExecutableMetadataProvider _executableMetadataProvider = processInfoProvider;
-    private readonly IMediator _mediator = mediator;
+    private readonly IUserConfigurationRepository _userConfigurationRepository = userConfigurationRepository;
 
     private async Task UpdateProcessInfoAsync(ProcessInfo processInfo, string? executablePath)
     {
-        TrackerSettingsDto settings = await _mediator.Send(new GetTrackerSettingsQuery());
+        TrackerSettings trackerSettings = (await _userConfigurationRepository.GetConfig()).Tracker;
         string? iconPath = null;
         string? description = null;
         if (executablePath is not null)
@@ -29,7 +28,7 @@ internal class ProcessManagementService(ILogger<ProcessManagementService> logger
             description = metadata.Description;
             if (metadata.IconBytes is not null)
             {
-                string directory = Path.Combine(settings.ProcessIconDirPath);
+                string directory = Path.Combine(trackerSettings.ProcessIconDirPath);
                 if (!Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
@@ -102,9 +101,9 @@ internal class ProcessManagementService(ILogger<ProcessManagementService> logger
         // 已有记录
         if (existing is not null)
         {
-            TrackerSettingsDto settings = await _mediator.Send(new GetTrackerSettingsQuery());
             // 检查是否需要更新
-            if (existing.AutoUpdate && (DateTime.Now - existing.LastAutoUpdated) > settings.ProcessInfoStaleThreshold)
+            TrackerSettings trackerSettings = (await _userConfigurationRepository.GetConfig()).Tracker;
+            if (existing.AutoUpdate && (DateTime.Now - existing.LastAutoUpdated) > trackerSettings.ProcessInfoStaleThreshold)
             {
                 await UpdateProcessInfoAsync(existing, GetExecutablePath(process));
                 await _processInfoRepository.UpdateAsync(existing);

@@ -10,7 +10,7 @@ namespace ScreenTimeTracker.ApplicationLayer
             // 服务
             services.AddSingleton<TrackerService>();
             services.AddSingleton<AggregationService>();
-            services.AddScoped<ProcessManagementService>();
+            services.AddScoped<ProcessInfoManagementService>();
 
             return services;
         }

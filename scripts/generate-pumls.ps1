@@ -15,12 +15,12 @@ $excludeFolders = @('lib', 'images')
 $excludeFiles = @('common.puml')
 
 
-Write-Host "--- PlantUML 构建开始 ---" -ForegroundColor Cyan
+Write-Host "--- PlantUML Build Started ---" -ForegroundColor Cyan
 
 # --- 环境检查 ---
-if (-not (Test-Path $jarPath -PathType Leaf)) { throw "JAR 不存在: $jarPath" }
-if (-not (Test-Path $inputBaseDir)) { throw "输入目录不存在: $inputBaseDir" }
-if (-not (Get-Command 'java' -ErrorAction SilentlyContinue)) { throw "未找到 java 命令" }
+if (-not (Test-Path $jarPath -PathType Leaf)) { throw "JAR not found: $jarPath" }
+if (-not (Test-Path $inputBaseDir)) { throw "Input directory not found: $inputBaseDir" }
+if (-not (Get-Command 'java' -ErrorAction SilentlyContinue)) { throw "java command not found" }
 
 # 确保输出根目录存在
 if (-not (Test-Path $outputBaseDir)) { New-Item -ItemType Directory -Path $outputBaseDir -Force | Out-Null }
@@ -33,7 +33,7 @@ $countFail = 0
 foreach ($file in $files) {
     # --- 检查排除: 文件名 ---
     if ($excludeFiles -contains $file.Name) {
-        Write-Host "跳过 (文件排除): $($file.Name)" -ForegroundColor DarkGray
+        Write-Host "Skipped (file excluded): $($file.Name)" -ForegroundColor DarkGray
         continue
     }
 
@@ -46,7 +46,7 @@ foreach ($file in $files) {
     $pathParts = $relPath -split '[\\/]'
     # 使用 Set 判断交集，比循环更简洁 
     if ($pathParts | Where-Object { $excludeFolders -contains $_ }) {
-        Write-Host "跳过 (目录排除): $($file.Name) [$relPath]" -ForegroundColor DarkGray
+        Write-Host "Skipped (directory excluded): $($file.Name) [$relPath]" -ForegroundColor DarkGray
         continue
     }
 
@@ -57,7 +57,7 @@ foreach ($file in $files) {
     }
 
     # --- 执行转换 ---
-    Write-Host "正在生成: $($file.Name) ... " -NoNewline -ForegroundColor Gray
+    Write-Host "Generating: $($file.Name) ... " -NoNewline -ForegroundColor Gray
 
     # 使用 & 调用操作符，它在 PS5.1 和 PS7 中对数组参数的处理是一致且安全的
     # 注意：PlantUML 输出到目录时，直接给目录路径即可
@@ -78,12 +78,12 @@ foreach ($file in $files) {
             $countSuccess++
         }
         else {
-            Write-Host "[失败] ExitCode: $LASTEXITCODE" -ForegroundColor Red
+            Write-Host "[Failed] ExitCode: $LASTEXITCODE" -ForegroundColor Red
             $countFail++
         }
     }
     catch {
-        Write-Host "[异常] $_" -ForegroundColor Red
+        Write-Host "[Exception] $_" -ForegroundColor Red
         $countFail++
     }
 }
@@ -91,6 +91,6 @@ foreach ($file in $files) {
 # --- 简要汇总 ---
 Write-Host "----------------------------"
 $summaryColor = if ($countFail -gt 0) { 'Red' } else { 'Green' }
-Write-Host "完成. 成功: $countSuccess  失败: $countFail" -ForegroundColor $summaryColor
+Write-Host "Done. Success: $countSuccess  Failures: $countFail" -ForegroundColor $summaryColor
 
 if ($countFail -gt 0) { exit 1 }

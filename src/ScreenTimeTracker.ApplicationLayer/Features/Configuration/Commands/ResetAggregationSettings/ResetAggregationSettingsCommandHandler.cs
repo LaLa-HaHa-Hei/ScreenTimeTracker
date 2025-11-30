@@ -1,3 +1,4 @@
+using System.Security.AccessControl;
 using Mediator;
 using ScreenTimeTracker.ApplicationLayer.Common.Mappers;
 using ScreenTimeTracker.ApplicationLayer.Features.Configuration.Commands.UpdateAggregationSettings;
@@ -10,14 +11,15 @@ public class ResetAggregationSettingsCommandHandler(
 {
     private readonly IMediator _mediator = mediator;
 
-    public ValueTask<Unit> Handle(ResetAggregationSettingsCommand command, CancellationToken cancellationToken)
+    public async ValueTask<Unit> Handle(ResetAggregationSettingsCommand command, CancellationToken cancellationToken)
     {
-        _ = _mediator.Send(
+        await _mediator.Send(
             new UpdateAggregationSettingsCommand
             (
                 Settings: AggregationSettingsMapper.Map(AggregationSettings.Default)
-            )
+            ),
+            cancellationToken
         );
-        return ValueTask.FromResult(Unit.Value);
+        return Unit.Value;
     }
 }

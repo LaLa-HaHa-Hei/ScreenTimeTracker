@@ -1,8 +1,6 @@
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ApplicationLayer.Common.DTOs;
-using ScreenTimeTracker.ApplicationLayer.Features.Configuration.Queries.GetTrackerSettings;
 using ScreenTimeTracker.DomainLayer.Entities;
 using ScreenTimeTracker.DomainLayer.Interfaces;
 
@@ -19,12 +17,10 @@ public class AggregationService(IServiceScopeFactory scopeFactory, ILogger<Aggre
         using var scope = _scopeFactory.CreateScope();
         var activityIntervalRepository = scope.ServiceProvider.GetRequiredService<IActivityIntervalRepository>();
         var hourlySummaryRepository = scope.ServiceProvider.GetRequiredService<IHourlySummaryRepository>();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var userConfigurationRepository = scope.ServiceProvider.GetRequiredService<IUserConfigurationRepository>();
 
         var now = DateTime.Now;
-        TrackerSettingsDto trackerSettings = await mediator.Send(
-            new GetTrackerSettingsQuery()
-        );
+        TrackerSettings trackerSettings = (await userConfigurationRepository.GetConfig()).Tracker;
         DateTime adjusted = now.Add(-trackerSettings.IdleTimeout);
         DateTime dataFreezeTime = new(adjusted.Year, adjusted.Month, adjusted.Day, adjusted.Hour, 0, 0);
 
@@ -55,4 +51,3 @@ public class AggregationService(IServiceScopeFactory scopeFactory, ILogger<Aggre
         await activityIntervalRepository.RemoveRangeAsync(activeIntervalsBefore);
     }
 }
-

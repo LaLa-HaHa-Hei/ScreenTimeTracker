@@ -49,8 +49,6 @@ namespace ScreenTimeTracker.Infrastructure.Persistence.Repositories
 
         public async Task DeleteAsync(Guid id)
         {
-            if (id == ProcessInfo.IdleProcessId || id == ProcessInfo.UnknownProcessId)
-                throw new InvalidOperationException($"Cannot delete the idle or unknown process.");
             ProcessInfoEntity? entityToDelete = await _dbContext.ProcessInfos.FindAsync(id)
                 ?? throw new NotFoundException($"ProcessInfo with Id {id} not found.");
 

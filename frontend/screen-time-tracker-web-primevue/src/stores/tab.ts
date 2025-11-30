@@ -21,6 +21,10 @@ export const useTabStore = defineStore('tab', () => {
             title: '进程管理',
         },
         {
+            name: 'ConfigurationEditor',
+            title: '配置',
+        },
+        {
             name: 'AboutProject',
             title: '关于',
         },

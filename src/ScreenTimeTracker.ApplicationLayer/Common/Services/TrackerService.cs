@@ -1,9 +1,7 @@
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ApplicationLayer.Common.DTOs;
 using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
-using ScreenTimeTracker.ApplicationLayer.Features.Configuration.Queries.GetTrackerSettings;
 using ScreenTimeTracker.DomainLayer.Entities;
 using ScreenTimeTracker.DomainLayer.Interfaces;
 using System.Diagnostics;
@@ -22,16 +20,16 @@ public class TrackerService(IServiceScopeFactory scopeFactory, ILogger<TrackerSe
     {
         using var scope = _scopeFactory.CreateScope();
         var activityIntervalRepository = scope.ServiceProvider.GetRequiredService<IActivityIntervalRepository>();
-        var processManagementService = scope.ServiceProvider.GetRequiredService<ProcessManagementService>();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var processManagementService = scope.ServiceProvider.GetRequiredService<ProcessInfoManagementService>();
+        var userConfigurationRepository = scope.ServiceProvider.GetRequiredService<IUserConfigurationRepository>();
         var now = DateTime.Now;
-        TrackerSettingsDto settings = await mediator.Send(new GetTrackerSettingsQuery());
-        var duration = settings.PollingInterval;
+        TrackerSettings trackerSettings = (await userConfigurationRepository.GetConfig()).Tracker;
+        var duration = trackerSettings.PollingInterval;
         TimeSpan idleTime = await _idleTimeProvider.GetSystemIdleTimeAsync();
         ProcessInfo processInfo;
 
         // 空闲时间超过阈值，标记为空闲进程
-        if (idleTime >= settings.IdleTimeout)
+        if (idleTime >= trackerSettings.IdleTimeout)
         {
             processInfo = await processManagementService.EnsureIdleProcessInfoExistsAsync();
 

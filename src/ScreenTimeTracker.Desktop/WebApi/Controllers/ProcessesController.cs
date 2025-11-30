@@ -99,18 +99,20 @@ public class ProcessesController(IProcessInfoRepository processInfoRepository, I
     }
 
     [HttpGet("{id:guid}/usage-distribution/hourly")]
-    public async Task<IDictionary<int, long>> ProcessHourlyDistribution(Guid id, [FromQuery] DateOnly date)
+    [ProducesResponseType(typeof(IDictionary<int, long>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ProcessHourlyDistribution(Guid id, [FromQuery] DateOnly date)
     {
-        return await _mediator.Send(
+        return Ok(await _mediator.Send(
             new GetProcessHourlyDistributionForDayQuery(id, date)
-        );
+        ));
     }
 
     [HttpGet("{id:guid}/usage-distribution/daily")]
-    public async Task<IDictionary<DateOnly, long>> ProcessDailyDistribution(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+    [ProducesResponseType(typeof(IDictionary<DateOnly, long>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ProcessDailyDistribution(Guid id, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
     {
-        return await _mediator.Send(
+        return Ok(await _mediator.Send(
             new GetProcessDailyDistributionForPeriodQuery(id, startDate, endDate)
-        );
+        ));
     }
 }

@@ -9,6 +9,8 @@ using ScreenTimeTracker.Infrastructure.Persistence.Repositories;
 using ScreenTimeTracker.Infrastructure.Persistence;
 using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
 using ScreenTimeTracker.Infrastructure.OS.Windows;
+using ScreenTimeTracker.ApplicationLayer.Interfaces;
+using ScreenTimeTracker.Infrastructure.Persistence.Queries;
 
 namespace ScreenTimeTracker.Infrastructure
 {
@@ -32,6 +34,8 @@ namespace ScreenTimeTracker.Infrastructure
             services.AddScoped<IActivityIntervalRepository, SqliteActivityIntervalRepository>();
             services.AddScoped<IHourlySummaryRepository, SqliteHourlySummaryRepository>();
             services.AddScoped<IProcessInfoRepository, SqliteProcessInfoRepository>();
+            services.AddScoped<IProcessInfosReadService, SqliteProcessInfosQueries>();
+            services.AddScoped<IUsageReportReadService, SqliteUsageReportQueries>();
 
             // 操作系统服务
             services.AddSingleton<IForegroundWindowService, ForegroundWindowService>();

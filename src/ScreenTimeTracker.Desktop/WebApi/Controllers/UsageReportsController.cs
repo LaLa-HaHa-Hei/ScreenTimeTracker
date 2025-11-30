@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScreenTimeTracker.ApplicationLayer.Features.UsageReport.Queries.GetRankedProcessUsageForPeriod;
 using ScreenTimeTracker.ApplicationLayer.Features.UsageReport.Queries.GetTotalDailyUsageForPeriod;
@@ -13,20 +14,23 @@ public class UsageReportsController(IMediator mediator) : ControllerBase
     private readonly IMediator _mediator = mediator;
 
     [HttpGet("ranks/processes")]
-    public async Task<IEnumerable<ProcessUsageRankEntry>> ProcessUsageRankEntryForPeriod([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] int topN = 10, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
+    [ProducesResponseType(typeof(IEnumerable<ProcessUsageRankEntry>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ProcessUsageRankEntryForPeriod([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] int topN = 10, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
-        return await _mediator.Send(new GetRankedProcessUsageForPeriodQuery(startDate, endDate, topN, excludedProcessIds));
+        return Ok(await _mediator.Send(new GetRankedProcessUsageForPeriodQuery(startDate, endDate, topN, excludedProcessIds)));
     }
 
     [HttpGet("summaries/hourly")]
-    public async Task<IDictionary<int, long>> TotalHourlyUsage([FromQuery] DateOnly date, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
+    [ProducesResponseType(typeof(IDictionary<int, long>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> TotalHourlyUsage([FromQuery] DateOnly date, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
-        return await _mediator.Send(new GetTotalHourlyUsageForDayQuery(date, excludedProcessIds));
+        return Ok(await _mediator.Send(new GetTotalHourlyUsageForDayQuery(date, excludedProcessIds)));
     }
 
     [HttpGet("summaries/daily")]
-    public async Task<IDictionary<DateOnly, long>> TotalDailyUsage([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
+    [ProducesResponseType(typeof(IDictionary<DateOnly, long>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> TotalDailyUsage([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] IEnumerable<Guid>? excludedProcessIds = null)
     {
-        return await _mediator.Send(new GetTotalDailyUsageForPeriodQuery(startDate, endDate, excludedProcessIds));
+        return Ok(await _mediator.Send(new GetTotalDailyUsageForPeriodQuery(startDate, endDate, excludedProcessIds)));
     }
 }

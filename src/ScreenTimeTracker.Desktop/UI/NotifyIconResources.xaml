@@ -8,6 +8,9 @@
         x:Shared="false"
         x:Key="SysTrayMenu">
         <MenuItem
+            Header="打开程序目录"
+            Command="{Binding OpenAppDirectoryCommand}"/>
+        <MenuItem
             Header="开机自启动"
             Command="{Binding ToggleStartupCommand}"
             IsChecked="{Binding IsStartupEnabled}"/>
@@ -15,12 +18,6 @@
         <MenuItem
             Header="显示"
             Command="{Binding OpenWebUICommand}"/>
-        <!-- <MenuItem
-            Header="显示窗口"
-            Command="{Binding ShowWindowCommand}"/> -->
-        <!-- <MenuItem
-            Header="隐藏窗口"
-            Command="{Binding HideWindowCommand}"/> -->
         <Separator/>
         <MenuItem
             Header="退出"

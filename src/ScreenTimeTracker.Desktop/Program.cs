@@ -1,8 +1,6 @@
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -48,8 +46,10 @@ public class Program
         // UI
         builder.Services.AddSingleton<NotifyIconViewModel>();
         // BackgroundServices
-        builder.Services.AddHostedService<TrackerWorker>();
-        builder.Services.AddHostedService<AggregationWorker>();
+        builder.Services.AddSingleton<TrackerWorker>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<TrackerWorker>());
+        builder.Services.AddSingleton<AggregationWorker>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<AggregationWorker>());
         // WebApi 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();

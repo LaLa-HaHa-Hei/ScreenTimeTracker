@@ -9,7 +9,8 @@ System_Boundary(c1, "ScreenTimeTracker System") {
     
     Container(desktop_host, "Desktop App", "C#", "核心进程 (Tray + API + Worker)。\n1. 承载托盘图标与右键菜单\n2. 提供 RESTful API\n3. 执行后台监控与数据聚合")
 
-    ContainerDb(db, "Database", "SQLite", "存储配置与统计数据。")
+    ContainerDb(db, "Database", "SQLite", "本地数据库存储")
+    ContainerDb(json, "Database", "JSON", "本地配置文件存储")
 }
 
 System_Ext(os, "Operating System", "Windows APIs")
@@ -27,5 +28,6 @@ Rel(desktop_host, web_ui, "托管静态文件", "Static Files")
 
 ' 数据库读写
 Rel(desktop_host, db, "读写数据", "EF Core")
+Rel(desktop_host, json, "读写配置", "JSON")
 
 @enduml

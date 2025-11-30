@@ -20,12 +20,18 @@
                     <TabPanel value="ProcessManagement">
                         <ProcessManagement />
                     </TabPanel>
+                    <TabPanel value="ConfigurationEditor">
+                        <ConfigurationEditor />
+                    </TabPanel>
                     <TabPanel value="AboutProject">
                         <AboutProject />
                     </TabPanel>
                 </Tabs>
             </Panel>
         </main>
+
+        <ConfirmDialog />
+        <Toast />
     </div>
 </template>
 
@@ -39,6 +45,7 @@ import Panel from 'primevue/panel'
 import UsageOverview from '@/pages/UsageOverview.vue'
 import ProcessDetail from '@/pages/ProcessDetail.vue'
 import ProcessManagement from '@/pages/ProcessManagement.vue'
+import ConfigurationEditor from '@/pages/ConfigurationEditor.vue'
 import AboutProject from '@/pages/AboutProject.vue'
 
 const tabStore = useTabStore()

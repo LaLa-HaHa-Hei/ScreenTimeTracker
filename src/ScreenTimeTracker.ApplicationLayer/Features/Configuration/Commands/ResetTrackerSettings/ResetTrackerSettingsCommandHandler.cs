@@ -10,14 +10,15 @@ public class ResetTrackerSettingsCommandHandler(
 {
     private readonly IMediator _mediator = mediator;
 
-    public ValueTask<Unit> Handle(ResetTrackerSettingsCommand command, CancellationToken cancellationToken)
+    public async ValueTask<Unit> Handle(ResetTrackerSettingsCommand command, CancellationToken cancellationToken)
     {
-        _ = _mediator.Send(
+        await _mediator.Send(
             new UpdateTrackerSettingsCommand
             (
                 Settings: TrackerSettingsMapper.Map(TrackerSettings.Default)
-            )
+            ),
+            cancellationToken
         );
-        return ValueTask.FromResult(Unit.Value);
+        return Unit.Value;
     }
 }
