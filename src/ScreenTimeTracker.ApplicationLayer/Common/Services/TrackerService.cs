@@ -28,8 +28,8 @@ public class TrackerService(IServiceScopeFactory scopeFactory, ILogger<TrackerSe
         TimeSpan idleTime = await _idleTimeProvider.GetSystemIdleTimeAsync();
         ProcessInfo processInfo;
 
-        // 空闲时间超过阈值，标记为空闲进程
-        if (idleTime >= trackerSettings.IdleTimeout)
+        // 启用空闲检查并且空闲时间超过阈值，标记为空闲进程
+        if (trackerSettings.EnableIdleDetection && idleTime >= trackerSettings.IdleTimeout)
         {
             processInfo = await processManagementService.EnsureIdleProcessInfoExistsAsync();
 

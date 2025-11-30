@@ -28,7 +28,7 @@ internal class ProcessInfoManagementService(ILogger<ProcessInfoManagementService
             description = metadata.Description;
             if (metadata.IconBytes is not null)
             {
-                string directory = Path.Combine(trackerSettings.ProcessIconDirPath);
+                string directory = trackerSettings.ProcessIconDirPath;
                 if (!Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 

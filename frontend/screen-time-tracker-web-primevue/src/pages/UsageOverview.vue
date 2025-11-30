@@ -100,7 +100,6 @@ import { StorageKey } from '@/constants/storageKeys'
 import ProcessUsageRank from '@/components/ProcessUsageRank.vue'
 import UsageBarChart from '@/components/UsageBarChart.vue'
 import Stepper from '@/components/Stepper.vue'
-import { SpecialProcessId } from '@/constants/specialProcess'
 
 const timeRangeOptions = [
     { label: '日', value: 'Daily' },
@@ -211,8 +210,7 @@ async function loadData() {
     today.value = new Date()
     const res = await getAllProcesses()
     processes.value = res.data
-    const exclude = localStorage.getItem(StorageKey.USAGE_OVERVIEW_EXCLUDED_PROCESSES)
-    const ids = exclude === null ? SpecialProcessId.Idle : exclude.split(',') || []
+    const ids = localStorage.getItem(StorageKey.USAGE_OVERVIEW_EXCLUDED_PROCESSES)?.split(',') || []
     excludedProcesses.value = processes.value.filter((p) => ids.includes(p.id))
 }
 
