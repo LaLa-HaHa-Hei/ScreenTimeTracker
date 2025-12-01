@@ -1,4 +1,3 @@
-using Mediator;
 using Microsoft.Extensions.Logging;
 using ScreenTimeTracker.ApplicationLayer.Common.DTOs;
 using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;

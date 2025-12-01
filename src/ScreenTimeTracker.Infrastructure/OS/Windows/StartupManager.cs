@@ -1,7 +1,7 @@
-using System.Security.Principal;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
+using System.Security.Principal;
 
 namespace ScreenTimeTracker.Infrastructure.OS.Windows;
 
@@ -67,16 +67,19 @@ public class StartupManager : IStartupManager
         using var ts = new TaskService();
         var td = ts.NewTask();
         td.RegistrationInfo.Description = $"Starts {appName} on user logon.";
-        td.RegistrationInfo.Author = "ScreenTimeTracker.Tray.StartupManager";
-
+        td.RegistrationInfo.Author = typeof(StartupManager).FullName;
+        // 以最高权限运行
         td.Principal.RunLevel = TaskRunLevel.Highest;
-
         // 创建一个在用户登录时触发的触发器
         td.Triggers.Add(new LogonTrigger());
-
         // 创建启动应用程序的操作
         td.Actions.Add(new ExecAction(filePath));
-
+        // 不限制电池情况下启动
+        td.Settings.DisallowStartIfOnBatteries = false;
+        // 切换到电池时不停止任务  
+        td.Settings.StopIfGoingOnBatteries = false;
+        // 关闭“如果运行时间超过…，停止任务”
+        td.Settings.ExecutionTimeLimit = TimeSpan.Zero;
         // 注册任务
         ts.RootFolder.RegisterTaskDefinition(appName, td);
     }

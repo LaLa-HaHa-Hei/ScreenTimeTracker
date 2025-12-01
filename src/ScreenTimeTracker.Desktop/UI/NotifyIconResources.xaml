@@ -10,6 +10,7 @@
         <MenuItem
             Header="打开程序目录"
             Command="{Binding OpenAppDirectoryCommand}"/>
+        <Separator/>
         <MenuItem
             Header="开机自启动"
             Command="{Binding ToggleStartupCommand}"

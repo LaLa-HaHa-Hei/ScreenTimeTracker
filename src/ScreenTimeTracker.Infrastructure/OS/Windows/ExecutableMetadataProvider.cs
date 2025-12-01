@@ -1,5 +1,5 @@
-using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
 using ScreenTimeTracker.ApplicationLayer.Common.DTOs;
+using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;

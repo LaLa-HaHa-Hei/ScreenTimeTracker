@@ -1,7 +1,7 @@
+using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
 using System.Diagnostics;
 using Windows.Win32;
 using Windows.Win32.Foundation;
-using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
 
 namespace ScreenTimeTracker.Infrastructure.OS.Windows;
 

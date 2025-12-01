@@ -1,4 +1,3 @@
-using System.IO;
 using Mediator;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +11,7 @@ using ScreenTimeTracker.ApplicationLayer.Features.UsageReport.Queries.GetProcess
 using ScreenTimeTracker.ApplicationLayer.Features.UsageReport.Queries.GetProcessHourlyDistributionForDay;
 using ScreenTimeTracker.Desktop.WebApi.DTOs;
 using ScreenTimeTracker.DomainLayer.Interfaces;
+using System.IO;
 
 namespace ScreenTimeTracker.Desktop.WebApi.Controllers;
 

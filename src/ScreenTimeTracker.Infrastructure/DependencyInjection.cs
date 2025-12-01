@@ -2,15 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using ScreenTimeTracker.DomainLayer.Interfaces;
-using ScreenTimeTracker.Infrastructure.Persistence.Options;
-using ScreenTimeTracker.Infrastructure.Persistence.DbContexts;
-using ScreenTimeTracker.Infrastructure.Persistence.Repositories;
-using ScreenTimeTracker.Infrastructure.Persistence;
 using ScreenTimeTracker.ApplicationLayer.Common.Interfaces;
-using ScreenTimeTracker.Infrastructure.OS.Windows;
 using ScreenTimeTracker.ApplicationLayer.Interfaces;
+using ScreenTimeTracker.DomainLayer.Interfaces;
+using ScreenTimeTracker.Infrastructure.OS.Windows;
+using ScreenTimeTracker.Infrastructure.Persistence;
+using ScreenTimeTracker.Infrastructure.Persistence.DbContexts;
+using ScreenTimeTracker.Infrastructure.Persistence.Options;
 using ScreenTimeTracker.Infrastructure.Persistence.Queries;
+using ScreenTimeTracker.Infrastructure.Persistence.Repositories;
 
 namespace ScreenTimeTracker.Infrastructure
 {

@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Mediator;
 using ScreenTimeTracker.ApplicationLayer.Common.Mappers;
 using ScreenTimeTracker.ApplicationLayer.Features.Configuration.Commands.UpdateAggregationSettings;

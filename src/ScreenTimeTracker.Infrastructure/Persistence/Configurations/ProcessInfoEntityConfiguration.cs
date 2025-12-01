@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.DomainLayer.Entities;
 using ScreenTimeTracker.Infrastructure.Persistence.Models;
 
 namespace ScreenTimeTracker.Infrastructure.Persistence.Configurations

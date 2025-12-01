@@ -1,5 +1,3 @@
-using System.IO;
-using System.Windows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +8,8 @@ using ScreenTimeTracker.Desktop.Services;
 using ScreenTimeTracker.Desktop.UI;
 using ScreenTimeTracker.Infrastructure;
 using Serilog;
+using System.IO;
+using System.Windows;
 
 namespace ScreenTimeTracker.Desktop;
 

@@ -1,6 +1,6 @@
-﻿using System.Windows;
+﻿using Hardcodet.Wpf.TaskbarNotification;
 using Microsoft.Extensions.DependencyInjection;
-using Hardcodet.Wpf.TaskbarNotification;
+using System.Windows;
 
 namespace ScreenTimeTracker.Desktop.UI;
 
