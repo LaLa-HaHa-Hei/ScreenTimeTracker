@@ -6,12 +6,12 @@ export const appDtoSchema = z.object({
   name: z.string(),
   color: z.string(),
   processName: z.string(),
-  isAutoUpdateEnabled: z.boolean(),
-  lastAutoUpdatedAt: z.coerce.date(),
+  allowMetadataAutoUpdate: z.boolean(),
+  metadataLastUpdatedAt: z.coerce.date(),
   appCategoryId: z.string(),
   executablePath: z.string().nullable(),
   iconPath: z.string().nullable(),
-  iconLastUpdatedAt: z.coerce.date(),
+  iconPathLastUpdatedAt: z.coerce.date(),
   isSystem: z.boolean(),
 });
 export type AppDto = z.infer<typeof appDtoSchema>;
@@ -28,7 +28,7 @@ export const patchAppSchema = z.object({
     .pick({
       name: true,
       color: true,
-      isAutoUpdateEnabled: true,
+      allowMetadataAutoUpdate: true,
       appCategoryId: true,
       iconPath: true,
     })

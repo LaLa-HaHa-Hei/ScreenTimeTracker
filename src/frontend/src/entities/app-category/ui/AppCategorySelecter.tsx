@@ -10,7 +10,10 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 
-type Item = Pick<AppCategory, "id" | "name" | "iconPath" | "iconLastUpdatedAt">;
+type Item = Pick<
+  AppCategory,
+  "id" | "name" | "iconPath" | "iconPathLastUpdatedAt"
+>;
 
 export type AppCategorySelecterProps = {
   className?: string;
@@ -27,7 +30,7 @@ export const AppCategorySelecter = ({
 }: AppCategorySelecterProps) => {
   const { data } = useQuery(
     appCategoryQueries.appCategories({
-      fields: "id,name,iconPath,iconLastUpdatedAt",
+      fields: "id,name,iconPath,iconPathLastUpdatedAt",
     }),
   ) as {
     data?: Item[];
@@ -55,7 +58,7 @@ export const AppCategorySelecter = ({
               <AppCategoryIcon
                 id={item.id}
                 iconPath={item.iconPath}
-                iconLastUpdatedAt={item.iconLastUpdatedAt}
+                iconPathLastUpdatedAt={item.iconPathLastUpdatedAt}
                 sx={{ width: "1.5rem", height: "1.5rem", mr: 1 }}
               />
               <Typography>{item.name}</Typography>

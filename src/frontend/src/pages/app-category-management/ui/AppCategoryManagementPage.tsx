@@ -30,15 +30,9 @@ import { LazyTextField } from "@/shared/ui/LazyTextField";
 import { useTranslation } from "react-i18next";
 
 export const AppCategoryManagementPage = () => {
-  const { t } = useTranslation([
-    "page_appCategoryManagement",
-    "shared",
-    "entity_appCategory",
-  ]);
+  const { t } = useTranslation(["page_appCategoryManagement"]);
   const { enqueueSnackbar } = useSnackbar();
-  const { data: appCategoriesData, isLoading } = useQuery(
-    appCategoryQueries.appCategories({}),
-  ) as {
+  const { data: appCategoriesData, isLoading } = useQuery(appCategoryQueries.appCategories({})) as {
     data?: AppCategory[];
     isLoading: boolean;
   };
@@ -46,14 +40,10 @@ export const AppCategoryManagementPage = () => {
   const { mutateAsync: patchAppCategoryAsync } = usePatchAppCategory();
   const { mutateAsync: deleteAppCategoryAsync } = useDeleteAppCategory();
 
-  const [
-    deleteAppCategoryComfirmDialogOpen,
-    setDeleteAppCategoryComfirmDialogOpen,
-  ] = useState(false);
-  const [createAppCategoryDialogOpen, setCreateAppCategoryDialogOpen] =
+  const [deleteAppCategoryComfirmDialogOpen, setDeleteAppCategoryComfirmDialogOpen] =
     useState(false);
-  const [appCategoryToDelete, setAppCategoryToDelete] =
-    useState<AppCategory | null>(null);
+  const [createAppCategoryDialogOpen, setCreateAppCategoryDialogOpen] = useState(false);
+  const [appCategoryToDelete, setAppCategoryToDelete] = useState<AppCategory | null>(null);
 
   const stopGridKeyboardEvent = (e: React.KeyboardEvent) => {
     e.stopPropagation();
@@ -62,7 +52,7 @@ export const AppCategoryManagementPage = () => {
   const columns: GridColDef[] = [
     {
       field: "name",
-      headerName: t("columns.name"),
+      headerName: t(($) => $.page_appCategoryManagement.columns.name),
       width: 150,
       renderCell: (params: GridRenderCellParams<AppCategory, string>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -79,9 +69,8 @@ export const AppCategoryManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("messages.error.updateFailed", {
-                    ns: "shared",
-                    field: t("fields.name"),
+                  t(($) => $.page_appCategoryManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appCategoryManagement.fields.name),
                   }),
                   { variant: "error" },
                 );
@@ -93,7 +82,7 @@ export const AppCategoryManagementPage = () => {
     },
     {
       field: "color",
-      headerName: t("columns.color"),
+      headerName: t(($) => $.page_appCategoryManagement.columns.color),
       width: 70,
       renderCell: (params: GridRenderCellParams<AppCategory, string>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -109,9 +98,8 @@ export const AppCategoryManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("messages.error.updateFailed", {
-                    ns: "shared",
-                    field: t("fields.color"),
+                  t(($) => $.page_appCategoryManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appCategoryManagement.fields.color),
                   }),
                   { variant: "error" },
                 );
@@ -123,7 +111,7 @@ export const AppCategoryManagementPage = () => {
     },
     {
       field: "icon",
-      headerName: t("columns.icon"),
+      headerName: t(($) => $.page_appCategoryManagement.columns.icon),
       width: 50,
       sortable: false,
       filterable: false,
@@ -133,7 +121,7 @@ export const AppCategoryManagementPage = () => {
           <AppCategoryIcon
             id={params.row.id}
             iconPath={params.row.iconPath}
-            iconLastUpdatedAt={params.row.iconLastUpdatedAt}
+            iconPathLastUpdatedAt={params.row.iconPathLastUpdatedAt}
             sx={{
               width: "2rem",
               height: "2rem",
@@ -144,7 +132,7 @@ export const AppCategoryManagementPage = () => {
     },
     {
       field: "iconPath",
-      headerName: t("columns.iconPath"),
+      headerName: t(($) => $.page_appCategoryManagement.columns.iconPath),
       width: 200,
       renderCell: (params: GridRenderCellParams<AppCategory, string>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -161,9 +149,8 @@ export const AppCategoryManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("messages.error.updateFailed", {
-                    ns: "shared",
-                    field: t("fields.iconPath"),
+                  t(($) => $.page_appCategoryManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appCategoryManagement.fields.iconPath),
                   }),
                   { variant: "error" },
                 );
@@ -175,7 +162,7 @@ export const AppCategoryManagementPage = () => {
     },
     {
       field: "action",
-      headerName: t("columns.action"),
+      headerName: t(($) => $.page_appCategoryManagement.columns.action),
       width: 60,
       sortable: false,
       filterable: false,
@@ -200,11 +187,8 @@ export const AppCategoryManagementPage = () => {
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "end" }}>
-        <Button
-          variant="contained"
-          onClick={() => setCreateAppCategoryDialogOpen(true)}
-        >
-          {t("buttons.createCategory")}
+        <Button variant="contained" onClick={() => setCreateAppCategoryDialogOpen(true)}>
+          {t(($) => $.page_appCategoryManagement.buttons.createCategory)}
         </Button>
       </Box>
       <Box sx={{ width: "100%", mt: 1 }}>
@@ -234,35 +218,36 @@ export const AppCategoryManagementPage = () => {
         role="alertdialog"
       >
         <DialogTitle>
-          {t("dialogs.delete.title", { name: appCategoryToDelete?.name })}
+          {t(($) => $.page_appCategoryManagement.dialogs.delete.title, {
+            name: appCategoryToDelete?.name,
+          })}
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {t("dialogs.delete.description")}
+            {t(($) => $.page_appCategoryManagement.dialogs.delete.description)}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setDeleteAppCategoryComfirmDialogOpen(false)}
-            autoFocus
-          >
-            {t("actions.cancel", { ns: "shared" })}
+          <Button onClick={() => setDeleteAppCategoryComfirmDialogOpen(false)} autoFocus>
+            {t(($) => $.page_appCategoryManagement.actions.cancel)}
           </Button>
           <Button
             onClick={async () => {
               if (appCategoryToDelete == null) {
-                enqueueSnackbar(t("messages.error.noCategorySelected"), {
-                  variant: "error",
-                });
+                enqueueSnackbar(
+                  t(($) => $.page_appCategoryManagement.messages.error.noCategorySelected),
+                  {
+                    variant: "error",
+                  },
+                );
                 return;
               }
               try {
                 await deleteAppCategoryAsync(appCategoryToDelete.id);
               } catch {
                 enqueueSnackbar(
-                  t("messages.error.deleteFailed", {
-                    ns: "shared",
-                    field: t("fields.category"),
+                  t(($) => $.page_appCategoryManagement.errors.deleteFailed, {
+                    field: t(($) => $.page_appCategoryManagement.fields.category),
                   }),
                   { variant: "error" },
                 );
@@ -273,7 +258,7 @@ export const AppCategoryManagementPage = () => {
             }}
             color="error"
           >
-            {t("actions.confirm", { ns: "shared" })}
+            {t(($) => $.page_appCategoryManagement.actions.confirm)}
           </Button>
         </DialogActions>
       </Dialog>
@@ -282,7 +267,7 @@ export const AppCategoryManagementPage = () => {
         open={createAppCategoryDialogOpen}
         onClose={() => setCreateAppCategoryDialogOpen(false)}
       >
-        <DialogTitle>{t("dialogs.create.title")}</DialogTitle>
+        <DialogTitle>{t(($) => $.page_appCategoryManagement.dialogs.create.title)}</DialogTitle>
         <DialogContent>
           <form
             onSubmit={async (event: React.SyntheticEvent<HTMLFormElement>) => {
@@ -291,16 +276,16 @@ export const AppCategoryManagementPage = () => {
               const data = Object.fromEntries(formData.entries()) as {
                 name: string;
                 color: string;
-                iconPath: string;
+                iconPath: string | null;
               };
+              if (data.iconPath === "") data.iconPath = null;
               try {
                 await createAppCategoryAsync(data);
                 setCreateAppCategoryDialogOpen(false);
               } catch {
                 enqueueSnackbar(
-                  t("messages.error.createFailed", {
-                    ns: "shared",
-                    field: t("fields.category"),
+                  t(($) => $.page_appCategoryManagement.errors.createFailed, {
+                    field: t(($) => $.page_appCategoryManagement.fields.category),
                   }),
                   { variant: "error" },
                 );
@@ -315,11 +300,11 @@ export const AppCategoryManagementPage = () => {
               variant="outlined"
               id="name"
               name="name"
-              label={t("fields.name")}
+              label={t(($) => $.page_appCategoryManagement.fields.name)}
               fullWidth
             />
             <TextField
-              label={t("fields.color")}
+              label={t(($) => $.page_appCategoryManagement.fields.color)}
               margin="dense"
               fullWidth
               slotProps={{
@@ -338,17 +323,17 @@ export const AppCategoryManagementPage = () => {
               variant="outlined"
               id="iconPath"
               name="iconPath"
-              label={t("fields.iconPath")}
+              label={t(($) => $.page_appCategoryManagement.fields.iconPath)}
               fullWidth
             />
           </form>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateAppCategoryDialogOpen(false)}>
-            {t("actions.cancel", { ns: "shared" })}
+            {t(($) => $.page_appCategoryManagement.actions.cancel)}
           </Button>
           <Button type="submit" form="create-form">
-            {t("actions.create", { ns: "shared" })}
+            {t(($) => $.page_appCategoryManagement.actions.create)}
           </Button>
         </DialogActions>
       </Dialog>

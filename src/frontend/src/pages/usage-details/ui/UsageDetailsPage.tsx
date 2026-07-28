@@ -54,7 +54,7 @@ export const UsageDetailsPage = ({
   search,
   onSearchChange,
 }: UsageDetailsPageProps) => {
-  const { t } = useTranslation(["page_usageDetails", "shared"]);
+  const { t } = useTranslation(["page_usageDetails"]);
   const {
     handleTimeFrameChange,
     handleDateRangeChange,
@@ -132,12 +132,12 @@ export const UsageDetailsPage = ({
           />
           <Box sx={{ flex: 1, display: "flex", justifyContent: "end" }}>
             <DimensionMemberPicker
-              sx={{ width: "90%" }}
+              sx={{ minWidth: "60%" }}
               dimension={search.dimension}
               value={search.id || null}
               onValueChange={handleMemberIdChange}
               mode="single"
-              placeholder={t("filters.memberPickerPlaceholder")}
+              placeholder={t(($) => $.page_usageDetails.filters.memberPickerPlaceholder)}
             />
           </Box>
         </Stack>
@@ -163,7 +163,7 @@ export const UsageDetailsPage = ({
           }}
         >
           <Typography sx={{ textAlign: "center" }}>
-            {t("states.emptyPrompt")}
+            {t(($) => $.page_usageDetails.states.emptyPrompt)}
           </Typography>
         </Paper>
       ) : (

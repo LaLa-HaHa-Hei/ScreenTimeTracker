@@ -1,6 +1,6 @@
 {
-  "appSettings": {
-    "title": "Application Settings",
+  "localSettings": {
+    "title": "Local Settings",
     "language": {
       "label": "Language"
     },
@@ -30,11 +30,11 @@
       "label": "App Icon Directory",
       "tooltip": "App icons automatically fetched by the program will be saved under the folder path set here. Modifying this path will not change the location of existing icons; it will only affect newly fetched icons, including icons retrieved during information updates (if they have changed)."
     },
-    "appInfoStaleThresholdMinutes": {
-      "label": "App Info Stale Threshold (Minutes)",
-      "tooltip": "The program fetches the executable file path, icon, and description when it first encounters an app. Next time it encounters this app, it determines whether the time elapsed since the last fetch exceeds the threshold set here. If it does, it refetches the information; otherwise, it keeps the old data. Note: If you need to customize an app icon and have manually modified its icon path, you should generally disable auto-update for that app, otherwise the update will overwrite your custom icon path."
+    "appMetadataStaleThresholdMinutes": {
+      "label": "App Metadata Stale Threshold (Minutes)",
+      "tooltip": "The program fetches the executable file path, and icon when it first encounters an app. Next time it encounters this app, it determines whether the time elapsed since the last fetch exceeds the threshold set here. If it does, it refetches the information; otherwise, it keeps the old data. Note: If you need to customize an app icon and have manually modified its icon path, you should generally disable auto-update for that app, otherwise the update will overwrite your custom icon path."
     },
-    "activeSessionAutoSaveSeconds": {
+    "activeAppUsageSessionAutoSaveIntervalSeconds": {
       "label": "Active Session Auto-Save (Seconds)",
       "tooltip": "The time interval to automatically save the currently active app usage session, preventing data loss during unexpected crashes and ensuring accurate screen time statistics."
     },
@@ -50,15 +50,15 @@
       "label": "Idle Detection Polling Interval (Seconds)",
       "tooltip": "Detects whether the user is idle at the specified intervals."
     },
-    "minValidSessionDurationSeconds": {
+    "minValidAppUsageSessionDurationSeconds": {
       "label": "Min Valid Session Duration (Seconds)",
       "tooltip": "Each time optimization is triggered, session records with a duration shorter than this value will be automatically filtered and deleted."
     },
-    "sessionMergeToleranceSeconds": {
+    "appUsageSessionMergeToleranceSeconds": {
       "label": "Session Merge Tolerance (Seconds)",
       "tooltip": "Each time optimization is triggered, two records of the same app with an interval smaller than this value will be merged into a single long record. Note: During merging, any other usage records in between will be deleted regardless."
     },
-    "sessionOptimizationIntervalMinutes": {
+    "appUsageSessionOptimizationIntervalMinutes": {
       "label": "Session Optimization Interval (Minutes)",
       "tooltip": "A session optimization will be triggered at the interval set here."
     },
@@ -66,5 +66,11 @@
       "label": "Day Cutoff Hour",
       "tooltip": "Defines at what hour a day starts and at what hour the next day ends."
     }
+  },
+  "errors": {
+    "fetchFailed": "Failed to fetch data"
+  },
+  "actions": {
+    "confirm": "Confirm"
   }
 }

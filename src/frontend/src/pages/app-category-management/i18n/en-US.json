@@ -28,5 +28,15 @@
     "error": {
       "noCategorySelected": "No category selected for deletion"
     }
+  },
+  "errors": {
+    "updateFailed": "Failed to update {{field}}",
+    "deleteFailed": "Failed to delete {{field}}",
+    "createFailed": "Failed to create {{field}}"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "create": "Create"
   }
 }

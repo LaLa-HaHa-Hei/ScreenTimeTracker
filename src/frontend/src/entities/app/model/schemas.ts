@@ -5,12 +5,12 @@ export const appSchema = z.object({
   name: z.string(),
   color: z.string(),
   processName: z.string(),
-  isAutoUpdateEnabled: z.boolean(),
-  lastAutoUpdatedAt: z.date(),
+  allowMetadataAutoUpdate: z.boolean(),
+  metadataLastUpdatedAt: z.date(),
   appCategoryId: z.string(),
   executablePath: z.string().nullable(),
   iconPath: z.string().nullable(),
-  iconLastUpdatedAt: z.date(),
+  iconPathLastUpdatedAt: z.date(),
   isSystem: z.boolean(),
 });
 export type App = z.infer<typeof appSchema>;

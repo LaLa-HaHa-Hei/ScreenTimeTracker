@@ -1,12 +1,23 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/BuildingBlocks/ScreenTimeTracker.BuildingBlocks.csproj" />
-    <Project Path="src/Shared/ScreenTimeTracker.Shared.csproj" />
-  </Folder>
-  <Folder Name="/src/Modules/">
-    <Project Path="src/Modules/ScreenTime/ScreenTimeTracker.Modules.ScreenTime.csproj" />
+    <Project Path="src/ScreenTimeTracker.BuildingBlocks/ScreenTimeTracker.BuildingBlocks.csproj" />
   </Folder>
   <Folder Name="/src/Hosts/">
-    <Project Path="src/Hosts/Desktop/ScreenTimeTracker.Hosts.Desktop.csproj" />
+    <Project Path="src/Hosts/ScreenTimeTracker.Desktop/ScreenTimeTracker.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/DesktopSettings/">
+    <Project Path="src/Modules/DesktopSettings/ScreenTimeTracker.DesktopSettings.Contracts/ScreenTimeTracker.DesktopSettings.Contracts.csproj" />
+    <Project Path="src/Modules/DesktopSettings/ScreenTimeTracker.DesktopSettings/ScreenTimeTracker.DesktopSettings.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/ScreenTime/">
+    <Project Path="src/Modules/ScreenTime/ScreenTimeTracker.ScreenTime/ScreenTimeTracker.ScreenTime.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ScreenTimeTracker.ArchitectureTests/ScreenTimeTracker.ArchitectureTests.csproj" />
+    <Project Path="tests/ScreenTimeTracker.Testing/ScreenTimeTracker.Testing.csproj" />
+  </Folder>
+  <Folder Name="/tests/BuildingBlocks/">
+    <Project Path="tests/BuildingBlocks/ScreenTimeTracker.BuildingBlocks.UnitTests/ScreenTimeTracker.BuildingBlocks.UnitTests.csproj" />
   </Folder>
 </Solution>

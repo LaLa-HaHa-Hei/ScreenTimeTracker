@@ -4,5 +4,16 @@
     "lastWeek": "上周",
     "last31Days": "近 31 天",
     "lastMonth": "上个月"
+  },
+  "date": {
+    "rangeSeparator": "至",
+    "today": "今天",
+    "yesterday": "昨天"
+  },
+  "timeFrame": {
+    "day": "日",
+    "week": "周",
+    "month": "月",
+    "custom": "自定义"
   }
 }

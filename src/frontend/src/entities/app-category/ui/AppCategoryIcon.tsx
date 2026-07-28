@@ -8,13 +8,13 @@ export const AppCategoryIcon = ({
   className,
   id,
   iconPath,
-  iconLastUpdatedAt,
+  iconPathLastUpdatedAt,
 }: {
   sx?: SxProps<Theme>;
   className?: string;
   id: string;
   iconPath: string | null;
-  iconLastUpdatedAt: Date;
+  iconPathLastUpdatedAt: Date;
 }) => {
   return (
     <Box
@@ -22,7 +22,7 @@ export const AppCategoryIcon = ({
       src={
         iconPath === null
           ? UnknownAppCategory
-          : getAppCategoryIconUrl(id, iconLastUpdatedAt)
+          : getAppCategoryIconUrl(id, iconPathLastUpdatedAt)
       }
       className={className}
       sx={[{}, ...(Array.isArray(sx) ? sx : [sx])]}

@@ -6,8 +6,8 @@
     "appCategory": "App Category",
     "icon": "Icon",
     "iconPath": "Icon Path",
-    "isAutoUpdateEnabled": "Auto Update",
-    "lastAutoUpdatedAt": "Last Auto Updated",
+    "allowMetadataAutoUpdate": "Auto Update Metadata",
+    "metadataLastUpdatedAt": "Last Metadata Auto Updated",
     "processName": "Process Name",
     "executablePath": "Executable Path",
     "action": "Actions"
@@ -17,6 +17,12 @@
     "description": "All existing data for this application will also be deleted."
   },
   "errors": {
-    "noAppSelected": "No application selected for deletion"
+    "noAppSelected": "No application selected for deletion",
+    "updateFailed": "Failed to update {{field}}",
+    "deleteFailed": "Failed to delete {{field}}"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   }
 }

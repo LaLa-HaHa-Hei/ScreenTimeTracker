@@ -4,5 +4,16 @@
     "lastWeek": "Last Week",
     "last31Days": "Last 31 Days",
     "lastMonth": "Last Month"
+  },
+  "date": {
+    "rangeSeparator": "to",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "timeFrame": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "custom": "Custom"
   }
 }

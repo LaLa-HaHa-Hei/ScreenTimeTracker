@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import ReactECharts from "echarts-for-react";
-import {
-  appCategoryUsageQueryOptions,
-  appUsageQueryOptions,
-} from "../api/queries";
+import { appCategoryUsageQueryOptions, appUsageQueryOptions } from "../api/queries";
 import type { DateOnly } from "@/shared/lib/date-only";
 import { formatSecondsDuration } from "@/shared/lib/time";
 import { useMemo } from "react";
@@ -36,7 +33,7 @@ export const UsageChart = ({
   includedIds,
   excludedIds,
 }: UsageChartProps) => {
-  const { t } = useTranslation(["feature_usageChart", "shared"]);
+  const { t } = useTranslation(["feature_usageChart"]);
   const { data: appUsageData } = useQuery({
     ...appUsageQueryOptions({
       granularity: granularity,
@@ -62,8 +59,7 @@ export const UsageChart = ({
   const isDark = theme.palette.mode === "dark";
 
   const option = useMemo(() => {
-    const usageData =
-      (type === "app" ? appUsageData : appCategoryUsageData) || [];
+    const usageData = (type === "app" ? appUsageData : appCategoryUsageData) || [];
     const sum = usageData.reduce((acc, cur) => acc + cur.durationSeconds, 0);
     const avg = Math.round(sum / (usageData.length || 1));
     const normalized = usageData.map((item) => {
@@ -73,8 +69,7 @@ export const UsageChart = ({
         name = item.startTime.getHours().toString().padStart(2, "0") + ":00";
       } else if (xAxisType === "day") {
         name = dayjs(item.startTime).format("L");
-      } else if (xAxisType === "week")
-        name = dayjs(item.startTime).format("ddd");
+      } else if (xAxisType === "week") name = dayjs(item.startTime).format("ddd");
 
       return { name, value: item.durationSeconds };
     });
@@ -84,11 +79,11 @@ export const UsageChart = ({
 
     const titleText =
       granularity !== "hour"
-        ? t("chart.titleWithAverage", {
+        ? t(($) => $.feature_usageChart.chart.titleWithAverage, {
             total: formattedSum,
             average: formattedAvg,
           })
-        : t("chart.titleWithoutAverage", { total: formattedSum });
+        : t(($) => $.feature_usageChart.chart.titleWithoutAverage, { total: formattedSum });
 
     return {
       backgroundColor: "transparent",
@@ -128,7 +123,7 @@ export const UsageChart = ({
                     {
                       yAxis: avg,
                       label: {
-                        formatter: t("chart.averageLabel", {
+                        formatter: t(($) => $.feature_usageChart.chart.averageLabel, {
                           value: formattedAvg,
                         }),
                       },
@@ -138,14 +133,11 @@ export const UsageChart = ({
         },
       ],
     };
-  }, [granularity, type, xAxisType, appUsageData, appCategoryUsageData]);
+  }, [granularity, type, xAxisType, appUsageData, appCategoryUsageData, t]);
 
   return (
     <Box
-      sx={[
-        { minWidth: 0, width: "100%", overflow: "hidden" },
-        ...(Array.isArray(sx) ? sx : [sx]),
-      ]}
+      sx={[{ minWidth: 0, width: "100%", overflow: "hidden" }, ...(Array.isArray(sx) ? sx : [sx])]}
       className={className}
     >
       <ReactECharts

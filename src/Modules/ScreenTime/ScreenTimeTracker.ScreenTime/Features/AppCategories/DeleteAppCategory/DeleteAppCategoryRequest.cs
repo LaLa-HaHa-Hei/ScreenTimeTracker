@@ -1,0 +1,3 @@
+namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.DeleteAppCategory;
+
+public record DeleteAppCategoryRequest(Guid AppCategoryId);

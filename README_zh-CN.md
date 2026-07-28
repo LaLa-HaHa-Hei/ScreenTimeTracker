@@ -25,6 +25,33 @@
 ## 下载
 您可以通过 [Releases](https://github.com/majianchuan/ScreenTimeTracker/releases) 下载软件或自行构建。
 
+## 技术栈
+### 后端
+- .NET 10.0 (C#)
+- ASP.NET Core Web API
+- FastEndpoints
+- Entity Framework Core
+- SQLite
+- Mediator
+### 前端
+- React
+- TypeScript
+- Vite
+- Material UI (MUI)
+- TanStack Query
+- TanStack Router
+- i18next
+- Zod
+- ECharts
+### 桌面端
+- Photino.NET
+- H.NotifyIcon
+
+## 架构概览
+后端采用模块化单体架构（Modular Monolith），内部模块采用垂直切片架构（Vertical Slice Architecture）。  
+前端采用特性切片设计（Feature-Sliced Design，FSD）。  
+软件运行后会启动本地后端提供 API 服务，通过 Photino.NET 桌面壳提供的 WebView 加载前端页面并与后端 API 进行交互。
+
 ## 开发
 - 准备环境
   - .NET SDK 10.0+
@@ -51,4 +78,3 @@
 
 - **Discord 社区**：[点击加入 Discord](https://discord.com/invite/PxqGwcsVuh)
 - **QQ 交流群**：[点击加入 QQ 群聊](https://qm.qq.com/q/uiwJZiQRAm)
-

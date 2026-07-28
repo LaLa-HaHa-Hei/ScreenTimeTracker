@@ -1,7 +1,7 @@
 {
   "chart": {
-    "titleWithAverage": "$t(shared:common.total)：{{total}} | $t(shared:common.average)：{{average}}",
-    "titleWithoutAverage": "$t(shared:common.total)：{{total}}",
-    "averageLabel": "$t(shared:common.average)\n{{value}}"
+    "titleWithAverage": "总计：{{total}} | 平均：{{average}}",
+    "titleWithoutAverage": "总计：{{total}}",
+    "averageLabel": "平均\n{{value}}"
   }
 }

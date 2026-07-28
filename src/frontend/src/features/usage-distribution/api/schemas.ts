@@ -6,7 +6,7 @@ export const appUsageDistributionItemDtoSchema = z.object({
   name: z.string(),
   color: z.string(),
   iconPath: z.string().nullable(),
-  iconLastUpdatedAt: z.coerce.date(),
+  iconPathLastUpdatedAt: z.coerce.date(),
   durationSeconds: z.number(),
 });
 export type AppUsageDistributionItemDto = z.infer<
@@ -29,7 +29,7 @@ export const appCategoryUsageDistributionItemDtoSchema = z.object({
   name: z.string(),
   color: z.string(),
   iconPath: z.string().nullable(),
-  iconLastUpdatedAt: z.coerce.date(),
+  iconPathLastUpdatedAt: z.coerce.date(),
   durationSeconds: z.number(),
 });
 export type AppCategoryUsageDistributionItemDto = z.infer<

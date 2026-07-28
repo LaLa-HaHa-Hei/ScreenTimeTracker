@@ -10,27 +10,24 @@ import { SnackbarProvider } from "notistack";
 import i18n, { type LanguageCode } from "@/shared/i18n";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { routeTree } from "../routeTree.gen";
 import { I18nextProvider } from "react-i18next";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { appSettingsQueries } from "@/entities/app-settings";
+import { localSettingsQueries } from "@/entities/local-settings";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import "dayjs/locale/zh-cn";
 import "dayjs/locale/en";
-import appEnUS from "../i18n/en-US.json";
-import appZhCN from "../i18n/zh-CN.json";
+import enUS from "../i18n/en-US.json";
+import zhCN from "../i18n/zh-CN.json";
+import { useTranslation } from "react-i18next";
 
-i18n.addResourceBundle("en", "app", appEnUS, true, true);
-i18n.addResourceBundle("zh", "app", appZhCN, true, true);
+i18n.addResourceBundle("en-US", "app", enUS, true, true);
+i18n.addResourceBundle("zh-CN", "app", zhCN, true, true);
 
 const dayjsLocaleMap: Record<LanguageCode, string> = {
   "zh-CN": "zh-cn",
@@ -38,8 +35,10 @@ const dayjsLocaleMap: Record<LanguageCode, string> = {
 };
 
 const AppLocalizationProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { data: appSettingsDtoData, isLoading: isAppSettingsDtoDataLoading } =
-    useQuery(appSettingsQueries.appSettings());
+  const { t } = useTranslation(["app"]);
+  const { data: appSettingsDtoData, isLoading: isAppSettingsDtoDataLoading } = useQuery(
+    localSettingsQueries.localSettings(),
+  );
 
   useEffect(() => {
     if (appSettingsDtoData?.language) {
@@ -69,7 +68,7 @@ const AppLocalizationProvider: FC<PropsWithChildren> = ({ children }) => {
           justifyContent: "center",
         }}
       >
-        <Typography>无法获取数据，请检查网络</Typography>
+        <Typography>{t(($) => $.app.errors.fetchFailed)}</Typography>
       </Box>
     );
 

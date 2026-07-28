@@ -35,7 +35,7 @@ import dayjs from "@/shared/lib/dayjs";
 import { useTranslation } from "react-i18next";
 
 export const AppManagementPage = () => {
-  const { t } = useTranslation(["page_appManagement", "shared"]);
+  const { t } = useTranslation(["page_appManagement"]);
   const { enqueueSnackbar } = useSnackbar();
   const { data: appsData, isLoading: isAppsDataLoading } = useQuery(
     appQueries.apps({}),
@@ -67,7 +67,7 @@ export const AppManagementPage = () => {
   const columns: GridColDef[] = [
     {
       field: "name",
-      headerName: t("columns.name"),
+      headerName: t(($) => $.page_appManagement.columns.name),
       width: 150,
       renderCell: (params: GridRenderCellParams<App, string>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -84,9 +84,8 @@ export const AppManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("errors.updateFailed", {
-                    ns: "shared",
-                    field: t("columns.name"),
+                  t(($) => $.page_appManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appManagement.columns.name),
                   }),
                   { variant: "error" },
                 );
@@ -98,7 +97,7 @@ export const AppManagementPage = () => {
     },
     {
       field: "color",
-      headerName: t("columns.color"),
+      headerName: t(($) => $.page_appManagement.columns.color),
       width: 70,
       renderCell: (params: GridRenderCellParams<App, string>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -114,9 +113,8 @@ export const AppManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("errors.updateFailed", {
-                    ns: "shared",
-                    field: t("columns.color"),
+                  t(($) => $.page_appManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appManagement.columns.color),
                   }),
                   { variant: "error" },
                 );
@@ -128,7 +126,7 @@ export const AppManagementPage = () => {
     },
     {
       field: "appCategory",
-      headerName: t("columns.appCategory"),
+      headerName: t(($) => $.page_appManagement.columns.appCategory),
       width: 210,
       valueGetter: (_, row) => {
         return categoryMap.get(row.appCategoryId) ?? "";
@@ -145,9 +143,8 @@ export const AppManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("errors.updateFailed", {
-                    ns: "shared",
-                    field: t("columns.appCategory"),
+                  t(($) => $.page_appManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appManagement.columns.appCategory),
                   }),
                   { variant: "error" },
                 );
@@ -159,7 +156,7 @@ export const AppManagementPage = () => {
     },
     {
       field: "icon",
-      headerName: t("columns.icon"),
+      headerName: t(($) => $.page_appManagement.columns.icon),
       width: 50,
       sortable: false,
       filterable: false,
@@ -169,7 +166,7 @@ export const AppManagementPage = () => {
           <AppIcon
             id={params.row.id}
             iconPath={params.row.iconPath}
-            iconLastUpdatedAt={params.row.iconLastUpdatedAt}
+            iconPathLastUpdatedAt={params.row.iconPathLastUpdatedAt}
             sx={{
               width: "2rem",
               height: "2rem",
@@ -180,7 +177,7 @@ export const AppManagementPage = () => {
     },
     {
       field: "iconPath",
-      headerName: t("columns.iconPath"),
+      headerName: t(($) => $.page_appManagement.columns.iconPath),
       width: 150,
       renderCell: (params: GridRenderCellParams<App, string>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -197,9 +194,8 @@ export const AppManagementPage = () => {
                 });
               } catch {
                 enqueueSnackbar(
-                  t("errors.updateFailed", {
-                    ns: "shared",
-                    field: t("columns.iconPath"),
+                  t(($) => $.page_appManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appManagement.columns.iconPath),
                   }),
                   { variant: "error" },
                 );
@@ -210,8 +206,8 @@ export const AppManagementPage = () => {
       ),
     },
     {
-      field: "isAutoUpdateEnabled",
-      headerName: t("columns.isAutoUpdateEnabled"),
+      field: "allowMetadataAutoUpdate",
+      headerName: t(($) => $.page_appManagement.columns.allowMetadataAutoUpdate),
       width: 80,
       renderCell: (params: GridRenderCellParams<App, boolean>) => (
         <Switch
@@ -220,14 +216,13 @@ export const AppManagementPage = () => {
             try {
               await patchAppAsync({
                 id: params.row.id,
-                body: { isAutoUpdateEnabled: event.target.checked },
+                body: { allowMetadataAutoUpdate: event.target.checked },
               });
             } catch {
-              enqueueSnackbar(
-                t("errors.updateFailed", {
-                  ns: "shared",
-                  field: t("columns.isAutoUpdateEnabled"),
-                }),
+                enqueueSnackbar(
+                  t(($) => $.page_appManagement.errors.updateFailed, {
+                    field: t(($) => $.page_appManagement.columns.allowMetadataAutoUpdate),
+                  }),
                 { variant: "error" },
               );
             }
@@ -236,24 +231,24 @@ export const AppManagementPage = () => {
       ),
     },
     {
-      field: "lastAutoUpdatedAt",
-      headerName: t("columns.lastAutoUpdatedAt"),
+      field: "metadataLastUpdatedAt",
+      headerName: t(($) => $.page_appManagement.columns.metadataLastUpdatedAt),
       width: 140,
       valueFormatter: (value) => dayjs(value).format("L LT"),
     },
     {
       field: "processName",
-      headerName: t("columns.processName"),
+      headerName: t(($) => $.page_appManagement.columns.processName),
       width: 150,
     },
     {
       field: "executablePath",
-      headerName: t("columns.executablePath"),
+      headerName: t(($) => $.page_appManagement.columns.executablePath),
       width: 200,
     },
     {
       field: "action",
-      headerName: t("columns.action"),
+      headerName: t(($) => $.page_appManagement.columns.action),
       width: 60,
       sortable: false,
       filterable: false,
@@ -304,11 +299,11 @@ export const AppManagementPage = () => {
         role="alertdialog"
       >
         <DialogTitle>
-          {t("deleteConfirm.title", { name: appToDelete?.name })}
+          {t(($) => $.page_appManagement.deleteConfirm.title, { name: appToDelete?.name })}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            {t("deleteConfirm.description")}
+            {t(($) => $.page_appManagement.deleteConfirm.description)}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -316,12 +311,12 @@ export const AppManagementPage = () => {
             onClick={() => setDeleteAppComfirmDialogOpen(false)}
             autoFocus
           >
-            {t("actions.cancel", { ns: "shared" })}
+            {t(($) => $.page_appManagement.actions.cancel)}
           </Button>
           <Button
             onClick={async () => {
               if (appToDelete == null) {
-                enqueueSnackbar(t("errors.noAppSelected"), {
+                enqueueSnackbar(t(($) => $.page_appManagement.errors.noAppSelected), {
                   variant: "error",
                 });
                 return;
@@ -330,9 +325,8 @@ export const AppManagementPage = () => {
                 await deleteAppAsync(appToDelete.id);
               } catch {
                 enqueueSnackbar(
-                  t("errors.deleteFailed", {
-                    ns: "shared",
-                    field: t("entityName"),
+                  t(($) => $.page_appManagement.errors.deleteFailed, {
+                    field: t(($) => $.page_appManagement.entityName),
                   }),
                   { variant: "error" },
                 );
@@ -343,7 +337,7 @@ export const AppManagementPage = () => {
             }}
             color="error"
           >
-            {t("actions.confirm", { ns: "shared" })}
+            {t(($) => $.page_appManagement.actions.confirm)}
           </Button>
         </DialogActions>
       </Dialog>

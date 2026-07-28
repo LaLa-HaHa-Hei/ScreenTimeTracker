@@ -5,7 +5,7 @@ import type { SxProps } from "@mui/material/styles";
 import ToggleButton from "@mui/material/ToggleButton";
 import { useTranslation } from "react-i18next";
 
-type TimeFrameOption = { value: TimeFrame; labelKey: string };
+type TimeFrameOption = { value: TimeFrame; label: string };
 
 export type TimeFrameSelectorProps = {
   sx?: SxProps<Theme>;
@@ -20,23 +20,23 @@ export const TimeFrameSelector = ({
   value,
   onValueChange,
 }: TimeFrameSelectorProps) => {
-  const { t } = useTranslation(["shared"]);
+  const { t } = useTranslation(["feature_dateFilter"]);
   const options: TimeFrameOption[] = [
     {
       value: "day",
-      labelKey: "timeFrame.day",
+      label: t(($) => $.feature_dateFilter.timeFrame.day),
     },
     {
       value: "week",
-      labelKey: "timeFrame.week",
+      label: t(($) => $.feature_dateFilter.timeFrame.week),
     },
     {
       value: "month",
-      labelKey: "timeFrame.month",
+      label: t(($) => $.feature_dateFilter.timeFrame.month),
     },
     {
       value: "custom",
-      labelKey: "timeFrame.custom",
+      label: t(($) => $.feature_dateFilter.timeFrame.custom),
     },
   ];
 
@@ -55,7 +55,7 @@ export const TimeFrameSelector = ({
     >
       {options.map((item) => (
         <ToggleButton key={item.value} value={item.value}>
-          {t(item.labelKey)}
+          {item.label}
         </ToggleButton>
       ))}
     </ToggleButtonGroup>

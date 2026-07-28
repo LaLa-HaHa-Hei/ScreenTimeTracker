@@ -2,16 +2,16 @@ import { z } from "zod";
 
 export const userSettingsDtoSchema = z.object({
   appIconDirectory: z.string(),
-  appInfoStaleThresholdMinutes: z.int(),
-  activeSessionAutoSaveSeconds: z.int(),
+  appMetadataStaleThresholdMinutes: z.int(),
+  activeAppUsageSessionAutoSaveIntervalSeconds: z.int(),
 
   isIdleDetectionEnabled: z.boolean(),
   idleThresholdSeconds: z.int(),
   idleDetectionPollingIntervalSeconds: z.int(),
 
-  minValidSessionDurationSeconds: z.int(),
-  sessionMergeToleranceSeconds: z.int(),
-  sessionOptimizationIntervalMinutes: z.int(),
+  minValidAppUsageSessionDurationSeconds: z.int(),
+  appUsageSessionMergeToleranceSeconds: z.int(),
+  appUsageSessionOptimizationIntervalMinutes: z.int(),
 
   dayCutoffHour: z.int(),
 });

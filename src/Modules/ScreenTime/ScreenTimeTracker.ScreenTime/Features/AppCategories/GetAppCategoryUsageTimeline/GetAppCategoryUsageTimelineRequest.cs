@@ -1,0 +1,10 @@
+using FastEndpoints;
+
+namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategoryUsageTimeline;
+
+public record GetAppCategoryUsageTimelineRequest(
+    [property: QueryParam] DateOnly StartDate,
+    [property: QueryParam] DateOnly EndDate,
+    [property: QueryParam] IEnumerable<Guid>? IncludedIds = null,
+    [property: QueryParam] IEnumerable<Guid>? ExcludedIds = null
+);

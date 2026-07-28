@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ScreenTimeTracker.DesktopSettings.Contracts</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ScreenTimeTracker.BuildingBlocks\ScreenTimeTracker.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

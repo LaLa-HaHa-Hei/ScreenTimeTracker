@@ -6,5 +6,8 @@
     "categories": "Category Management",
     "data": "Data Management",
     "settings": "Settings"
+  },
+  "errors": {
+    "fetchFailed": "Failed to fetch data"
   }
 }

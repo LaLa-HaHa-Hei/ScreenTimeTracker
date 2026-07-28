@@ -24,5 +24,16 @@
   },
   "export": {
     "filenamePattern": "screen-time-tracker-data-{{date}}.json"
+  },
+  "common": {
+    "to": "至"
+  },
+  "validation": {
+    "selectDateRange": "请选择日期范围"
+  },
+  "actions": {
+    "delete": "删除",
+    "cancel": "取消",
+    "confirm": "确认"
   }
 }

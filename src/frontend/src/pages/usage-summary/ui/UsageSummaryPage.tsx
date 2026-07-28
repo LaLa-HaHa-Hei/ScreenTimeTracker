@@ -63,7 +63,7 @@ export const UsageSummaryPage = ({
   search,
   onSearchChange,
 }: UsageSummaryPageProps) => {
-  const { t } = useTranslation(["page_usageSummary", "shared"]);
+  const { t } = useTranslation(["page_usageSummary"]);
   const {
     handleTimeFrameChange,
     handleDateRangeChange,
@@ -145,12 +145,13 @@ export const UsageSummaryPage = ({
           />
           <Box sx={{ flex: 1, display: "flex", justifyContent: "end" }}>
             <DimensionMemberPicker
-              sx={{ width: "90%" }}
+              sx={{ minWidth: "60%" }}
               dimension={search.dimension}
               value={search.excludedIds || []}
               onValueChange={handleMemberIdsChange}
               mode="multiple"
-              placeholder={t("filters.excludePlaceholder")}
+              placeholder={t(($) => $.page_usageSummary.filters.excludePlaceholder)}
+              maxDisplayCount={2}
             />
           </Box>
         </Stack>
@@ -241,9 +242,9 @@ export const UsageSummaryPage = ({
               }}
             >
               <ToggleButton value="pieChart">
-                {t("viewTypes.pieChart")}
+                {t(($) => $.page_usageSummary.viewTypes.pieChart)}
               </ToggleButton>
-              <ToggleButton value="list">{t("viewTypes.list")}</ToggleButton>
+              <ToggleButton value="list">{t(($) => $.page_usageSummary.viewTypes.list)}</ToggleButton>
             </ToggleButtonGroup>
             <Select
               value={search.topN}

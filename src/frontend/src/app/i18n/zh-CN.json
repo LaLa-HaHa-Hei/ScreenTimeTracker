@@ -6,5 +6,8 @@
     "categories": "类别管理",
     "data": "数据管理",
     "settings": "设置"
+  },
+  "errors": {
+    "fetchFailed": "获取数据失败"
   }
 }

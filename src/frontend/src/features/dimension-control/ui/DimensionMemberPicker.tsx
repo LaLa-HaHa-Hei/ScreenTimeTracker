@@ -19,25 +19,16 @@ export type DimensionMemberPickerProps = {
       mode: "multiple";
       value: string[];
       onValueChange: (value: string[]) => void;
+      maxDisplayCount?: number;
     }
 );
 
 export const DimensionMemberPicker = (props: DimensionMemberPickerProps) => {
-  const { className, sx, dimension, placeholder, ...pickerProps } = props;
+  const { dimension, ...pickerProps } = props;
 
   return dimension === "app" ? (
-    <AppPicker
-      className={className}
-      sx={sx}
-      placeholder={placeholder}
-      {...pickerProps}
-    />
+    <AppPicker {...pickerProps} />
   ) : (
-    <AppCategoryPicker
-      className={className}
-      sx={sx}
-      placeholder={placeholder}
-      {...pickerProps}
-    />
+    <AppCategoryPicker {...pickerProps} />
   );
 };

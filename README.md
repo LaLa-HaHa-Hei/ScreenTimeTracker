@@ -25,6 +25,33 @@ An intuitive and lightweight desktop screen time tracking tool designed to help 
 ## Download
 You can download the application from [Releases](https://github.com/majianchuan/ScreenTimeTracker/releases) or build it yourself.
 
+## Tech Stack
+### Backend
+* .NET 10.0 (C#)
+* ASP.NET Core Web API
+* FastEndpoints
+* Entity Framework Core
+* SQLite
+* Mediator
+### Frontend
+* React
+* TypeScript
+* Vite
+* Material UI (MUI)
+* TanStack Query
+* TanStack Router
+* i18next
+* Zod
+* ECharts
+### Desktop
+* Photino.NET
+* H.NotifyIcon
+
+## Architecture Overview
+The backend follows a Modular Monolith architecture, with individual modules organized using Vertical Slice Architecture.  
+The frontend follows Feature-Sliced Design (FSD).  
+When the application starts, it launches a local backend API service. The frontend is loaded into the WebView provided by the Photino.NET desktop shell and communicates with the backend through the local API.
+
 ## Development
 - **Prerequisites**
   - .NET SDK 10.0+

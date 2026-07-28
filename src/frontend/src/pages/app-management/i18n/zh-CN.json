@@ -6,8 +6,8 @@
     "appCategory": "应用类别",
     "icon": "图标",
     "iconPath": "图标路径",
-    "isAutoUpdateEnabled": "自动更新",
-    "lastAutoUpdatedAt": "上次自动更新时间",
+    "allowMetadataAutoUpdate": "自动更新元数据",
+    "metadataLastUpdatedAt": "上次元数据更新时间",
     "processName": "进程名",
     "executablePath": "可执行文件路径",
     "action": "操作"
@@ -17,6 +17,12 @@
     "description": "同时将删除所有该应用的已有数据。"
   },
   "errors": {
-    "noAppSelected": "未选择要删除的应用"
+    "noAppSelected": "未选择要删除的应用",
+    "updateFailed": "更新{{field}}失败",
+    "deleteFailed": "删除{{field}}失败"
+  },
+  "actions": {
+    "cancel": "取消",
+    "confirm": "确认"
   }
 }

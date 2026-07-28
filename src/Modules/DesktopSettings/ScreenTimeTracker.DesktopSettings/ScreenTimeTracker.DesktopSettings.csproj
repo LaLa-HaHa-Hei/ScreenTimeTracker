@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ScreenTimeTracker.DesktopSettings</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" />
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Microsoft.Windows.CsWin32">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="TaskScheduler" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ScreenTimeTracker.BuildingBlocks\ScreenTimeTracker.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\ScreenTimeTracker.DesktopSettings.Contracts\ScreenTimeTracker.DesktopSettings.Contracts.csproj" />
+  </ItemGroup>
+</Project>

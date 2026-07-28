@@ -1,11 +1,5 @@
-import {
-  appSettingsQueries,
-  usePatchAppSettings,
-} from "@/entities/app-settings";
-import {
-  usePatchUserSettings,
-  userSettingsQueries,
-} from "@/entities/user-settings";
+import { localSettingsQueries, usePatchLocalettings } from "@/entities/local-settings";
+import { usePatchUserSettings, userSettingsQueries } from "@/entities/user-settings";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
@@ -29,17 +23,18 @@ import { SUPPORTED_LANGUAGES, type LanguageCode } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
 
 export const SettingsManagementPage = () => {
-  const { t } = useTranslation(["page_settingsManagement", "shared"]);
-  const { data: userSettingsDtoData, isLoading: isuserSettingsDataLoading } =
-    useQuery(userSettingsQueries.userSettings());
-  const { data: appSettingsDtoData, isLoading: isAppSettingsDataLoading } =
-    useQuery(appSettingsQueries.appSettings());
+  const { t } = useTranslation(["page_settingsManagement"]);
+  const { data: userSettingsDtoData, isLoading: isuserSettingsDataLoading } = useQuery(
+    userSettingsQueries.userSettings(),
+  );
+  const { data: localSettingsDtoData, isLoading: isLocalSettingsDataLoading } = useQuery(
+    localSettingsQueries.localSettings(),
+  );
   const { mutateAsync: patchUserSettingsAsync } = usePatchUserSettings();
-  const { mutateAsync: patchAppSettingsAsync } = usePatchAppSettings();
-  const [autoStartAlertDialogOpen, setAutoStartAlertDialogOpen] =
-    useState(false);
+  const { mutateAsync: patchLocalSettingsAsync } = usePatchLocalettings();
+  const [autoStartAlertDialogOpen, setAutoStartAlertDialogOpen] = useState(false);
 
-  if (isuserSettingsDataLoading || isAppSettingsDataLoading)
+  if (isuserSettingsDataLoading || isLocalSettingsDataLoading)
     return (
       <Box
         sx={{
@@ -51,7 +46,7 @@ export const SettingsManagementPage = () => {
       </Box>
     );
 
-  if (!userSettingsDtoData || !appSettingsDtoData)
+  if (!userSettingsDtoData || !localSettingsDtoData)
     return (
       <Box
         sx={{
@@ -59,7 +54,7 @@ export const SettingsManagementPage = () => {
           justifyContent: "center",
         }}
       >
-        <Typography>{t("errors.fetchFailed", { ns: "shared" })}</Typography>
+        <Typography>{t(($) => $.page_settingsManagement.errors.fetchFailed)}</Typography>
       </Box>
     );
 
@@ -72,9 +67,7 @@ export const SettingsManagementPage = () => {
         }}
       >
         <Stack spacing={1} direction="column">
-          <Typography sx={{ fontWeight: "bold" }}>
-            {t("appSettings.title")}
-          </Typography>
+          <Typography sx={{ fontWeight: "bold" }}>{t(($) => $.page_settingsManagement.localSettings.title)}</Typography>
           {/* 语言设置 */}
           <Stack
             direction="row"
@@ -83,18 +76,20 @@ export const SettingsManagementPage = () => {
               justifyContent: "space-between",
             }}
           >
-            <Typography>{t("appSettings.language.label")}</Typography>
+            <Typography>{t(($) => $.page_settingsManagement.localSettings.language.label)}</Typography>
             <Select
               size="small"
-              value={appSettingsDtoData.language}
+              value={localSettingsDtoData.language}
               onChange={async (event: SelectChangeEvent<string>) => {
-                await patchAppSettingsAsync({
+                await patchLocalSettingsAsync({
                   language: event.target.value as LanguageCode,
                 });
               }}
             >
               {SUPPORTED_LANGUAGES.map((language) => (
-                <MenuItem value={language.code}>{language.label}</MenuItem>
+                <MenuItem key={language.code} value={language.code}>
+                  {language.label}
+                </MenuItem>
               ))}
             </Select>
           </Stack>
@@ -107,10 +102,8 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("appSettings.defaultUIOpenMode.label")}
-              </Typography>
-              <Tooltip title={t("appSettings.defaultUIOpenMode.tooltip")}>
+              <Typography>{t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -118,19 +111,19 @@ export const SettingsManagementPage = () => {
             </Stack>
             <Select
               size="small"
-              value={appSettingsDtoData.defaultUIOpenMode}
+              value={localSettingsDtoData.defaultUIOpenMode}
               onChange={async (event: SelectChangeEvent<string>) => {
-                await patchAppSettingsAsync({
+                await patchLocalSettingsAsync({
                   defaultUIOpenMode: event.target.value as "Window" | "Browser",
                 });
               }}
             >
               <MenuItem value="Window">
                 {" "}
-                {t("appSettings.defaultUIOpenMode.options.window")}
+                {t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.options.window)}
               </MenuItem>
               <MenuItem value="Browser">
-                {t("appSettings.defaultUIOpenMode.options.browser")}
+                {t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.options.browser)}
               </MenuItem>
             </Select>
           </Stack>
@@ -143,24 +136,22 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("appSettings.isAutoStartEnabled.label")}
-              </Typography>
-              <Tooltip title={t("appSettings.isAutoStartEnabled.tooltip")}>
+              <Typography>{t(($) => $.page_settingsManagement.localSettings.isAutoStartEnabled.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.localSettings.isAutoStartEnabled.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
               </Tooltip>
             </Stack>
             <Switch
-              checked={appSettingsDtoData.isAutoStartEnabled}
+              checked={localSettingsDtoData.isAutoStartEnabled}
               onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
                 const {
                   target: { checked },
                 } = event;
                 if (checked === true) setAutoStartAlertDialogOpen(true);
 
-                await patchAppSettingsAsync({
+                await patchLocalSettingsAsync({
                   isAutoStartEnabled: checked,
                 });
               }}
@@ -172,14 +163,14 @@ export const SettingsManagementPage = () => {
             onClose={() => setAutoStartAlertDialogOpen(false)}
             role="alertdialog"
           >
-            <DialogTitle>{t("appSettings.autoStartAlert.title")}</DialogTitle>
+            <DialogTitle>{t(($) => $.page_settingsManagement.localSettings.autoStartAlert.title)}</DialogTitle>
             <DialogActions>
               <Button
                 onClick={() => {
                   setAutoStartAlertDialogOpen(false);
                 }}
               >
-                {t("actions.confirm", { ns: "shared" })}
+                {t(($) => $.page_settingsManagement.actions.confirm)}
               </Button>
             </DialogActions>
           </Dialog>
@@ -192,19 +183,17 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("appSettings.isSilentStartEnabled.label")}
-              </Typography>
-              <Tooltip title={t("appSettings.isSilentStartEnabled.tooltip")}>
+              <Typography>{t(($) => $.page_settingsManagement.localSettings.isSilentStartEnabled.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.localSettings.isSilentStartEnabled.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
               </Tooltip>
             </Stack>
             <Switch
-              checked={appSettingsDtoData.isSilentStartEnabled}
+              checked={localSettingsDtoData.isSilentStartEnabled}
               onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
-                await patchAppSettingsAsync({
+                await patchLocalSettingsAsync({
                   isSilentStartEnabled: event.target.checked,
                 });
               }}
@@ -219,9 +208,7 @@ export const SettingsManagementPage = () => {
         }}
       >
         <Stack spacing={1} direction="column">
-          <Typography sx={{ fontWeight: "bold" }}>
-            {t("screenTimeSettings.title")}
-          </Typography>
+          <Typography sx={{ fontWeight: "bold" }}>{t(($) => $.page_settingsManagement.screenTimeSettings.title)}</Typography>
           {/* 应用图标目录设置 */}
           <Stack
             direction="row"
@@ -231,10 +218,8 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("screenTimeSettings.appIconDirectory.label")}
-              </Typography>
-              <Tooltip title={t("screenTimeSettings.appIconDirectory.tooltip")}>
+              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.appIconDirectory.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.appIconDirectory.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -260,13 +245,9 @@ export const SettingsManagementPage = () => {
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <Typography>
-                {t("screenTimeSettings.appInfoStaleThresholdMinutes.label")}
+                {t(($) => $.page_settingsManagement.screenTimeSettings.appMetadataStaleThresholdMinutes.label)}
               </Typography>
-              <Tooltip
-                title={t(
-                  "screenTimeSettings.appInfoStaleThresholdMinutes.tooltip",
-                )}
-              >
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.appMetadataStaleThresholdMinutes.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -274,10 +255,10 @@ export const SettingsManagementPage = () => {
             </Stack>
             <LazyNumberField
               size="small"
-              value={userSettingsDtoData.appInfoStaleThresholdMinutes}
+              value={userSettingsDtoData.appMetadataStaleThresholdMinutes}
               onValueChange={async (value) => {
                 await patchUserSettingsAsync({
-                  appInfoStaleThresholdMinutes: value,
+                  appMetadataStaleThresholdMinutes: value,
                 });
               }}
               min={0}
@@ -295,12 +276,10 @@ export const SettingsManagementPage = () => {
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <Typography>
-                {t("screenTimeSettings.activeSessionAutoSaveSeconds.label")}
+                {t(($) => $.page_settingsManagement.screenTimeSettings.activeAppUsageSessionAutoSaveIntervalSeconds.label)}
               </Typography>
               <Tooltip
-                title={t(
-                  "screenTimeSettings.activeSessionAutoSaveSeconds.tooltip",
-                )}
+                title={t(($) => $.page_settingsManagement.screenTimeSettings.activeAppUsageSessionAutoSaveIntervalSeconds.tooltip)}
               >
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
@@ -309,10 +288,10 @@ export const SettingsManagementPage = () => {
             </Stack>
             <LazyNumberField
               size="small"
-              value={userSettingsDtoData.activeSessionAutoSaveSeconds}
+              value={userSettingsDtoData.activeAppUsageSessionAutoSaveIntervalSeconds}
               onValueChange={async (value) => {
                 await patchUserSettingsAsync({
-                  activeSessionAutoSaveSeconds: value,
+                  activeAppUsageSessionAutoSaveIntervalSeconds: value,
                 });
               }}
               min={1}
@@ -329,12 +308,8 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("screenTimeSettings.isIdleDetectionEnabled.label")}
-              </Typography>
-              <Tooltip
-                title={t("screenTimeSettings.isIdleDetectionEnabled.tooltip")}
-              >
+              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.isIdleDetectionEnabled.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.isIdleDetectionEnabled.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -358,12 +333,8 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("screenTimeSettings.idleThresholdSeconds.label")}
-              </Typography>
-              <Tooltip
-                title={t("screenTimeSettings.idleThresholdSeconds.tooltip")}
-              >
+              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.idleThresholdSeconds.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.idleThresholdSeconds.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -392,15 +363,9 @@ export const SettingsManagementPage = () => {
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <Typography>
-                {t(
-                  "screenTimeSettings.idleDetectionPollingIntervalSeconds.label",
-                )}
+                {t(($) => $.page_settingsManagement.screenTimeSettings.idleDetectionPollingIntervalSeconds.label)}
               </Typography>
-              <Tooltip
-                title={t(
-                  "screenTimeSettings.idleDetectionPollingIntervalSeconds.tooltip",
-                )}
-              >
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.idleDetectionPollingIntervalSeconds.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -429,12 +394,10 @@ export const SettingsManagementPage = () => {
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <Typography>
-                {t("screenTimeSettings.minValidSessionDurationSeconds.label")}
+                {t(($) => $.page_settingsManagement.screenTimeSettings.minValidAppUsageSessionDurationSeconds.label)}
               </Typography>
               <Tooltip
-                title={t(
-                  "screenTimeSettings.minValidSessionDurationSeconds.tooltip",
-                )}
+                title={t(($) => $.page_settingsManagement.screenTimeSettings.minValidAppUsageSessionDurationSeconds.tooltip)}
               >
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
@@ -443,10 +406,10 @@ export const SettingsManagementPage = () => {
             </Stack>
             <LazyNumberField
               size="small"
-              value={userSettingsDtoData.minValidSessionDurationSeconds}
+              value={userSettingsDtoData.minValidAppUsageSessionDurationSeconds}
               onValueChange={async (value) => {
                 await patchUserSettingsAsync({
-                  minValidSessionDurationSeconds: value,
+                  minValidAppUsageSessionDurationSeconds: value,
                 });
               }}
               min={0}
@@ -464,13 +427,9 @@ export const SettingsManagementPage = () => {
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <Typography>
-                {t("screenTimeSettings.sessionMergeToleranceSeconds.label")}
+                {t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionMergeToleranceSeconds.label)}
               </Typography>
-              <Tooltip
-                title={t(
-                  "screenTimeSettings.sessionMergeToleranceSeconds.tooltip",
-                )}
-              >
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionMergeToleranceSeconds.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
@@ -478,10 +437,10 @@ export const SettingsManagementPage = () => {
             </Stack>
             <LazyNumberField
               size="small"
-              value={userSettingsDtoData.sessionMergeToleranceSeconds}
+              value={userSettingsDtoData.appUsageSessionMergeToleranceSeconds}
               onValueChange={async (value) => {
                 await patchUserSettingsAsync({
-                  sessionMergeToleranceSeconds: value,
+                  appUsageSessionMergeToleranceSeconds: value,
                 });
               }}
               min={0}
@@ -499,14 +458,10 @@ export const SettingsManagementPage = () => {
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <Typography>
-                {t(
-                  "screenTimeSettings.sessionOptimizationIntervalMinutes.label",
-                )}
+                {t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionOptimizationIntervalMinutes.label)}
               </Typography>
               <Tooltip
-                title={t(
-                  "screenTimeSettings.sessionOptimizationIntervalMinutes.tooltip",
-                )}
+                title={t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionOptimizationIntervalMinutes.tooltip)}
               >
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
@@ -515,10 +470,10 @@ export const SettingsManagementPage = () => {
             </Stack>
             <LazyNumberField
               size="small"
-              value={userSettingsDtoData.sessionOptimizationIntervalMinutes}
+              value={userSettingsDtoData.appUsageSessionOptimizationIntervalMinutes}
               onValueChange={async (value) => {
                 await patchUserSettingsAsync({
-                  sessionOptimizationIntervalMinutes: value,
+                  appUsageSessionOptimizationIntervalMinutes: value,
                 });
               }}
               min={1}
@@ -535,10 +490,8 @@ export const SettingsManagementPage = () => {
             }}
           >
             <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t("screenTimeSettings.dayCutoffHour.label")}
-              </Typography>
-              <Tooltip title={t("screenTimeSettings.dayCutoffHour.tooltip")}>
+              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.dayCutoffHour.label)}</Typography>
+              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.dayCutoffHour.tooltip)}>
                 <IconButton size="small">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>

@@ -1,4 +1,4 @@
-import i18n from "./setup";
+import i18n from "./i18n";
 
 export const SUPPORTED_LANGUAGES = [
   { code: "en-US", label: "English" },

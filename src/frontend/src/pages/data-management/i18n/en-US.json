@@ -24,5 +24,16 @@
   },
   "export": {
     "filenamePattern": "screen-time-tracker-data-{{date}}.json"
+  },
+  "common": {
+    "to": "to"
+  },
+  "validation": {
+    "selectDateRange": "Please select a date range"
+  },
+  "actions": {
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   }
 }

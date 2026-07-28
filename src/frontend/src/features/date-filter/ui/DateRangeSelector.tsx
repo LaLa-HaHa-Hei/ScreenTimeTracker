@@ -26,37 +26,35 @@ export const DateRangeSelector = ({
   value,
   onValueChange,
 }: DateRangeSelectorProps) => {
-  const { t } = useTranslation(["feature_dateFilter", "shared"]);
-  const { data: userSettingsDtoData } = useQuery(
-    userSettingsQueries.userSettings(),
-  );
+  const { t } = useTranslation(["feature_dateFilter"]);
+  const { data: userSettingsDtoData } = useQuery(userSettingsQueries.userSettings());
   if (!userSettingsDtoData) return null;
 
   const dayCutoffHour = userSettingsDtoData.dayCutoffHour;
   const logicalToday = dayjs().subtract(dayCutoffHour, "hour").startOf("day");
   const isEndToday = dayjs(value.end).isSame(logicalToday, "day");
   const dateLabel = (() => {
-    const separator = t("date.rangeSeparator", { ns: "shared" });
+    const separator = t(($) => $.feature_dateFilter.date.rangeSeparator);
 
     switch (timeFrame) {
       case "day": {
-        if (isEndToday) return t("date.today", { ns: "shared" });
+        if (isEndToday) return t(($) => $.feature_dateFilter.date.today);
         if (dayjs(value.end).isSame(logicalToday.subtract(1, "day"), "day"))
-          return t("date.yesterday", { ns: "shared" });
+          return t(($) => $.feature_dateFilter.date.yesterday);
         return dayjs(value.end).format("L");
       }
       case "week": {
-        if (isEndToday) return t("dateRangeSelector.last7Days");
+        if (isEndToday) return t(($) => $.feature_dateFilter.dateRangeSelector.last7Days);
         const lastWeekEnd = logicalToday.subtract(1, "week").endOf("isoWeek");
         if (dayjs(value.end).isSame(lastWeekEnd, "day"))
-          return t("dateRangeSelector.lastWeek");
+          return t(($) => $.feature_dateFilter.dateRangeSelector.lastWeek);
         return `${dayjs(value.start).format("L")}${separator}${dayjs(value.end).format("L")}`;
       }
       case "month": {
-        if (isEndToday) return t("dateRangeSelector.last31Days");
+        if (isEndToday) return t(($) => $.feature_dateFilter.dateRangeSelector.last31Days);
         const lastMonthEnd = logicalToday.subtract(1, "month").endOf("month");
         if (dayjs(value.end).isSame(lastMonthEnd, "day"))
-          return t("dateRangeSelector.lastMonth");
+          return t(($) => $.feature_dateFilter.dateRangeSelector.lastMonth);
         return `${dayjs(value.start).format("L")}${separator}${dayjs(value.end).format("L")}`;
       }
       default:
@@ -190,8 +188,7 @@ export const DateRangeSelector = ({
           value={dayjs(value.start)}
           sx={{ flex: "1" }}
           onChange={(newdate) =>
-            newdate !== null &&
-            onValueChange({ start: newdate.toDate(), end: value.end })
+            newdate !== null && onValueChange({ start: newdate.toDate(), end: value.end })
           }
           slotProps={{
             textField: {
@@ -203,8 +200,7 @@ export const DateRangeSelector = ({
           value={dayjs(value.end)}
           sx={{ flex: "1" }}
           onChange={(newdate) =>
-            newdate !== null &&
-            onValueChange({ start: value.start, end: newdate.toDate() })
+            newdate !== null && onValueChange({ start: value.start, end: newdate.toDate() })
           }
           slotProps={{
             textField: {

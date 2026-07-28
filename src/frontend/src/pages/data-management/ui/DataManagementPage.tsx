@@ -24,7 +24,7 @@ import Stack from "@mui/material/Stack";
 import { useTranslation } from "react-i18next";
 
 export const DataManagementPage = () => {
-  const { t } = useTranslation(["page_dataManagement", "shared"]);
+  const { t } = useTranslation(["page_dataManagement"]);
   const { enqueueSnackbar } = useSnackbar();
   const { mutateAsync: deleteUsageDataAsync } = useDeleteData();
   const { refetch } = useQuery({
@@ -44,9 +44,9 @@ export const DataManagementPage = () => {
 
   const handleImportError = (err: unknown) => {
     if (axios.isAxiosError(err) && err.response?.status === 422) {
-      enqueueSnackbar(t("messages.unsupportedVersion"), { variant: "error" });
+      enqueueSnackbar(t(($) => $.page_dataManagement.messages.unsupportedVersion), { variant: "error" });
     } else {
-      enqueueSnackbar(t("messages.importFailed"), { variant: "error" });
+      enqueueSnackbar(t(($) => $.page_dataManagement.messages.importFailed), { variant: "error" });
     }
   };
 
@@ -70,7 +70,7 @@ export const DataManagementPage = () => {
             alignItems: "center",
           }}
         >
-          <Typography>{t("labels.deletePrefix")}</Typography>
+          <Typography>{t(($) => $.page_dataManagement.labels.deletePrefix)}</Typography>
           <DatePicker
             sx={{ width: "10rem" }}
             value={dayjs(deleteUsageDataStartDate)}
@@ -83,7 +83,7 @@ export const DataManagementPage = () => {
               },
             }}
           />
-          <Typography>{t("common.to", { ns: "shared" })}</Typography>
+          <Typography>{t(($) => $.page_dataManagement.common.to)}</Typography>
           <DatePicker
             sx={{ width: "10rem" }}
             value={dayjs(deleteUsageDataEndDate)}
@@ -96,7 +96,7 @@ export const DataManagementPage = () => {
               },
             }}
           />
-          <Typography>{t("labels.deleteSuffix")}</Typography>
+          <Typography>{t(($) => $.page_dataManagement.labels.deleteSuffix)}</Typography>
           <Button
             variant="contained"
             color="error"
@@ -106,7 +106,7 @@ export const DataManagementPage = () => {
                 deleteUsageDataEndDate === null
               ) {
                 enqueueSnackbar(
-                  t("validation.selectDateRange", { ns: "shared" }),
+                  t(($) => $.page_dataManagement.validation.selectDateRange),
                   { variant: "error" },
                 );
                 return;
@@ -114,7 +114,7 @@ export const DataManagementPage = () => {
               setDeleteUsageDataComfirmDialogOpen(true);
             }}
           >
-            {t("actions.delete", { ns: "shared" })}
+            {t(($) => $.page_dataManagement.actions.delete)}
           </Button>
         </Stack>
 
@@ -132,34 +132,34 @@ export const DataManagementPage = () => {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
-                    a.download = t("export.filenamePattern", {
+                    a.download = t(($) => $.page_dataManagement.export.filenamePattern, {
                       date: dayjs(new Date()).format("YYYY-MM-DD"),
                     });
                     a.click();
                     URL.revokeObjectURL(url);
 
-                    enqueueSnackbar(t("messages.exportFileSuccess"), {
+                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportFileSuccess), {
                       variant: "success",
                     });
                   } catch {
-                    enqueueSnackbar(t("messages.exportFileFailed"), {
+                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportFileFailed), {
                       variant: "error",
                     });
                   }
                 }}
               >
-                {t("labels.exportDataBtn")}
+                {t(($) => $.page_dataManagement.labels.exportDataBtn)}
               </Button>
               <IconButton
                 onClick={async () => {
                   try {
                     const content = await fetchExportContent();
                     await navigator.clipboard.writeText(content);
-                    enqueueSnackbar(t("messages.exportClipboardSuccess"), {
+                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportClipboardSuccess), {
                       variant: "success",
                     });
                   } catch {
-                    enqueueSnackbar(t("messages.exportClipboardFailed"), {
+                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportClipboardFailed), {
                       variant: "error",
                     });
                   }
@@ -170,7 +170,7 @@ export const DataManagementPage = () => {
             </Stack>
             <Stack direction="row" spacing={1}>
               <Button component="label" variant="contained">
-                {t("labels.importDataBtn")}
+                {t(($) => $.page_dataManagement.labels.importDataBtn)}
                 <input
                   hidden
                   type="file"
@@ -180,7 +180,7 @@ export const DataManagementPage = () => {
                     try {
                       const result = await importDataAsync(await file.text());
                       enqueueSnackbar(
-                        t("messages.importFileSuccess", {
+                        t(($) => $.page_dataManagement.messages.importFileSuccess, {
                           newApps: result.newApps,
                           newAppCategories: result.newAppCategories,
                           importedSessions: result.importedSessions,
@@ -203,8 +203,8 @@ export const DataManagementPage = () => {
                     const result = await importDataAsync(
                       await navigator.clipboard.readText(),
                     );
-                    enqueueSnackbar(
-                      t("messages.importClipboardSuccess", {
+                      enqueueSnackbar(
+                        t(($) => $.page_dataManagement.messages.importClipboardSuccess, {
                         newApps: result.newApps,
                         newAppCategories: result.newAppCategories,
                         importedSessions: result.importedSessions,
@@ -230,7 +230,7 @@ export const DataManagementPage = () => {
         role="alertdialog"
       >
         <DialogTitle>
-          {t("dialogs.deleteConfirm.title", {
+          {t(($) => $.page_dataManagement.dialogs.deleteConfirm.title, {
             startDate: deleteUsageDataStartDate?.toLocaleDateString(),
             endDate: deleteUsageDataEndDate?.toLocaleDateString(),
           })}
@@ -240,7 +240,7 @@ export const DataManagementPage = () => {
             onClick={() => setDeleteUsageDataComfirmDialogOpen(false)}
             autoFocus
           >
-            {t("actions.cancel", { ns: "shared" })}
+            {t(($) => $.page_dataManagement.actions.cancel)}
           </Button>
           <Button
             onClick={async () => {
@@ -254,11 +254,11 @@ export const DataManagementPage = () => {
                   startDate: dateToDateOnly(deleteUsageDataStartDate),
                   endDate: dateToDateOnly(deleteUsageDataEndDate),
                 });
-                enqueueSnackbar(t("messages.deleteSuccess"), {
+                enqueueSnackbar(t(($) => $.page_dataManagement.messages.deleteSuccess), {
                   variant: "success",
                 });
               } catch {
-                enqueueSnackbar(t("messages.deleteFailed"), {
+                enqueueSnackbar(t(($) => $.page_dataManagement.messages.deleteFailed), {
                   variant: "error",
                 });
               } finally {
@@ -267,7 +267,7 @@ export const DataManagementPage = () => {
             }}
             color="error"
           >
-            {t("actions.confirm", { ns: "shared" })}
+            {t(($) => $.page_dataManagement.actions.confirm)}
           </Button>
         </DialogActions>
       </Dialog>

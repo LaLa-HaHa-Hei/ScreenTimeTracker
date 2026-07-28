@@ -60,9 +60,7 @@ export const UsageDistributionPieChart = ({
     enabled: type === "app-category",
   });
   const usageDistributiondata =
-    type === "app"
-      ? appUsageDistributionData
-      : appCategoryUsageDistributionData;
+    type === "app" ? appUsageDistributionData : appCategoryUsageDistributionData;
 
   const option = useMemo(() => {
     return {
@@ -81,10 +79,9 @@ export const UsageDistributionPieChart = ({
           (acc, v) => {
             const iconUrl =
               type === "app"
-                ? getAppIconUrl(v.id, v.iconLastUpdatedAt)
-                : getAppCategoryIconUrl(v.id, v.iconLastUpdatedAt);
-            const fallbackIconUrl =
-              type === "app" ? UnknownApp : UnknownAppCategory;
+                ? getAppIconUrl(v.id, v.iconPathLastUpdatedAt)
+                : getAppCategoryIconUrl(v.id, v.iconPathLastUpdatedAt);
+            const fallbackIconUrl = type === "app" ? UnknownApp : UnknownAppCategory;
             acc[toRichKey(v.id)] = {
               backgroundColor: {
                 image: v.iconPath ? iconUrl : fallbackIconUrl,
@@ -132,16 +129,15 @@ export const UsageDistributionPieChart = ({
                 color: v.color,
               },
             })) || []),
-            ...(usageDistributiondata &&
-            usageDistributiondata.othersDurationSeconds > 0
+            ...(usageDistributiondata && usageDistributiondata.othersDurationSeconds > 0
               ? [
                   {
                     name:
                       type === "app"
-                        ? t("pieChart.otherApps", {
+                        ? t(($) => $.feature_usageDistribution.pieChart.otherApps, {
                             count: usageDistributiondata.othersCount,
                           })
-                        : t("pieChart.otherCategories", {
+                        : t(($) => $.feature_usageDistribution.pieChart.otherCategories, {
                             count: usageDistributiondata.othersCount,
                           }),
                     value: usageDistributiondata?.othersDurationSeconds,
@@ -156,7 +152,7 @@ export const UsageDistributionPieChart = ({
         },
       ],
     };
-  }, [type, usageDistributiondata, isDark]);
+  }, [type, usageDistributiondata, isDark, t]);
 
   return (
     <Box sx={sx} className={className}>

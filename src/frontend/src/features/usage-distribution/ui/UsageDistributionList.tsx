@@ -83,7 +83,7 @@ export const UsageDistributionList = ({
                     }}
                     id={item.id}
                     iconPath={item.iconPath}
-                    iconLastUpdatedAt={item.iconLastUpdatedAt}
+                    iconPathLastUpdatedAt={item.iconPathLastUpdatedAt}
                   />
                 ) : (
                   <AppCategoryIcon
@@ -93,7 +93,7 @@ export const UsageDistributionList = ({
                     }}
                     id={item.id}
                     iconPath={item.iconPath}
-                    iconLastUpdatedAt={item.iconLastUpdatedAt}
+                    iconPathLastUpdatedAt={item.iconPathLastUpdatedAt}
                   />
                 )}
               </ListItemIcon>

@@ -21,11 +21,22 @@
   "fields": {
     "name": "名称",
     "color": "颜色",
-    "iconPath": "图标路径"
+    "iconPath": "图标路径",
+    "category": "类别"
   },
   "messages": {
     "error": {
       "noCategorySelected": "未选择要删除的类别"
     }
+  },
+  "errors": {
+    "updateFailed": "更新{{field}}失败",
+    "deleteFailed": "删除{{field}}失败",
+    "createFailed": "创建{{field}}失败"
+  },
+  "actions": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "create": "创建"
   }
 }

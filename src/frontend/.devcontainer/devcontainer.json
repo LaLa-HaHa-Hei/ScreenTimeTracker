@@ -1,11 +1,17 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-  "name": "Node.js & TypeScript",
+  "name": "stt-frontend",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
+  
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/frontend,type=bind",
+  "workspaceFolder": "/workspace/frontend",
 
-  "mounts": ["source=pnpm-store,target=/home/node/.pnpm-store,type=volume"],
+  "mounts": [
+    "source=pnpm-store,target=/home/node/.pnpm-store,type=volume",
+    "source=stt-frontend-node_modules,target=/workspace/frontend/node_modules,type=volume"
+  ],
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
@@ -14,15 +20,12 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sudo chown -R node:node /home/node/.pnpm-store && pnpm config set store-dir /home/node/.pnpm-store",
+  "postCreateCommand": "sudo chown -R node:node /home/node/.pnpm-store /workspace/frontend/node_modules && pnpm config set store-dir /home/node/.pnpm-store",
 
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "styled-components.vscode-styled-components"
-      ]
+      "extensions": ["oxc.oxc-vscode", "styled-components.vscode-styled-components"]
     }
   }
 

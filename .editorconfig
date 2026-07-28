@@ -1,4 +1,14 @@
 [*.cs]
+# 强制开启命名空间与文件目录结构/根命名空间相匹配的规则
+dotnet_style_namespace_match_folder = true:warning
 
-# CA1860: Avoid using 'Enumerable.Any()' extension method
-dotnet_diagnostic.CA1860.severity = none
+[**/Migrations/**]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+generated_code_analysis = false
+
+[tests/**/*.cs]
+# CA1707: 标识符不应包含下划线
+dotnet_diagnostic.CA1707.severity = none
+# IDE1006: 命名样式不匹配
+dotnet_diagnostic.IDE1006.severity = none

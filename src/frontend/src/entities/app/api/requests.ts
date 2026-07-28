@@ -19,19 +19,19 @@ export const getApps = async (
       name: validated.name,
       color: validated.color,
       processName: validated.processName,
-      isAutoUpdateEnabled: validated.isAutoUpdateEnabled,
-      lastAutoUpdatedAt: validated.lastAutoUpdatedAt,
+      allowMetadataAutoUpdate: validated.allowMetadataAutoUpdate,
+      metadataLastUpdatedAt: validated.metadataLastUpdatedAt,
       appCategoryId: validated.appCategoryId,
       executablePath: validated.executablePath,
       iconPath: validated.iconPath,
-      iconLastUpdatedAt: validated.iconLastUpdatedAt,
+      iconPathLastUpdatedAt: validated.iconPathLastUpdatedAt,
       isSystem: validated.isSystem,
     };
   });
 };
 
-export const getAppIconUrl = (appId: string, iconLastUpdatedAt: Date) =>
-  `${baseApiUrl}/screen-time/apps/${appId}/icon?v=${iconLastUpdatedAt.getTime()}`;
+export const getAppIconUrl = (appId: string, iconPathLastUpdatedAt: Date) =>
+  `${baseApiUrl}/screen-time/apps/${appId}/icon?v=${iconPathLastUpdatedAt.getTime()}`;
 
 export const patchApp = async (params: PatchAppParams) => {
   const { data } = await apiClient.patch(

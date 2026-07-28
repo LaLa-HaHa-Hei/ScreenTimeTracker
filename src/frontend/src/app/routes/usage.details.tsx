@@ -29,10 +29,7 @@ export const Route = createFileRoute("/usage/details")({
     const { dayCutoffHour } = await context.queryClient.ensureQueryData(
       userSettingsQueries.userSettings(),
     );
-    const logicalToday = dayjs()
-      .subtract(dayCutoffHour, "hour")
-      .startOf("day")
-      .toDate();
+    const logicalToday = dayjs().subtract(dayCutoffHour, "hour").startOf("day").toDate();
     const logicalTodayDateOnly = dateToDateOnly(logicalToday);
 
     throw redirect({
@@ -54,7 +51,5 @@ function RouteComponent() {
     navigate({ search: (prev) => ({ ...prev, ...newParams }) });
   };
 
-  return (
-    <UsageDetailsPage search={search} onSearchChange={handleSearchChange} />
-  );
+  return <UsageDetailsPage search={search} onSearchChange={handleSearchChange} />;
 }

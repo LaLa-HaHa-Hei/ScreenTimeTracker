@@ -53,40 +53,38 @@ function RootComponent() {
     {
       to: "/usage/summary",
       icon: <DashboardOutlinedIcon />,
-      labelKey: "navigation.usageSummary",
+      label: t(($) => $.app.navigation.usageSummary),
     },
     {
       to: "/usage/details",
       icon: <BarChartOutlinedIcon />,
-      labelKey: "navigation.usageDetails",
+      label: t(($) => $.app.navigation.usageDetails),
     },
     {
       to: "/apps",
       icon: <AppsOutlinedIcon />,
-      labelKey: "navigation.apps",
+      label: t(($) => $.app.navigation.apps),
     },
     {
       to: "/app-categories",
       icon: <CategoryOutlinedIcon />,
-      labelKey: "navigation.categories",
+      label: t(($) => $.app.navigation.categories),
     },
     {
       to: "/data",
       icon: <StorageOutlinedIcon />,
-      labelKey: "navigation.data",
+      label: t(($) => $.app.navigation.data),
     },
     {
       to: "/settings",
       icon: <SettingsOutlinedIcon />,
-      labelKey: "navigation.settings",
+      label: t(($) => $.app.navigation.settings),
     },
   ];
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchMap, setSearchMap] = useState<
-    Record<string, Record<string, unknown>>
-  >({});
+  const [searchMap, setSearchMap] = useState<Record<string, Record<string, unknown>>>({});
   const savedSearch = searchMap[location.pathname];
   if (JSON.stringify(savedSearch) !== JSON.stringify(location.search)) {
     setSearchMap((prev) => ({
@@ -107,10 +105,7 @@ function RootComponent() {
     <>
       <TanStackRouterDevtools />
       <Box sx={{ display: "flex" }}>
-        <AppBar
-          position="fixed"
-          sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        >
+        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar variant="dense" sx={{ justifyContent: "space-between" }}>
             <Box
               component={Link}
@@ -129,11 +124,7 @@ function RootComponent() {
             </Box>
 
             <Stack direction="row" spacing={1}>
-              <IconButton
-                color="inherit"
-                size="small"
-                onClick={() => window.location.reload()}
-              >
+              <IconButton color="inherit" size="small" onClick={() => window.location.reload()}>
                 <RefreshIcon fontSize="inherit" />
               </IconButton>
               <Divider orientation="vertical" flexItem />
@@ -200,7 +191,7 @@ function RootComponent() {
                   >
                     <ListItemIcon>{item.icon}</ListItemIcon>
                     <ListItemText
-                      primary={t(item.labelKey)}
+                      primary={item.label}
                       sx={{
                         textAlign: "center",
                         pr: 2,

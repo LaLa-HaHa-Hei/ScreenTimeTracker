@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 type DimensionOption = {
   value: Dimension;
-  labelKey: string;
+  label: string;
 };
 
 export type DateRangeSelectorProps = {
@@ -27,11 +27,11 @@ export const DimensionTypeSelector = ({
   const dimensionOptions: DimensionOption[] = [
     {
       value: "app",
-      labelKey: "DimensionTypeSelector.options.app",
+      label: t(($) => $.feature_dimensionControl.DimensionTypeSelector.options.app),
     },
     {
       value: "app-category",
-      labelKey: "DimensionTypeSelector.options.app-category",
+      label: t(($) => $.feature_dimensionControl.DimensionTypeSelector.options.appCategory),
     },
   ];
 
@@ -50,7 +50,7 @@ export const DimensionTypeSelector = ({
     >
       {dimensionOptions.map((item) => (
         <ToggleButton key={item.value} value={item.value}>
-          {t(item.labelKey)}
+          {item.label}
         </ToggleButton>
       ))}
     </ToggleButtonGroup>
