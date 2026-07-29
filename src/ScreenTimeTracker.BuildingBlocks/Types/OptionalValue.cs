@@ -29,8 +29,10 @@ public readonly record struct OptionalValue<T>
 }
 
 /// <summary>
-/// 反序列化时：JSON 缺失的字段映射为 HasValue=false；JSON 中存在（即使值为 null）的字段映射为 HasValue=true。
-/// 序列化时：不支持，抛出 NotSupportedException 异常
+/// During deserialization:
+/// JSON fields that are missing are mapped to HasValue=false;
+/// fields that exist in JSON (even if the value is null) are mapped to HasValue=true.
+/// During serialization: Not supported; a NotSupportedException will be thrown.
 /// </summary>
 public class OptionalValueJsonConverterFactory : JsonConverterFactory
 {

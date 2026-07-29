@@ -63,11 +63,11 @@ public class AppCategory : AggregateRoot
                 "Icon path must be updated with a valid icon path last updated time."
             );
 
-        if (name.HasValue)
+        if (name.HasValue && name.Value != Name)
             Name = name.Value;
-        if (color.HasValue)
+        if (color.HasValue && color.Value != Color)
             Color = color.Value;
-        if (iconPath.HasValue)
+        if (iconPath.HasValue && iconPath.Value != IconPath)
         {
             IconPath = iconPath.Value;
             IconPathLastUpdatedAt = iconPathLastUpdatedAt!.Value;

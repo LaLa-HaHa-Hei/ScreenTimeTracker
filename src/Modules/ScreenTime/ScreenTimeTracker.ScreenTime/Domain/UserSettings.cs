@@ -136,25 +136,46 @@ public class UserSettings : AggregateRoot
                 nameof(dayCutoffHour)
             );
 
-        if (appIconDirectory.HasValue)
+        if (appIconDirectory.HasValue && appIconDirectory.Value != AppIconDirectory)
             AppIconDirectory = appIconDirectory.Value;
-        if (appMetadataStaleThreshold.HasValue)
+        if (
+            appMetadataStaleThreshold.HasValue
+            && appMetadataStaleThreshold.Value != AppMetadataStaleThreshold
+        )
             AppMetadataStaleThreshold = appMetadataStaleThreshold.Value;
-        if (activeAppUsageSessionAutoSaveInterval.HasValue)
+        if (
+            activeAppUsageSessionAutoSaveInterval.HasValue
+            && activeAppUsageSessionAutoSaveInterval.Value != ActiveAppUsageSessionAutoSaveInterval
+        )
             ActiveAppUsageSessionAutoSaveInterval = activeAppUsageSessionAutoSaveInterval.Value;
-        if (isIdleDetectionEnabled.HasValue)
+        if (
+            isIdleDetectionEnabled.HasValue
+            && isIdleDetectionEnabled.Value != IsIdleDetectionEnabled
+        )
             IsIdleDetectionEnabled = isIdleDetectionEnabled.Value;
-        if (idleThreshold.HasValue)
+        if (idleThreshold.HasValue && idleThreshold.Value != IdleThreshold)
             IdleThreshold = idleThreshold.Value;
-        if (idleDetectionPollingInterval.HasValue)
+        if (
+            idleDetectionPollingInterval.HasValue
+            && idleDetectionPollingInterval.Value != IdleDetectionPollingInterval
+        )
             IdleDetectionPollingInterval = idleDetectionPollingInterval.Value;
-        if (minValidAppUsageSessionDuration.HasValue)
+        if (
+            minValidAppUsageSessionDuration.HasValue
+            && minValidAppUsageSessionDuration.Value != MinValidAppUsageSessionDuration
+        )
             MinValidAppUsageSessionDuration = minValidAppUsageSessionDuration.Value;
-        if (appUsageSessionMergeTolerance.HasValue)
+        if (
+            appUsageSessionMergeTolerance.HasValue
+            && appUsageSessionMergeTolerance.Value != AppUsageSessionMergeTolerance
+        )
             AppUsageSessionMergeTolerance = appUsageSessionMergeTolerance.Value;
-        if (appUsageSessionOptimizationInterval.HasValue)
+        if (
+            appUsageSessionOptimizationInterval.HasValue
+            && appUsageSessionOptimizationInterval.Value != AppUsageSessionOptimizationInterval
+        )
             AppUsageSessionOptimizationInterval = appUsageSessionOptimizationInterval.Value;
-        if (dayCutoffHour.HasValue)
+        if (dayCutoffHour.HasValue && dayCutoffHour.Value != DayCutoffHour)
             DayCutoffHour = dayCutoffHour.Value;
     }
 }

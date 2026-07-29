@@ -20,4 +20,11 @@
   <Folder Name="/tests/BuildingBlocks/">
     <Project Path="tests/BuildingBlocks/ScreenTimeTracker.BuildingBlocks.UnitTests/ScreenTimeTracker.BuildingBlocks.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tests/Modules/" />
+  <Folder Name="/tests/Modules/DesktopSettings/">
+    <Project Path="tests/Modules/DesktopSettings/ScreenTimeTracker.DesktopSettings.UnitTests/ScreenTimeTracker.DesktopSettings.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Modules/ScreenTime/">
+    <Project Path="tests/Modules/ScreenTime/ScreenTimeTracker.ScreenTime.UnitTests/ScreenTimeTracker.ScreenTime.UnitTests.csproj" />
+  </Folder>
 </Solution>

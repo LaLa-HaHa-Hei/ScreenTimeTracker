@@ -144,15 +144,18 @@ public class App : AggregateRoot
                 "Icon path must be updated with a valid icon path last updated time."
             );
 
-        if (name.HasValue)
+        if (name.HasValue && name.Value != Name)
             Name = name.Value;
-        if (color.HasValue)
+        if (color.HasValue && color.Value != Color)
             Color = color.Value;
-        if (allowMetadataAutoUpdate.HasValue)
+        if (
+            allowMetadataAutoUpdate.HasValue
+            && allowMetadataAutoUpdate.Value != AllowMetadataAutoUpdate
+        )
             AllowMetadataAutoUpdate = allowMetadataAutoUpdate.Value;
-        if (appCategoryId.HasValue)
+        if (appCategoryId.HasValue && appCategoryId.Value != AppCategoryId)
             AppCategoryId = appCategoryId.Value;
-        if (iconPath.HasValue)
+        if (iconPath.HasValue && iconPath.Value != IconPath)
         {
             IconPath = iconPath.Value;
             IconPathLastUpdatedAt = iconPathUpdatedAt!.Value;
@@ -174,6 +177,14 @@ public class App : AggregateRoot
 
     public bool NeedsMetadataUpdate(DateTime now, TimeSpan threshold) =>
         AllowMetadataAutoUpdate && (now - MetadataLastUpdatedAt) >= threshold;
+
+    public static string GenerateColor()
+    {
+        int h = Random.Shared.Next(360);
+        int s = Random.Shared.Next(50, 80);
+        int l = Random.Shared.Next(50, 80);
+        return HslToHex(h, s, l);
+    }
 
     private static string HslToHex(double h, double s, double l)
     {
@@ -207,13 +218,5 @@ public class App : AggregateRoot
         int b = (int)Math.Round((b1 + m) * 255);
 
         return $"#{r:X2}{g:X2}{b:X2}";
-    }
-
-    private static string GenerateColor()
-    {
-        int h = Random.Shared.Next(360);
-        int s = Random.Shared.Next(50, 80);
-        int l = Random.Shared.Next(50, 80);
-        return HslToHex(h, s, l);
     }
 }

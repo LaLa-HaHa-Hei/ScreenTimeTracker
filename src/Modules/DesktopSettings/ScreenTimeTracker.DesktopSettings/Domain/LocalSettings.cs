@@ -51,22 +51,37 @@ public class LocalSettings : AggregateRoot
                 nameof(language)
             );
 
-        if (defaultUIOpenMode.HasValue)
-            DefaultUIOpenMode = defaultUIOpenMode.Value;
-        if (isAutoStartEnabled.HasValue)
-            IsAutoStartEnabled = isAutoStartEnabled.Value;
-        if (isSilentStartEnabled.HasValue)
-            IsSilentStartEnabled = isSilentStartEnabled.Value;
-        if (language.HasValue)
-            Language = language.Value;
+        bool hasChanged = false;
 
-        AddDomainEvent(
-            new LocalSettingsUpdatedDomainEvent(
-                DefaultUIOpenMode,
-                IsAutoStartEnabled,
-                IsSilentStartEnabled,
-                Language
-            )
-        );
+        if (defaultUIOpenMode.HasValue && DefaultUIOpenMode != defaultUIOpenMode.Value)
+        {
+            DefaultUIOpenMode = defaultUIOpenMode.Value;
+            hasChanged = true;
+        }
+        if (isAutoStartEnabled.HasValue && IsAutoStartEnabled != isAutoStartEnabled.Value)
+        {
+            IsAutoStartEnabled = isAutoStartEnabled.Value;
+            hasChanged = true;
+        }
+        if (isSilentStartEnabled.HasValue && IsSilentStartEnabled != isSilentStartEnabled.Value)
+        {
+            IsSilentStartEnabled = isSilentStartEnabled.Value;
+            hasChanged = true;
+        }
+        if (language.HasValue && Language != language.Value)
+        {
+            Language = language.Value;
+            hasChanged = true;
+        }
+
+        if (hasChanged)
+            AddDomainEvent(
+                new LocalSettingsUpdatedDomainEvent(
+                    DefaultUIOpenMode,
+                    IsAutoStartEnabled,
+                    IsSilentStartEnabled,
+                    Language
+                )
+            );
     }
 }
