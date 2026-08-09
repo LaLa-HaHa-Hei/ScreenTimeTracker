@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <ApplicationIcon>Resources/Icon.ico</ApplicationIcon>
     <AssemblyName>ScreenTimeTracker</AssemblyName>
     <RootNamespace>ScreenTimeTracker.Desktop</RootNamespace>

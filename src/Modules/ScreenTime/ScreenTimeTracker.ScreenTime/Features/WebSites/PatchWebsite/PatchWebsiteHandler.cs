@@ -38,7 +38,7 @@ public class PatchWebsiteHandler(ScreenTimeDbContext context, TimeProvider timeP
         if (request.CategoryId.HasValue)
         {
             var exists = await context.WebsiteCategories.AnyAsync(
-                x => x.Id == request.CategoryId,
+                x => x.Id == request.CategoryId.Value,
                 cancellationToken
             );
             if (!exists)

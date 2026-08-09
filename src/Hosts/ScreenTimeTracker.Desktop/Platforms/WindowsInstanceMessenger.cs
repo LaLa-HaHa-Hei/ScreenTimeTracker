@@ -96,7 +96,10 @@ public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> 
                             {
                                 handler(this, new MessageReceivedEventArgs(msg));
                             }
-                            catch { }
+                            catch
+                            {
+                                // 应该由订阅者自己处理异常，这里直接忽略
+                            }
                         },
                         CancellationToken.None
                     );

@@ -38,7 +38,7 @@ public class PatchAppHandler(ScreenTimeDbContext context, TimeProvider timeProvi
         if (request.CategoryId.HasValue)
         {
             var exists = await context.AppCategories.AnyAsync(
-                x => x.Id == request.CategoryId,
+                x => x.Id == request.CategoryId.Value,
                 cancellationToken
             );
             if (!exists)
