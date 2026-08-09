@@ -1,13 +1,13 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategoryUsageDistribution;
 
 public class GetAppCategoryUsageDistributionHandler(
     ScreenTimeDbContext context,
-    IActiveAppUsageSessionStore activeSessionStore,
+    ActiveAppUsageSessionStore activeSessionStore,
     TimeProvider timeProvider
 ) : IRequestHandler<GetAppCategoryUsageDistributionQuery, GetAppCategoryUsageDistributionResponse>
 {
@@ -17,28 +17,33 @@ public class GetAppCategoryUsageDistributionHandler(
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var startTime = request
-            .StartDate.ToDateTime(TimeOnly.MinValue)
-            .AddHours(settings.DayCutoffHour);
-        var endTime = request
-            .EndDate.ToDateTime(TimeOnly.MinValue)
-            .AddDays(1)
-            .AddHours(settings.DayCutoffHour);
+        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
+        var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
+        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+            request.StartDate,
+            dayCutoffHour,
+            timeZoneInfo
+        );
+        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+            request.EndDate.AddDays(1),
+            dayCutoffHour,
+            timeZoneInfo
+        );
         var excludedIds = request.ExcludedIds?.ToHashSet() ?? [];
 
         var sessions = await context
             .AppUsageSessions.Where(x =>
-                !excludedIds.Contains(x.App!.AppCategoryId)
-                && x.StartTime < endTime
-                && startTime <= x.EndTime
+                !excludedIds.Contains(x.App!.CategoryId)
+                && x.StartTime < maxTime
+                && minTime <= x.EndTime
             )
             .Select(x => new
             {
-                Id = x.App!.AppCategoryId,
-                x.App!.AppCategory!.Name,
-                x.App!.AppCategory!.Color,
-                x.App.AppCategory!.IconPath,
-                x.App.AppCategory!.IconPathLastUpdatedAt,
+                Id = x.App!.CategoryId,
+                x.App!.Category!.Name,
+                x.App!.Category!.Color,
+                x.App.Category!.IconPath,
+                x.App.Category!.IconPathLastUpdatedAt,
                 x.StartTime,
                 x.EndTime,
             })
@@ -47,24 +52,29 @@ public class GetAppCategoryUsageDistributionHandler(
         var activeSession = activeSessionStore.Current;
         if (activeSession is not null)
         {
-            var activeApp = await context
-                .Apps.Include(a => a.AppCategory)
-                .AsNoTracking()
-                .SingleAsync(x => x.Id == activeSession.AppId, cancellationToken);
+            var activeSessionEnd = timeProvider.GetUtcNow();
 
-            if (!excludedIds.Contains(activeApp.AppCategoryId))
-                sessions.Add(
-                    new
-                    {
-                        Id = activeApp.AppCategoryId,
-                        activeApp.AppCategory!.Name,
-                        activeApp.AppCategory!.Color,
-                        activeApp.AppCategory!.IconPath,
-                        activeApp.AppCategory!.IconPathLastUpdatedAt,
-                        activeSession.StartTime,
-                        EndTime = timeProvider.GetLocalNow().DateTime,
-                    }
-                );
+            if (activeSession.StartTime < maxTime && minTime < activeSessionEnd)
+            {
+                var activeApp = await context
+                    .Apps.Include(a => a.Category)
+                    .AsNoTracking()
+                    .SingleAsync(x => x.Id == activeSession.AppId, cancellationToken);
+
+                if (!excludedIds.Contains(activeApp.CategoryId))
+                    sessions.Add(
+                        new
+                        {
+                            Id = activeApp.CategoryId,
+                            activeApp.Category!.Name,
+                            activeApp.Category!.Color,
+                            activeApp.Category!.IconPath,
+                            activeApp.Category!.IconPathLastUpdatedAt,
+                            activeSession.StartTime,
+                            EndTime = activeSessionEnd,
+                        }
+                    );
+            }
         }
 
         var aggregatedUsage =
@@ -74,7 +84,7 @@ public class GetAppCategoryUsageDistributionHandler(
                     string Name,
                     string Color,
                     string? IconPath,
-                    DateTime IconPathLastUpdatedAt,
+                    DateTimeOffset IconPathLastUpdatedAt,
                     long DurationMilliseconds
                 )
             >();
@@ -82,8 +92,8 @@ public class GetAppCategoryUsageDistributionHandler(
         foreach (var session in sessions)
         {
             // 截取和请求时间段交集的时间 (避免多算范围外的时长)
-            DateTime actualStart = startTime < session.StartTime ? session.StartTime : startTime;
-            DateTime actualEnd = session.EndTime < endTime ? session.EndTime : endTime;
+            DateTimeOffset actualStart = minTime < session.StartTime ? session.StartTime : minTime;
+            DateTimeOffset actualEnd = session.EndTime < maxTime ? session.EndTime : maxTime;
 
             if (actualStart < actualEnd)
             {
@@ -115,6 +125,8 @@ public class GetAppCategoryUsageDistributionHandler(
 
         // 排序截取Top N列表
         var topNItems = aggregatedUsage
+            // 先按照使用时长倒序排列，再保留到秒，防止顺序不准确
+            .OrderByDescending(x => x.Value.DurationMilliseconds)
             .Select(kvp => new AppCategoryUsageDistributionItem(
                 Id: kvp.Key,
                 Name: kvp.Value.Name,
@@ -123,8 +135,6 @@ public class GetAppCategoryUsageDistributionHandler(
                 IconPathLastUpdatedAt: kvp.Value.IconPathLastUpdatedAt,
                 DurationSeconds: kvp.Value.DurationMilliseconds / 1000
             ))
-            // 按照使用时长倒序排列
-            .OrderByDescending(x => x.DurationSeconds)
             // 取前 TopN
             .Take(request.TopN)
             .ToList();

@@ -1,4 +1,3 @@
-import { AppCategoryIcon, appCategoryQueries, type AppCategory } from "@/entities/app-category";
 import Autocomplete, { type AutocompleteProps } from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -8,6 +7,10 @@ import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { AppCategoryIcon } from "./AppCategoryIcon";
+import type { AppCategory } from "../model/schemas";
+import { appCategoryQueries } from "../api/queries";
+
 type Item = Pick<AppCategory, "id" | "name" | "iconPath" | "iconPathLastUpdatedAt">;
 
 export type AppCategoryPickerProps = {
@@ -113,7 +116,15 @@ export const AppCategoryPicker = (props: AppCategoryPickerProps) => {
           props.maxDisplayCount !== undefined &&
           value.length > props.maxDisplayCount
         )
-          return <Chip variant="outlined" size="small" label={t(($) => $.entity_appCategory.ui.picker.selectedCount, { count: value.length })} />;
+          return (
+            <Chip
+              variant="outlined"
+              size="small"
+              label={t(($) => $.entity_appCategory.ui.picker.selectedCount, {
+                count: value.length,
+              })}
+            />
+          );
         else
           return value.map((option: Item, index: number) => {
             const { key: _, ...itemProps } = getItemProps({ index });

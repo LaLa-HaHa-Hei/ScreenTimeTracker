@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsageSession;
+using ScreenTimeTracker.ScreenTime.Features.Tracking;
 using Windows.Win32;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 

@@ -17,8 +17,8 @@
     "exportFileFailed": "Failed to export data to file",
     "exportClipboardSuccess": "Successfully copied data to clipboard",
     "exportClipboardFailed": "Failed to copy data to clipboard",
-    "importFileSuccess": "Successfully imported data from file. Added {{newApps}} apps, {{newAppCategories}} categories; imported {{importedSessions}} sessions, skipped {{skippedSessions}} sessions.",
-    "importClipboardSuccess": "Successfully imported data from clipboard. Added {{newApps}} apps, {{newAppCategories}} categories; imported {{importedSessions}} sessions, skipped {{skippedSessions}} sessions.",
+    "importFileSuccess": "Successfully imported data from file. imported {{importedAppUsageSessions}} app sessions, {{importedWebsiteUsageSessions}} website sessions.",
+    "importClipboardSuccess": "Successfully imported data from clipboard. imported {{importedAppUsageSessions}} app sessions, {{importedWebsiteUsageSessions}} website sessions.",
     "deleteSuccess": "Successfully deleted usage time data",
     "deleteFailed": "Failed to delete usage time data"
   },

@@ -1,3 +1,4 @@
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
@@ -5,9 +6,9 @@ using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategory;
 
 public class GetAppCategoryHandler(ScreenTimeDbContext context)
-    : IRequestHandler<GetAppCategoryQuery, GetAppCategoryResponse?>
+    : IRequestHandler<GetAppCategoryQuery, ErrorOr<GetAppCategoryResponse>>
 {
-    public async ValueTask<GetAppCategoryResponse?> Handle(
+    public async ValueTask<ErrorOr<GetAppCategoryResponse>> Handle(
         GetAppCategoryQuery request,
         CancellationToken cancellationToken
     )
@@ -18,15 +19,20 @@ public class GetAppCategoryHandler(ScreenTimeDbContext context)
                 appCategory => appCategory.Id == request.AppCategoryId,
                 cancellationToken
             );
-        return appCategory is null
-            ? null
-            : new GetAppCategoryResponse(
-                appCategory.Id,
-                appCategory.Name,
-                appCategory.Color,
-                appCategory.IconPath,
-                appCategory.IconPathLastUpdatedAt,
-                appCategory.IsSystem
+
+        if (appCategory is null)
+            return Error.NotFound(
+                code: "AppCategory.NotFound",
+                description: "The app category with the specified ID was not found."
             );
+
+        return new GetAppCategoryResponse(
+            appCategory.Id,
+            appCategory.Name,
+            appCategory.Color,
+            appCategory.IconPath,
+            appCategory.IconPathLastUpdatedAt,
+            appCategory.IsSystem
+        );
     }
 }

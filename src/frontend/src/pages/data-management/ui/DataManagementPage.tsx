@@ -1,9 +1,5 @@
 import Paper from "@mui/material/Paper";
-import {
-  exportDataQueryOptions,
-  useDeleteData,
-  useImportData,
-} from "../api/queries";
+import { exportDataQueryOptions, useDeleteData, useImportData } from "../api/queries";
 import { dateToDateOnly } from "@/shared/lib/date-only";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -33,20 +29,23 @@ export const DataManagementPage = () => {
   });
   const { mutateAsync: importDataAsync } = useImportData();
 
-  const [deleteUsageDataStartDate, setDeleteUsageDataStartDate] =
-    useState<Date | null>(new Date(new Date().getFullYear(), 0, 1));
-  const [deleteUsageDataEndDate, setDeleteUsageDataEndDate] =
-    useState<Date | null>(new Date());
-  const [
-    deleteUsageDataComfirmDialogOpen,
-    setDeleteUsageDataComfirmDialogOpen,
-  ] = useState(false);
+  const [deleteUsageDataStartDate, setDeleteUsageDataStartDate] = useState<Date | null>(
+    new Date(new Date().getFullYear(), 0, 1),
+  );
+  const [deleteUsageDataEndDate, setDeleteUsageDataEndDate] = useState<Date | null>(new Date());
+  const [deleteUsageDataComfirmDialogOpen, setDeleteUsageDataComfirmDialogOpen] = useState(false);
 
   const handleImportError = (err: unknown) => {
     if (axios.isAxiosError(err) && err.response?.status === 422) {
-      enqueueSnackbar(t(($) => $.page_dataManagement.messages.unsupportedVersion), { variant: "error" });
+      enqueueSnackbar(
+        t(($) => $.page_dataManagement.messages.unsupportedVersion),
+        { variant: "error" },
+      );
     } else {
-      enqueueSnackbar(t(($) => $.page_dataManagement.messages.importFailed), { variant: "error" });
+      enqueueSnackbar(
+        t(($) => $.page_dataManagement.messages.importFailed),
+        { variant: "error" },
+      );
     }
   };
 
@@ -74,9 +73,7 @@ export const DataManagementPage = () => {
           <DatePicker
             sx={{ width: "10rem" }}
             value={dayjs(deleteUsageDataStartDate)}
-            onChange={(newdate) =>
-              setDeleteUsageDataStartDate(newdate?.toDate() || null)
-            }
+            onChange={(newdate) => setDeleteUsageDataStartDate(newdate?.toDate() || null)}
             slotProps={{
               textField: {
                 size: "small",
@@ -87,9 +84,7 @@ export const DataManagementPage = () => {
           <DatePicker
             sx={{ width: "10rem" }}
             value={dayjs(deleteUsageDataEndDate)}
-            onChange={(newdate) =>
-              setDeleteUsageDataEndDate(newdate?.toDate() || null)
-            }
+            onChange={(newdate) => setDeleteUsageDataEndDate(newdate?.toDate() || null)}
             slotProps={{
               textField: {
                 size: "small",
@@ -101,10 +96,7 @@ export const DataManagementPage = () => {
             variant="contained"
             color="error"
             onClick={() => {
-              if (
-                deleteUsageDataStartDate === null ||
-                deleteUsageDataEndDate === null
-              ) {
+              if (deleteUsageDataStartDate === null || deleteUsageDataEndDate === null) {
                 enqueueSnackbar(
                   t(($) => $.page_dataManagement.validation.selectDateRange),
                   { variant: "error" },
@@ -138,13 +130,19 @@ export const DataManagementPage = () => {
                     a.click();
                     URL.revokeObjectURL(url);
 
-                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportFileSuccess), {
-                      variant: "success",
-                    });
+                    enqueueSnackbar(
+                      t(($) => $.page_dataManagement.messages.exportFileSuccess),
+                      {
+                        variant: "success",
+                      },
+                    );
                   } catch {
-                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportFileFailed), {
-                      variant: "error",
-                    });
+                    enqueueSnackbar(
+                      t(($) => $.page_dataManagement.messages.exportFileFailed),
+                      {
+                        variant: "error",
+                      },
+                    );
                   }
                 }}
               >
@@ -155,13 +153,19 @@ export const DataManagementPage = () => {
                   try {
                     const content = await fetchExportContent();
                     await navigator.clipboard.writeText(content);
-                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportClipboardSuccess), {
-                      variant: "success",
-                    });
+                    enqueueSnackbar(
+                      t(($) => $.page_dataManagement.messages.exportClipboardSuccess),
+                      {
+                        variant: "success",
+                      },
+                    );
                   } catch {
-                    enqueueSnackbar(t(($) => $.page_dataManagement.messages.exportClipboardFailed), {
-                      variant: "error",
-                    });
+                    enqueueSnackbar(
+                      t(($) => $.page_dataManagement.messages.exportClipboardFailed),
+                      {
+                        variant: "error",
+                      },
+                    );
                   }
                 }}
               >
@@ -181,10 +185,8 @@ export const DataManagementPage = () => {
                       const result = await importDataAsync(await file.text());
                       enqueueSnackbar(
                         t(($) => $.page_dataManagement.messages.importFileSuccess, {
-                          newApps: result.newApps,
-                          newAppCategories: result.newAppCategories,
-                          importedSessions: result.importedSessions,
-                          skippedSessions: result.skippedSessions,
+                          importedAppUsageSessions: result.importedAppUsageSessions,
+                          importedWebsiteUsageSessions: result.importedWebsiteUsageSessions,
                         }),
                         { variant: "success" },
                       );
@@ -200,15 +202,11 @@ export const DataManagementPage = () => {
                 sx={{ ml: 1 }}
                 onClick={async () => {
                   try {
-                    const result = await importDataAsync(
-                      await navigator.clipboard.readText(),
-                    );
-                      enqueueSnackbar(
-                        t(($) => $.page_dataManagement.messages.importClipboardSuccess, {
-                        newApps: result.newApps,
-                        newAppCategories: result.newAppCategories,
-                        importedSessions: result.importedSessions,
-                        skippedSessions: result.skippedSessions,
+                    const result = await importDataAsync(await navigator.clipboard.readText());
+                    enqueueSnackbar(
+                      t(($) => $.page_dataManagement.messages.importClipboardSuccess, {
+                        importedAppUsageSessions: result.importedAppUsageSessions,
+                        importedWebsiteUsageSessions: result.importedWebsiteUsageSessions,
                       }),
                       { variant: "success" },
                     );
@@ -236,31 +234,30 @@ export const DataManagementPage = () => {
           })}
         </DialogTitle>
         <DialogActions>
-          <Button
-            onClick={() => setDeleteUsageDataComfirmDialogOpen(false)}
-            autoFocus
-          >
+          <Button onClick={() => setDeleteUsageDataComfirmDialogOpen(false)} autoFocus>
             {t(($) => $.page_dataManagement.actions.cancel)}
           </Button>
           <Button
             onClick={async () => {
-              if (
-                deleteUsageDataStartDate === null ||
-                deleteUsageDataEndDate === null
-              )
-                return;
+              if (deleteUsageDataStartDate === null || deleteUsageDataEndDate === null) return;
               try {
                 await deleteUsageDataAsync({
                   startDate: dateToDateOnly(deleteUsageDataStartDate),
                   endDate: dateToDateOnly(deleteUsageDataEndDate),
                 });
-                enqueueSnackbar(t(($) => $.page_dataManagement.messages.deleteSuccess), {
-                  variant: "success",
-                });
+                enqueueSnackbar(
+                  t(($) => $.page_dataManagement.messages.deleteSuccess),
+                  {
+                    variant: "success",
+                  },
+                );
               } catch {
-                enqueueSnackbar(t(($) => $.page_dataManagement.messages.deleteFailed), {
-                  variant: "error",
-                });
+                enqueueSnackbar(
+                  t(($) => $.page_dataManagement.messages.deleteFailed),
+                  {
+                    variant: "error",
+                  },
+                );
               } finally {
                 setDeleteUsageDataComfirmDialogOpen(false);
               }

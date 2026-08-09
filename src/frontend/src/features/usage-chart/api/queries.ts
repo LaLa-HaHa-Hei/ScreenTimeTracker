@@ -1,6 +1,16 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { GetAppCategoryUsageParams, GetAppUsageParams } from "./schemas";
-import { getAppCategoryUsage, getAppUsage } from "./requests";
+import type {
+  GetAppCategoryUsageParams,
+  GetAppUsageParams,
+  GetWebsiteCategoryUsageParams,
+  GetWebsiteUsageParams,
+} from "./schemas";
+import {
+  getAppCategoryUsage,
+  getAppUsage,
+  getWebsiteCategoryUsage,
+  getWebsiteUsage,
+} from "./requests";
 
 export const appUsageQueryOptions = (params: GetAppUsageParams) => {
   return queryOptions({
@@ -9,11 +19,23 @@ export const appUsageQueryOptions = (params: GetAppUsageParams) => {
   });
 };
 
-export const appCategoryUsageQueryOptions = (
-  params: GetAppCategoryUsageParams,
-) => {
+export const appCategoryUsageQueryOptions = (params: GetAppCategoryUsageParams) => {
   return queryOptions({
     queryKey: ["app-category-usage", params],
     queryFn: () => getAppCategoryUsage(params),
+  });
+};
+
+export const websiteUsageQueryOptions = (params: GetWebsiteUsageParams) => {
+  return queryOptions({
+    queryKey: ["website-usage", params],
+    queryFn: () => getWebsiteUsage(params),
+  });
+};
+
+export const websiteCategoryUsageQueryOptions = (params: GetWebsiteCategoryUsageParams) => {
+  return queryOptions({
+    queryKey: ["website-category-usage", params],
+    queryFn: () => getWebsiteCategoryUsage(params),
   });
 };

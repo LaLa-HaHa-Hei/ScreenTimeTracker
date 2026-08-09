@@ -13,6 +13,6 @@ public record AppUsageDistributionItem(
     string Name,
     string Color,
     string? IconPath,
-    DateTime IconPathLastUpdatedAt,
+    DateTimeOffset IconPathLastUpdatedAt,
     long DurationSeconds
 );

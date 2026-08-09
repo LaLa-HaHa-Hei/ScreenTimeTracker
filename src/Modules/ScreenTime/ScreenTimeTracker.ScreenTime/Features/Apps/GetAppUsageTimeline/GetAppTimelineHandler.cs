@@ -1,13 +1,13 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.GetAppUsageTimeline;
 
 public class GetAppUsageTimelineHandler(
     ScreenTimeDbContext context,
-    IActiveAppUsageSessionStore activeSessionStore,
+    ActiveAppUsageSessionStore activeSessionStore,
     TimeProvider timeProvider
 ) : IRequestHandler<GetAppUsageTimelineQuery, List<GetAppUsageTimelineResponseItem>>
 {
@@ -17,65 +17,73 @@ public class GetAppUsageTimelineHandler(
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var startTime = request
-            .EndDate.ToDateTime(TimeOnly.MinValue)
-            .AddHours(settings.DayCutoffHour);
-        var endTime = request
-            .EndDate.ToDateTime(TimeOnly.MinValue)
-            .AddDays(1)
-            .AddHours(settings.DayCutoffHour);
+        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
+        var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
+        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+            request.StartDate,
+            dayCutoffHour,
+            timeZoneInfo
+        );
+        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+            request.EndDate.AddDays(1),
+            dayCutoffHour,
+            timeZoneInfo
+        );
 
         var query = context
             .AppUsageSessions.AsNoTracking()
-            .Where(x => x.StartTime < endTime && startTime <= x.EndTime);
+            .Where(x => x.StartTime < maxTime && minTime <= x.EndTime);
 
         if (request.IncludedIds is not null)
-            query = query.Where(x => request.IncludedIds.Contains(x.AppId));
+            query = query.Where(x => request.IncludedIds.Contains(x.App!.CategoryId));
         else if (request.ExcludedIds is not null)
-            query = query.Where(x => !request.ExcludedIds.Contains(x.AppId));
+            query = query.Where(x => !request.ExcludedIds.Contains(x.App!.CategoryId));
 
         var sessions = await query
             .Select(x => new
             {
-                Id = x.AppId,
-                x.App!.Name,
-                x.App!.Color,
+                x.App!.Id,
+                x.App.Name,
+                x.App.Color,
                 x.StartTime,
                 x.EndTime,
             })
             .ToListAsync(cancellationToken);
 
         var activeSession = activeSessionStore.Current;
-        if (activeSession is not null && activeSession.StartTime < endTime)
+        if (activeSession is not null)
         {
-            var included = request.IncludedIds?.Contains(activeSession.AppId) ?? true;
-            var notExcluded =
-                request.ExcludedIds is null || !request.ExcludedIds.Contains(activeSession.AppId);
-            var shouldInclude = request.IncludedIds is not null ? included : notExcluded;
+            var activeSessionEnd = timeProvider.GetUtcNow();
 
-            if (shouldInclude)
+            if (activeSession.StartTime < maxTime && minTime < activeSessionEnd)
             {
                 var activeApp = await context
                     .Apps.AsNoTracking()
                     .SingleAsync(x => x.Id == activeSession.AppId, cancellationToken);
-                sessions.Add(
-                    new
-                    {
-                        activeApp.Id,
-                        activeApp.Name,
-                        activeApp.Color,
-                        activeSession.StartTime,
-                        EndTime = timeProvider.GetLocalNow().DateTime,
-                    }
-                );
+                var included = request.IncludedIds?.Contains(activeApp.Id) ?? true;
+                var notExcluded =
+                    request.ExcludedIds is null || !request.ExcludedIds.Contains(activeApp.Id);
+                var shouldInclude = request.IncludedIds is not null ? included : notExcluded;
+
+                if (shouldInclude)
+                    sessions.Add(
+                        new
+                        {
+                            activeApp.Id,
+                            activeApp.Name,
+                            activeApp.Color,
+                            activeSession.StartTime,
+                            EndTime = activeSessionEnd,
+                        }
+                    );
             }
         }
 
         var normalized = sessions.Select(s =>
             s with
             {
-                StartTime = s.StartTime < startTime ? startTime : s.StartTime,
-                EndTime = endTime < s.EndTime ? endTime : s.EndTime,
+                StartTime = s.StartTime < minTime ? minTime : s.StartTime,
+                EndTime = maxTime < s.EndTime ? maxTime : s.EndTime,
             }
         );
 

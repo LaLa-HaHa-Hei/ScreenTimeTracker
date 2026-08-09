@@ -1,7 +1,9 @@
 using System.Text.Json;
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Websites;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.DataManagement.ImportData;
@@ -9,38 +11,96 @@ namespace ScreenTimeTracker.ScreenTime.Features.DataManagement.ImportData;
 public class ImportDataHandler(
     ScreenTimeDbContext context,
     TimeProvider timeProvider,
-    IActiveAppUsageSessionStore activeSessionStore
-) : IRequestHandler<ImportDataCommand, ImportDataResponse>
+    ActiveAppUsageSessionStore activeAppUsageSessionStore,
+    ActiveWebsiteUsageSessionStore activeWebsiteUsageSessionStore
+) : IRequestHandler<ImportDataCommand, ErrorOr<ImportDataResponse>>
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
-    public async ValueTask<ImportDataResponse> Handle(
+    public async ValueTask<ErrorOr<ImportDataResponse>> Handle(
         ImportDataCommand request,
         CancellationToken cancellationToken
     )
     {
-        using var doc = JsonDocument.Parse(request.RawJson);
-        var version = doc.RootElement.GetProperty("version").GetInt32();
-
-        var v3Data = version switch
+        int version;
+        try
         {
-            1 => UpcastV2ToV3(
-                UpcastV1ToV2(Deserialize<ImportDataContracts.V1Data>(request.RawJson))
-            ),
-            2 => UpcastV2ToV3(Deserialize<ImportDataContracts.V2Data>(request.RawJson)),
-            3 => Deserialize<ImportDataContracts.V3Data>(request.RawJson),
-            _ => throw new NotSupportedException($"未知版本: {version}"),
-        };
+            using var doc = JsonDocument.Parse(request.RawJson);
 
-        return await SaveDataAsync(v3Data, cancellationToken);
+            if (!doc.RootElement.TryGetProperty("version", out var versionElement))
+            {
+                return Error.Validation(
+                    "ImportData.MissingVersion",
+                    "The imported data is missing the version field."
+                );
+            }
+
+            if (!versionElement.TryGetInt32(out version))
+            {
+                return Error.Validation(
+                    "ImportData.InvalidVersion",
+                    "The data version must be an integer."
+                );
+            }
+        }
+        catch (JsonException)
+        {
+            return Error.Validation(
+                "ImportData.InvalidJson",
+                "The imported data is not valid JSON."
+            );
+        }
+
+        ImportDataContracts.V4Data v4Data;
+        try
+        {
+            switch (version)
+            {
+                case 1:
+                    v4Data = UpcastV3ToV4(
+                        UpcastV2ToV3(
+                            UpcastV1ToV2(Deserialize<ImportDataContracts.V1Data>(request.RawJson))
+                        )
+                    );
+                    break;
+                case 2:
+                    v4Data = UpcastV3ToV4(
+                        UpcastV2ToV3(Deserialize<ImportDataContracts.V2Data>(request.RawJson))
+                    );
+                    break;
+                case 3:
+                    v4Data = UpcastV3ToV4(Deserialize<ImportDataContracts.V3Data>(request.RawJson));
+                    break;
+                case 4:
+                    v4Data = Deserialize<ImportDataContracts.V4Data>(request.RawJson);
+                    break;
+                default:
+                    return Error.Validation(
+                        "ImportData.UnsupportedVersion",
+                        $"Unsupported data version: {version}"
+                    );
+            }
+        }
+        catch (JsonException)
+        {
+            return Error.Validation(
+                "ImportData.DeserializationFailed",
+                "The imported data could not be parsed because its structure does not match the expected format."
+            );
+        }
+
+        return await SaveDataAsync(v4Data, cancellationToken);
     }
 
-    private static T Deserialize<T>(string json) =>
-        JsonSerializer.Deserialize<T>(json, _jsonSerializerOptions)
-        ?? throw new InvalidOperationException("JSON 解析失败");
+    private static T Deserialize<T>(string json)
+    {
+        var result = JsonSerializer.Deserialize<T>(json, _jsonSerializerOptions);
+
+        return result ?? throw new JsonException("Deserialized data is null.");
+    }
 
     private static class ImportDataContracts
     {
@@ -91,7 +151,7 @@ public class ImportDataHandler(
             string Name,
             string Color,
             string ProcessName,
-            bool IsAutoUpdateEnabled,
+            bool IsAutoRefreshEnabled,
             string AppCategoryName,
             Icon? Icon
         );
@@ -100,6 +160,50 @@ public class ImportDataHandler(
             string AppProcessName,
             DateTime StartTime,
             DateTime EndTime
+        );
+
+        // V4 数据结构
+        public sealed record V4Data(
+            V4App[] Apps,
+            V4AppCategory[] AppCategories,
+            V4AppUsageSession[] AppUsageSessions,
+            V4Website[] Websites,
+            V4WebsiteCategory[] WebsiteCategories,
+            V4WebsiteUsageSession[] WebsiteUsageSessions
+        );
+
+        public sealed record V4App(
+            string Name,
+            string Color,
+            string ProcessName,
+            bool AllowMetadataAutoRefresh,
+            string AppCategoryName,
+            Icon? Icon
+        );
+
+        public sealed record V4AppCategory(string Name, string Color, Icon? Icon);
+
+        public sealed record V4AppUsageSession(
+            string AppProcessName,
+            DateTimeOffset StartTime,
+            DateTimeOffset EndTime
+        );
+
+        public sealed record V4Website(
+            string Name,
+            string Color,
+            string Host,
+            bool AllowMetadataAutoRefresh,
+            string WebsiteCategoryName,
+            Icon? Icon
+        );
+
+        public sealed record V4WebsiteCategory(string Name, string Color, Icon? Icon);
+
+        public sealed record V4WebsiteUsageSession(
+            string WebsiteHost,
+            DateTimeOffset StartTime,
+            DateTimeOffset EndTime
         );
     }
 
@@ -131,7 +235,7 @@ public class ImportDataHandler(
         var categories = v2
             .AppCategories.Select(c => new ImportDataContracts.V3AppCategory(
                 c.Name,
-                GenerateColor(),
+                App.GenerateColor(),
                 c.Icon
             ))
             .ToArray();
@@ -139,7 +243,7 @@ public class ImportDataHandler(
         var apps = v2
             .Apps.Select(a => new ImportDataContracts.V3App(
                 a.Name,
-                GenerateColor(),
+                App.GenerateColor(),
                 a.ProcessName,
                 true,
                 a.AppCategoryName,
@@ -158,8 +262,43 @@ public class ImportDataHandler(
         return new ImportDataContracts.V3Data(categories, apps, sessions);
     }
 
+    private static ImportDataContracts.V4Data UpcastV3ToV4(ImportDataContracts.V3Data v3)
+    {
+        var apps = v3
+            .Apps.Select(a => new ImportDataContracts.V4App(
+                a.Name,
+                a.Color,
+                a.ProcessName,
+                true,
+                a.AppCategoryName,
+                a.Icon
+            ))
+            .ToArray();
+
+        var appCategories = v3
+            .AppCategories.Select(c => new ImportDataContracts.V4AppCategory(
+                c.Name,
+                c.Color,
+                c.Icon
+            ))
+            .ToArray();
+
+        // 之前版本的时间存储是采用的地时间，在此之后的则采用UTC时间
+        var appUsageSessions = v3
+            .AppUsageSessions.Select(s => new ImportDataContracts.V4AppUsageSession(
+                s.AppProcessName,
+                new DateTimeOffset(
+                    DateTime.SpecifyKind(s.StartTime, DateTimeKind.Local)
+                ).UtcDateTime,
+                new DateTimeOffset(DateTime.SpecifyKind(s.EndTime, DateTimeKind.Local)).UtcDateTime
+            ))
+            .ToArray();
+
+        return new ImportDataContracts.V4Data(apps, appCategories, appUsageSessions, [], [], []);
+    }
+
     private async Task<ImportDataResponse> SaveDataAsync(
-        ImportDataContracts.V3Data data,
+        ImportDataContracts.V4Data data,
         CancellationToken cancellationToken
     )
     {
@@ -167,152 +306,315 @@ public class ImportDataHandler(
             data.AppCategories.Length == 0
             && data.Apps.Length == 0
             && data.AppUsageSessions.Length == 0
+            && data.Websites.Length == 0
+            && data.WebsiteCategories.Length == 0
+            && data.WebsiteUsageSessions.Length == 0
         )
-            return new ImportDataResponse(0, 0, 0, 0);
+            return new ImportDataResponse(0, 0, 0, 0, 0, 0, 0, 0);
 
-        long newAppCategories = 0;
         long newApps = 0;
-        long importedSessions = 0;
-        long skippedSessions = 0;
+        long newAppCategories = 0;
+        long importedAppUsageSessions = 0;
+        long skippedAppUsageSessions = 0;
+        long newWebsites = 0;
+        long newWebsiteCategories = 0;
+        long importedWebsiteUsageSessions = 0;
+        long skippedWebsiteUsageSessions = 0;
 
-        DateTime now = timeProvider.GetLocalNow().DateTime;
+        DateTimeOffset now = timeProvider.GetUtcNow();
+        var userSettings = await context.UserSettings.SingleAsync(cancellationToken);
+        var appIconDirectory = userSettings.AppTracking.IconDirectory;
+        var appCategoryIconDirectory = "./Data/AppCategoryIcons";
+        var websiteIconDirectory = userSettings.WebsiteTracking.IconDirectory;
+        var websiteCategoryIconDirectory = "./Data/WebsiteCategoryIcons";
 
-        var appIconDirectory = (
-            await context.UserSettings.SingleAsync(cancellationToken)
-        ).AppIconDirectory;
-
-        // 处理 AppCategory
-        var existingCategories = await context.AppCategories.ToDictionaryAsync(
-            c => c.Name,
-            cancellationToken
-        );
-
-        foreach (var categoryData in data.AppCategories)
         {
-            if (!existingCategories.TryGetValue(categoryData.Name, out var category))
+            // AppCategory
+            var existingCategories = await context.AppCategories.ToDictionaryAsync(
+                c => c.Name,
+                cancellationToken
+            );
+
+            foreach (var categoryData in data.AppCategories)
             {
-                var iconPath = await SaveIconAsync(
-                    categoryData.Icon,
-                    categoryData.Name,
-                    "./Data/AppCategoryIcons",
-                    cancellationToken
-                );
-                category = AppCategory.Import(categoryData.Name, categoryData.Color, iconPath, now);
-                context.AppCategories.Add(category);
-                existingCategories[categoryData.Name] = category;
-                newAppCategories++;
-            }
-        }
-
-        // 处理 Apps
-        var existingApps = await context.Apps.ToDictionaryAsync(
-            a => a.ProcessName,
-            cancellationToken
-        );
-
-        foreach (var appData in data.Apps)
-        {
-            if (!existingApps.TryGetValue(appData.ProcessName, out var app))
-            {
-                var iconPath = await SaveIconAsync(
-                    appData.Icon,
-                    appData.Name,
-                    appIconDirectory,
-                    cancellationToken
-                );
-                app = App.Import(
-                    appData.Name,
-                    appData.Color,
-                    appData.ProcessName,
-                    appData.IsAutoUpdateEnabled,
-                    DateTime.MinValue,
-                    AppCategory.UncategorizedId,
-                    null,
-                    iconPath,
-                    now
-                );
-
-                existingCategories.TryGetValue(appData.AppCategoryName, out var matchedCategory);
-                if (matchedCategory is null)
+                if (!existingCategories.TryGetValue(categoryData.Name, out var category))
                 {
-                    matchedCategory = AppCategory.Import(
-                        appData.AppCategoryName,
-                        GenerateColor(),
-                        null,
-                        now
+                    var iconPath = await SaveIconAsync(
+                        categoryData.Icon,
+                        categoryData.Name,
+                        appCategoryIconDirectory,
+                        cancellationToken
                     );
-                    context.AppCategories.Add(matchedCategory);
-                    existingCategories[appData.AppCategoryName] = matchedCategory;
+                    category = AppCategory.Import(categoryData.Name, categoryData.Color, iconPath);
+                    context.AppCategories.Add(category);
+                    existingCategories[categoryData.Name] = category;
                     newAppCategories++;
                 }
-                app.Update(appCategoryId: matchedCategory.Id);
+            }
 
-                context.Apps.Add(app);
-                existingApps[appData.ProcessName] = app;
-                newApps++;
+            // Apps
+            var existingApps = await context.Apps.ToDictionaryAsync(
+                a => a.ProcessName,
+                cancellationToken
+            );
+
+            foreach (var appData in data.Apps)
+            {
+                if (!existingApps.TryGetValue(appData.ProcessName, out var app))
+                {
+                    var iconPath = await SaveIconAsync(
+                        appData.Icon,
+                        appData.Name,
+                        appIconDirectory,
+                        cancellationToken
+                    );
+                    app = App.Import(
+                        appData.Name,
+                        appData.Color,
+                        appData.ProcessName,
+                        appData.AllowMetadataAutoRefresh,
+                        AppCategory.UncategorizedId,
+                        iconPath
+                    );
+
+                    existingCategories.TryGetValue(
+                        appData.AppCategoryName,
+                        out var matchedCategory
+                    );
+                    if (matchedCategory is null)
+                    {
+                        matchedCategory = AppCategory.Import(
+                            appData.AppCategoryName,
+                            App.GenerateColor(),
+                            null
+                        );
+                        context.AppCategories.Add(matchedCategory);
+                        existingCategories[appData.AppCategoryName] = matchedCategory;
+                        newAppCategories++;
+                    }
+                    app.Update(categoryId: matchedCategory.Id);
+
+                    context.Apps.Add(app);
+                    existingApps[appData.ProcessName] = app;
+                    newApps++;
+                }
+            }
+
+            // AppUsageSessions
+            if (data.AppUsageSessions.Length != 0)
+            {
+                var minStart = data.AppUsageSessions.Min(s => s.StartTime);
+                var maxEnd = data.AppUsageSessions.Max(s => s.EndTime);
+
+                var existingSessions = await context
+                    .AppUsageSessions.Where(s => s.StartTime < maxEnd && minStart < s.EndTime)
+                    .ToListAsync(cancellationToken);
+
+                var activeSession = activeAppUsageSessionStore.Current;
+                if (activeSession is not null && activeSession.StartTime < maxEnd && minStart < now)
+                    existingSessions.Add(
+                        AppUsageSession.Create(activeSession.AppId, activeSession.StartTime, now)
+                    );
+
+                foreach (var session in data.AppUsageSessions)
+                {
+                    if (now <= session.EndTime)
+                    {
+                        skippedAppUsageSessions++;
+                        continue;
+                    }
+
+                    var hasOverlap = existingSessions.Any(s =>
+                        s.StartTime < session.EndTime && session.StartTime < s.EndTime
+                    );
+                    if (hasOverlap)
+                    {
+                        skippedAppUsageSessions++;
+                        continue;
+                    }
+
+                    if (!existingApps.TryGetValue(session.AppProcessName, out var app))
+                    {
+                        app = App.Import(
+                            session.AppProcessName,
+                            App.GenerateColor(),
+                            session.AppProcessName,
+                            true,
+                            AppCategory.UncategorizedId,
+                            null
+                        );
+                        context.Apps.Add(app);
+                        existingApps[session.AppProcessName] = app;
+                    }
+
+                    var usageSession = AppUsageSession.Import(
+                        app.Id,
+                        session.StartTime,
+                        session.EndTime,
+                        false
+                    );
+                    existingSessions.Add(usageSession);
+                    context.AppUsageSessions.Add(usageSession);
+                    importedAppUsageSessions++;
+                }
             }
         }
 
-        // 处理 AppUsageSessions
-        var minStart = data.AppUsageSessions.Min(s => s.StartTime);
-        var maxEnd = data.AppUsageSessions.Max(s => s.EndTime);
-
-        var existingSessions = await context
-            .AppUsageSessions.Where(s => s.StartTime < maxEnd && minStart < s.EndTime)
-            .ToListAsync(cancellationToken);
-
-        var activeSession = activeSessionStore.Current;
-        if (activeSession is not null && activeSession.StartTime < maxEnd)
-            existingSessions.Add(
-                AppUsageSession.Import(activeSession.AppId, activeSession.StartTime, now)
-            );
-
-        foreach (var session in data.AppUsageSessions)
         {
-            if (now <= session.EndTime)
-            {
-                skippedSessions++;
-                continue;
-            }
-
-            var hasOverlap = existingSessions.Any(s =>
-                s.StartTime < session.EndTime && session.StartTime < s.EndTime
+            // WebsiteCategory
+            var existingCategories = await context.WebsiteCategories.ToDictionaryAsync(
+                c => c.Name,
+                cancellationToken
             );
-            if (hasOverlap)
+
+            foreach (var categoryData in data.WebsiteCategories)
             {
-                skippedSessions++;
-                continue;
+                if (!existingCategories.TryGetValue(categoryData.Name, out var category))
+                {
+                    var iconPath = await SaveIconAsync(
+                        categoryData.Icon,
+                        categoryData.Name,
+                        websiteCategoryIconDirectory,
+                        cancellationToken
+                    );
+                    category = WebsiteCategory.Import(
+                        categoryData.Name,
+                        categoryData.Color,
+                        iconPath
+                    );
+                    context.WebsiteCategories.Add(category);
+                    existingCategories[categoryData.Name] = category;
+                    newWebsiteCategories++;
+                }
             }
 
-            if (!existingApps.TryGetValue(session.AppProcessName, out var app))
-            {
-                app = App.Import(
-                    session.AppProcessName,
-                    GenerateColor(),
-                    session.AppProcessName,
-                    true,
-                    DateTime.MinValue,
-                    AppCategory.UncategorizedId,
-                    null,
-                    null,
-                    now
-                );
-                context.Apps.Add(app);
-                existingApps[session.AppProcessName] = app;
-            }
-
-            var usageSession = AppUsageSession.Import(
-                app.Id,
-                session.StartTime,
-                session.EndTime,
-                false
+            // Websites
+            var existingWebsites = await context.Websites.ToDictionaryAsync(
+                a => a.Host,
+                cancellationToken
             );
-            context.AppUsageSessions.Add(usageSession);
-            importedSessions++;
+
+            foreach (var websiteData in data.Websites)
+            {
+                if (!existingWebsites.TryGetValue(websiteData.Host, out var website))
+                {
+                    var iconPath = await SaveIconAsync(
+                        websiteData.Icon,
+                        websiteData.Name,
+                        websiteIconDirectory,
+                        cancellationToken
+                    );
+                    website = Website.Import(
+                        websiteData.Name,
+                        websiteData.Color,
+                        websiteData.Host,
+                        websiteData.AllowMetadataAutoRefresh,
+                        WebsiteCategory.UncategorizedId,
+                        iconPath
+                    );
+
+                    existingCategories.TryGetValue(
+                        websiteData.WebsiteCategoryName,
+                        out var matchedCategory
+                    );
+                    if (matchedCategory is null)
+                    {
+                        matchedCategory = WebsiteCategory.Import(
+                            websiteData.WebsiteCategoryName,
+                            Website.GenerateColor(),
+                            null
+                        );
+                        context.WebsiteCategories.Add(matchedCategory);
+                        existingCategories[websiteData.WebsiteCategoryName] = matchedCategory;
+                        newWebsiteCategories++;
+                    }
+                    website.Update(categoryId: matchedCategory.Id);
+
+                    context.Websites.Add(website);
+                    existingWebsites[websiteData.Host] = website;
+                    newWebsites++;
+                }
+            }
+
+            if (data.WebsiteUsageSessions.Length != 0)
+            {
+                // WebsiteUsageSessions
+                var minStart = data.WebsiteUsageSessions.Min(s => s.StartTime);
+                var maxEnd = data.WebsiteUsageSessions.Max(s => s.EndTime);
+
+                var existingSessions = await context
+                    .WebsiteUsageSessions.Where(s => s.StartTime < maxEnd && minStart < s.EndTime)
+                    .ToListAsync(cancellationToken);
+
+                var activeSession = activeWebsiteUsageSessionStore.Current;
+                if (
+                    activeSession is not null
+                    && activeSession.StartTime < maxEnd
+                    && minStart < activeSession.LastActiveAt
+                )
+                    existingSessions.Add(
+                        WebsiteUsageSession.Create(
+                            activeSession.WebsiteId,
+                            activeSession.StartTime,
+                            activeSession.LastActiveAt
+                        )
+                    );
+
+                foreach (var session in data.WebsiteUsageSessions)
+                {
+                    if (now <= session.EndTime)
+                    {
+                        skippedWebsiteUsageSessions++;
+                        continue;
+                    }
+
+                    var hasOverlap = existingSessions.Any(s =>
+                        s.StartTime < session.EndTime && session.StartTime < s.EndTime
+                    );
+                    if (hasOverlap)
+                    {
+                        skippedWebsiteUsageSessions++;
+                        continue;
+                    }
+
+                    if (!existingWebsites.TryGetValue(session.WebsiteHost, out var website))
+                    {
+                        website = Website.Import(
+                            session.WebsiteHost,
+                            Website.GenerateColor(),
+                            session.WebsiteHost,
+                            true,
+                            WebsiteCategory.UncategorizedId,
+                            null
+                        );
+                        context.Websites.Add(website);
+                        existingWebsites[session.WebsiteHost] = website;
+                    }
+
+                    var usageSession = WebsiteUsageSession.Import(
+                        website.Id,
+                        session.StartTime,
+                        session.EndTime,
+                        false
+                    );
+                    existingSessions.Add(usageSession);
+                    context.WebsiteUsageSessions.Add(usageSession);
+                    importedWebsiteUsageSessions++;
+                }
+            }
         }
 
         await context.SaveChangesAsync(cancellationToken);
-        return new ImportDataResponse(newAppCategories, newApps, importedSessions, skippedSessions);
+        return new ImportDataResponse(
+            newApps,
+            newAppCategories,
+            newWebsites,
+            newWebsiteCategories,
+            importedAppUsageSessions,
+            skippedAppUsageSessions,
+            importedWebsiteUsageSessions,
+            skippedWebsiteUsageSessions
+        );
     }
 
     private static async Task<string?> SaveIconAsync(
@@ -324,11 +626,13 @@ public class ImportDataHandler(
     {
         if (icon is null || icon.Data is null || icon.Data.Length == 0)
             return null;
+
+        var safeIconName = Path.GetFileName(iconName);
         try
         {
             if (!Directory.Exists(iconDirectory))
                 Directory.CreateDirectory(iconDirectory);
-            var filePath = Path.Combine(iconDirectory, $"{iconName}{icon.Extension}");
+            var filePath = Path.Combine(iconDirectory, $"{safeIconName}{icon.Extension}");
             await File.WriteAllBytesAsync(filePath, icon.Data, cancellationToken);
             return filePath;
         }
@@ -336,47 +640,5 @@ public class ImportDataHandler(
         {
             return null;
         }
-    }
-
-    private static string HslToHex(double h, double s, double l)
-    {
-        h %= 360;
-        s /= 100.0;
-        l /= 100.0;
-
-        double c = (1 - Math.Abs(2 * l - 1)) * s;
-        double x = c * (1 - Math.Abs((h / 60.0) % 2 - 1));
-        double m = l - c / 2;
-
-        double r1 = 0,
-            g1 = 0,
-            b1 = 0;
-
-        if (h < 60)
-            (r1, g1, b1) = (c, x, 0);
-        else if (h < 120)
-            (r1, g1, b1) = (x, c, 0);
-        else if (h < 180)
-            (r1, g1, b1) = (0, c, x);
-        else if (h < 240)
-            (r1, g1, b1) = (0, x, c);
-        else if (h < 300)
-            (r1, g1, b1) = (x, 0, c);
-        else
-            (r1, g1, b1) = (c, 0, x);
-
-        int r = (int)Math.Round((r1 + m) * 255);
-        int g = (int)Math.Round((g1 + m) * 255);
-        int b = (int)Math.Round((b1 + m) * 255);
-
-        return $"#{r:X2}{g:X2}{b:X2}";
-    }
-
-    private static string GenerateColor()
-    {
-        int h = Random.Shared.Next(360);
-        int s = Random.Shared.Next(60, 100);
-        int l = Random.Shared.Next(50, 80);
-        return HslToHex(h, s, l);
     }
 }

@@ -2,14 +2,14 @@ namespace ScreenTimeTracker.BuildingBlocks.Domain;
 
 public abstract class AggregateRoot : Entity
 {
-    [Obsolete("a", true)]
-    public AggregateRoot() { }
+    [Obsolete("This constructor is reserved for framework use only. Do not call directly.", true)]
+    protected AggregateRoot() { }
 
     public AggregateRoot(Guid id)
         : base(id) { }
 
     private readonly List<IDomainEvent> _domainEvents = [];
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents;
 
     public void AddDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 

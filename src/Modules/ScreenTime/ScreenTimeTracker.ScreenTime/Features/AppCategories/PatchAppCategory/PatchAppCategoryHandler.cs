@@ -1,15 +1,15 @@
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
-using ScreenTimeTracker.ScreenTime.Domain.Exceptions;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.PatchAppCategory;
 
 public class PatchAppCategoryHandler(ScreenTimeDbContext context, TimeProvider timeProvider)
-    : IRequestHandler<PatchAppCategoryCommand>
+    : IRequestHandler<PatchAppCategoryCommand, ErrorOr<Updated>>
 {
-    public async ValueTask<Unit> Handle(
+    public async ValueTask<ErrorOr<Updated>> Handle(
         PatchAppCategoryCommand request,
         CancellationToken cancellationToken
     )
@@ -18,8 +18,12 @@ public class PatchAppCategoryHandler(ScreenTimeDbContext context, TimeProvider t
             [request.AppCategoryId],
             cancellationToken
         );
+
         if (appCategory is null)
-            return Unit.Value;
+            return Error.NotFound(
+                code: "AppCategory.NotFound",
+                description: "The app category with the specified ID was not found."
+            );
 
         if (request.Name.HasValue)
         {
@@ -28,17 +32,15 @@ public class PatchAppCategoryHandler(ScreenTimeDbContext context, TimeProvider t
                 cancellationToken
             );
             if (exists)
-                throw new AppCategoryAlreadyExistsException(request.Name.Value);
+                return Error.Conflict(
+                    "AppCategory.NameAlreadyExists",
+                    "An app category with the same name already exists."
+                );
         }
 
-        appCategory.Update(
-            request.Name,
-            request.Color,
-            request.IconPath,
-            timeProvider.GetLocalNow().DateTime
-        );
+        appCategory.Update(request.Name, request.Color, request.IconPath, timeProvider.GetUtcNow());
 
         await context.SaveChangesAsync(cancellationToken);
-        return Unit.Value;
+        return Result.Updated;
     }
 }

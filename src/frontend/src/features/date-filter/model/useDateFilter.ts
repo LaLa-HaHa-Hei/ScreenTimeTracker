@@ -21,11 +21,8 @@ export const useDateFilter = ({
   const { data, isLoading } = useQuery({
     ...userSettingsQueries.userSettings(),
   });
-  const dayCutoffHour = data?.dayCutoffHour || 5;
-  const logicalToday = dayjs()
-    .subtract(dayCutoffHour, "hour")
-    .startOf("day")
-    .toDate();
+  const dayCutoffHour = data?.timeBoundary.dayCutoffHour || 4;
+  const logicalToday = dayjs().subtract(dayCutoffHour, "hour").startOf("day").toDate();
 
   const getDefaultDateRange = useCallback(
     (timeFrame: TimeFrame): DateRange => {
@@ -54,9 +51,7 @@ export const useDateFilter = ({
   }, [currentTimeFrame, currentDateRange]);
 
   const handleTimeFrameChange = (newTimeFrame: TimeFrame) => {
-    const nextRange =
-      timeFrameCacheRef.current[newTimeFrame] ||
-      getDefaultDateRange(newTimeFrame);
+    const nextRange = timeFrameCacheRef.current[newTimeFrame] || getDefaultDateRange(newTimeFrame);
     onValueChange(newTimeFrame, nextRange);
   };
 

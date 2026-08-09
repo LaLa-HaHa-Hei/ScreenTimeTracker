@@ -5,13 +5,12 @@ import { useMemo } from "react";
 import {
   appCategoryUsageTimelineQueryOptions,
   appUsageTimelineQueryOptions,
+  websiteCategoryUsageTimelineQueryOptions,
+  websiteUsageTimelineQueryOptions,
 } from "../api/queries";
 import ReactECharts from "echarts-for-react";
 import { userSettingsQueries } from "@/entities/user-settings";
-import type {
-  AppCategoryUsageTimelineItemDto,
-  AppUsageTimelineItemDto,
-} from "../api/schemas";
+import type { AppCategoryUsageTimelineItemDto, AppUsageTimelineItemDto } from "../api/schemas";
 import type { Theme } from "@emotion/react";
 import { useTheme, type SxProps } from "@mui/material/styles";
 import dayjs from "@/shared/lib/dayjs";
@@ -20,7 +19,7 @@ import Box from "@mui/material/Box";
 export type UsageTimelineProps = {
   className?: string;
   sx?: SxProps<Theme>;
-  type: "app" | "app-category";
+  type: "app" | "app-category" | "website" | "website-category";
   date: DateOnly;
   includedIds?: string[];
   excludedIds?: string[];
@@ -76,10 +75,8 @@ export const UsageTimeline = ({
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
-  const { data: userSettingsDtoData } = useQuery(
-    userSettingsQueries.userSettings(),
-  );
-  const dayCutoffHour = userSettingsDtoData?.dayCutoffHour ?? 0;
+  const { data: userSettingsDtoData } = useQuery(userSettingsQueries.userSettings());
+  const dayCutoffHour = userSettingsDtoData?.timeBoundary.dayCutoffHour ?? 0;
   const { data: appUsageTimelineData } = useQuery({
     ...appUsageTimelineQueryOptions({
       startDate: date,
@@ -98,14 +95,36 @@ export const UsageTimeline = ({
     }),
     enabled: type === "app-category",
   });
+  const { data: websiteUsageTimelineData } = useQuery({
+    ...websiteUsageTimelineQueryOptions({
+      startDate: date,
+      endDate: date,
+      includedIds: includedIds,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website",
+  });
+  const { data: awebsiteCategoryUsageTimelineData } = useQuery({
+    ...websiteCategoryUsageTimelineQueryOptions({
+      startDate: date,
+      endDate: date,
+      includedIds: includedIds,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website-category",
+  });
 
   const timelineData =
-    type === "app" ? appUsageTimelineData : appCategoryUsageTimelineData;
+    type === "app"
+      ? appUsageTimelineData
+      : type === "app-category"
+        ? appCategoryUsageTimelineData
+        : type === "website"
+          ? websiteUsageTimelineData
+          : awebsiteCategoryUsageTimelineData;
 
   const option = useMemo(() => {
-    const dayStart = dayjs(dateOnlyToDate(date))
-      .add(dayCutoffHour, "hour")
-      .toDate();
+    const dayStart = dayjs(dateOnlyToDate(date)).add(dayCutoffHour, "hour").toDate();
     const dayStartMs = dayStart.getTime();
     const dayEndMs = dayStartMs + 24 * 3600 * 1000;
 
@@ -115,10 +134,7 @@ export const UsageTimeline = ({
         acc[item.name].push(item);
         return acc;
       },
-      {} as Record<
-        string,
-        AppUsageTimelineItemDto[] | AppCategoryUsageTimelineItemDto[]
-      >,
+      {} as Record<string, AppUsageTimelineItemDto[] | AppCategoryUsageTimelineItemDto[]>,
     );
 
     const series = Object.entries(groupedData).map(([name, items]) => {

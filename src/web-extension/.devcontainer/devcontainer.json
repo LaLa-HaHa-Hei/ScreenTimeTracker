@@ -1,0 +1,23 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+	"name": "stt-web-extension",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace/web-extension,type=bind",
+	"workspaceFolder": "/workspace/web-extension",
+	"mounts": [
+		"source=pnpm-store,target=/home/node/.pnpm-store,type=volume",
+		"source=stt-web-extension-node_modules,target=/workspace/web-extension/node_modules,type=volume"
+	],
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "sudo chown -R node:node /home/node/.pnpm-store /workspace/web-extension/node_modules && pnpm config set store-dir /home/node/.pnpm-store"
+	// Configure tool-specific properties.
+	// "customizations": {},
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

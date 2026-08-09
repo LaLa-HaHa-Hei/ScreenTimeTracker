@@ -4,7 +4,7 @@
     <ApplicationIcon>Resources/Icon.ico</ApplicationIcon>
     <AssemblyName>ScreenTimeTracker</AssemblyName>
     <RootNamespace>ScreenTimeTracker.Desktop</RootNamespace>
-    <Version>4.5.2</Version>
+    <Version>4.6.0</Version>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
@@ -21,10 +21,20 @@
       <Link>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\web-extension\.output\chrome-mv3\**">
+      <Link>web-extension-chrome-mv3\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\web-extension\.output\firefox-mv2\**">
+      <Link>web-extension-firefox-mv2\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <Target Name="CleanFrontendAssets" BeforeTargets="Publish">
     <RemoveDir Directories="$(TargetDir)wwwroot" />
+    <RemoveDir Directories="$(TargetDir)web-extension-chrome-mv3" />
+    <RemoveDir Directories="$(TargetDir)web-extension-firefox-mv2" />
   </Target>
 
   <ItemGroup>

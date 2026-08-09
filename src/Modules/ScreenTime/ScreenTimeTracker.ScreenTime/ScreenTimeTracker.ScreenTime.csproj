@@ -4,12 +4,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="PrePreparedAppCategoryIcons\**">
+    <Content Include="PrePreparedCategoryIcons\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ErrorOr" />
     <PackageReference Include="FastEndpoints" />
     <PackageReference Include="Mediator.Abstractions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />

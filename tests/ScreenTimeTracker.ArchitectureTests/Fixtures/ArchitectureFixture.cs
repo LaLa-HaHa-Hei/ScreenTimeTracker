@@ -15,9 +15,8 @@ public class ArchitectureFixture
     {
         Architecture = new ArchLoader()
             .LoadAssemblies(
-                typeof(DateTime).Assembly,
                 typeof(BuildingBlocks.Domain.Entity).Assembly,
-                typeof(ScreenTime.Domain.App).Assembly,
+                typeof(ScreenTime.Domain.Apps.App).Assembly,
                 typeof(DesktopSettings.Domain.LocalSettings).Assembly,
                 typeof(DesktopSettings.Contracts.Enums.UIOpenMode).Assembly,
                 typeof(Desktop.DesktopGroup).Assembly

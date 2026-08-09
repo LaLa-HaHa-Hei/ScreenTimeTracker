@@ -5,7 +5,7 @@ using ScreenTimeTracker.DesktopSettings.Contracts.Queries;
 namespace ScreenTimeTracker.DesktopSettings.Features.LocalSettingsManagement.GetLocalSettings;
 
 public class GetLocalSettingsEndpoint(IMediator mediator)
-    : Endpoint<EmptyRequest, GetLocalSettingsResult>
+    : Endpoint<EmptyRequest, GetLocalSettingsResponse>
 {
     public override void Configure()
     {
@@ -16,7 +16,15 @@ public class GetLocalSettingsEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(EmptyRequest req, CancellationToken ct)
     {
-        GetLocalSettingsResult response = await mediator.Send(new GetLocalSettingsQuery(), ct);
-        await Send.OkAsync(response, ct);
+        var response = await mediator.Send(new GetLocalSettingsQuery(), ct);
+        await Send.OkAsync(
+            new GetLocalSettingsResponse(
+                response.DefaultUIOpenMode,
+                response.IsAutoStartEnabled,
+                response.IsSilentStartEnabled,
+                response.Language
+            ),
+            ct
+        );
     }
 }

@@ -1,14 +1,14 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.UserSettingsManagement.GetUserSettings;
 
 public class GetUserSettingsHandler(ScreenTimeDbContext context)
-    : IRequestHandler<GetUserSettingsQuery, GetUserSettingsResult>
+    : IRequestHandler<GetUserSettingsQuery, GetUserSettingsResponse>
 {
-    public async ValueTask<GetUserSettingsResult> Handle(
+    public async ValueTask<GetUserSettingsResponse> Handle(
         GetUserSettingsQuery request,
         CancellationToken cancellationToken
     )
@@ -17,17 +17,29 @@ public class GetUserSettingsHandler(ScreenTimeDbContext context)
             .UserSettings.AsNoTracking()
             .SingleAsync(cancellationToken);
 
-        return new GetUserSettingsResult(
-            AppIconDirectory: userSettings.AppIconDirectory,
-            AppMetadataStaleThreshold: userSettings.AppMetadataStaleThreshold,
-            ActiveAppUsageSessionAutoSaveInterval: userSettings.ActiveAppUsageSessionAutoSaveInterval,
-            IsIdleDetectionEnabled: userSettings.IsIdleDetectionEnabled,
-            IdleThreshold: userSettings.IdleThreshold,
-            IdleDetectionPollingInterval: userSettings.IdleDetectionPollingInterval,
-            MinValidAppUsageSessionDuration: userSettings.MinValidAppUsageSessionDuration,
-            AppUsageSessionMergeTolerance: userSettings.AppUsageSessionMergeTolerance,
-            AppUsageSessionOptimizationInterval: userSettings.AppUsageSessionOptimizationInterval,
-            DayCutoffHour: userSettings.DayCutoffHour
+        return new GetUserSettingsResponse(
+            new AppTrackingSettingsDto(
+                userSettings.AppTracking.IconDirectory,
+                (int)userSettings.AppTracking.MetadataStaleThreshold.TotalSeconds,
+                (int)userSettings.AppTracking.ActiveUsageSessionAutoSaveInterval.TotalSeconds,
+                (int)userSettings.AppTracking.MinValidUsageSessionDuration.TotalSeconds,
+                (int)userSettings.AppTracking.UsageSessionMergeTolerance.TotalSeconds,
+                (int)userSettings.AppTracking.UsageSessionOptimizationInterval.TotalSeconds
+            ),
+            new WebsiteTrackingSettingsDto(
+                userSettings.AppTracking.IconDirectory,
+                (int)userSettings.WebsiteTracking.ActiveUsageSessionAutoSaveInterval.TotalSeconds,
+                (int)userSettings.WebsiteTracking.MinValidUsageSessionDuration.TotalSeconds,
+                (int)userSettings.WebsiteTracking.UsageSessionMergeTolerance.TotalSeconds,
+                (int)userSettings.WebsiteTracking.UsageSessionOptimizationInterval.TotalSeconds
+            ),
+            new IdleDetectionSettingsDto(
+                userSettings.IdleDetection.IsEnabled,
+                (int)userSettings.IdleDetection.InactivityThreshold.TotalSeconds,
+                (int)userSettings.IdleDetection.PollingInterval.TotalSeconds
+            ),
+            new TimeBoundarySettingsDto(userSettings.TimeBoundary.DayCutoffHour),
+            new RegionalSettingsDto(userSettings.Regional.TimeZoneId)
         );
     }
 }

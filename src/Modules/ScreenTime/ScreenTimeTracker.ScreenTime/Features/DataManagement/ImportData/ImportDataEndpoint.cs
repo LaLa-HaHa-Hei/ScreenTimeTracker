@@ -1,5 +1,7 @@
+using ErrorOr;
 using FastEndpoints;
 using Mediator;
+using Microsoft.AspNetCore.Http;
 
 namespace ScreenTimeTracker.ScreenTime.Features.DataManagement.ImportData;
 
@@ -17,14 +19,27 @@ public class ImportDataEndpoint(IMediator mediator) : EndpointWithoutRequest<Imp
         using var reader = new StreamReader(HttpContext.Request.Body);
         var rawJson = await reader.ReadToEndAsync(ct);
 
-        try
+        ErrorOr<ImportDataResponse> result = await mediator.Send(
+            new ImportDataCommand(rawJson),
+            ct
+        );
+
+        if (result.IsError)
         {
-            var response = await mediator.Send(new ImportDataCommand(rawJson), ct);
-            await Send.OkAsync(response, ct);
+            var firstError = result.FirstError;
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: firstError.Description,
+                    statusCode: firstError.Type switch
+                    {
+                        ErrorType.NotFound => StatusCodes.Status404NotFound,
+                        _ => StatusCodes.Status500InternalServerError,
+                    },
+                    extensions: new Dictionary<string, object?> { ["code"] = firstError.Code }
+                )
+            );
+            return;
         }
-        catch (NotSupportedException)
-        {
-            await Send.ErrorsAsync(statusCode: 422, ct);
-        }
+        await Send.OkAsync(result.Value, ct);
     }
 }

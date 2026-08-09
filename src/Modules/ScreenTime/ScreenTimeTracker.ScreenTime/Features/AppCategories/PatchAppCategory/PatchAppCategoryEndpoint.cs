@@ -1,5 +1,7 @@
+using ErrorOr;
 using FastEndpoints;
 using Mediator;
+using Microsoft.AspNetCore.Http;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.PatchAppCategory;
 
@@ -15,7 +17,7 @@ public class PatchAppCategoryEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(PatchAppCategoryRequest req, CancellationToken ct)
     {
-        await mediator.Send(
+        ErrorOr<Updated> result = await mediator.Send(
             new PatchAppCategoryCommand(
                 AppCategoryId: req.AppCategoryId,
                 Name: req.Name,
@@ -24,6 +26,25 @@ public class PatchAppCategoryEndpoint(IMediator mediator)
             ),
             ct
         );
+
+        if (result.IsError)
+        {
+            var firstError = result.FirstError;
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: firstError.Description,
+                    statusCode: firstError.Type switch
+                    {
+                        ErrorType.NotFound => StatusCodes.Status404NotFound,
+                        ErrorType.Conflict => StatusCodes.Status409Conflict,
+                        _ => StatusCodes.Status500InternalServerError,
+                    },
+                    extensions: new Dictionary<string, object?> { ["code"] = firstError.Code }
+                )
+            );
+            return;
+        }
+
         await Send.NoContentAsync(ct);
     }
 }

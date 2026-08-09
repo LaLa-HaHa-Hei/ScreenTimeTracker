@@ -1,7 +1,7 @@
 import { getAppCategoryIconUrl } from "../api/requests";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
-import UnknownAppCategory from "@/shared/ui/UnknownAppCategory.svg";
+import UnknownCategory from "@/shared/ui/UnknownCategory.svg";
 
 export const AppCategoryIcon = ({
   sx,
@@ -19,11 +19,7 @@ export const AppCategoryIcon = ({
   return (
     <Box
       component="img"
-      src={
-        iconPath === null
-          ? UnknownAppCategory
-          : getAppCategoryIconUrl(id, iconPathLastUpdatedAt)
-      }
+      src={iconPath === null ? UnknownCategory : getAppCategoryIconUrl(id, iconPathLastUpdatedAt)}
       className={className}
       sx={[{}, ...(Array.isArray(sx) ? sx : [sx])]}
     />

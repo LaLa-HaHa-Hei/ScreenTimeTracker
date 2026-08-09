@@ -3,6 +3,7 @@
     <RootNamespace>ScreenTimeTracker.DesktopSettings</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="ErrorOr" />
     <PackageReference Include="FastEndpoints" />
     <PackageReference Include="Mediator.Abstractions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />

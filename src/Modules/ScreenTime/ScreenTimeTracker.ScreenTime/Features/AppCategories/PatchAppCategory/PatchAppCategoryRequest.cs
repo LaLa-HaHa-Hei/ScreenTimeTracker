@@ -1,14 +1,11 @@
-using System.Text.Json.Serialization;
+using FastEndpoints;
 using ScreenTimeTracker.BuildingBlocks.Types;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.PatchAppCategory;
 
 public record PatchAppCategoryRequest(
-    Guid AppCategoryId,
-    [property: JsonConverter(typeof(OptionalValueJsonConverter<string>))]
-        OptionalValue<string> Name,
-    [property: JsonConverter(typeof(OptionalValueJsonConverter<string>))]
-        OptionalValue<string> Color,
-    [property: JsonConverter(typeof(OptionalValueJsonConverter<string?>))]
-        OptionalValue<string?> IconPath
+    [property: RouteParam] Guid AppCategoryId,
+    OptionalValue<string> Name = default,
+    OptionalValue<string> Color = default,
+    OptionalValue<string?> IconPath = default
 );

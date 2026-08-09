@@ -1,0 +1,11 @@
+{
+  "ui": {
+    "state": {
+      "loading": "加载中...",
+      "noOptions": "无选项"
+    },
+    "picker": {
+      "selectedCount": "已选 {{count}} 项"
+    }
+  }
+}

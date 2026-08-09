@@ -3,6 +3,8 @@ import { AppCategoryPicker } from "@/entities/app-category";
 import type { Dimension } from "../model/schemas";
 import type { Theme } from "@emotion/react";
 import type { SxProps } from "@mui/material/styles";
+import { WebsitePicker } from "@/entities/website";
+import { WebsiteCategoryPicker } from "@/entities/website-category";
 
 export type DimensionMemberPickerProps = {
   className?: string;
@@ -28,7 +30,11 @@ export const DimensionMemberPicker = (props: DimensionMemberPickerProps) => {
 
   return dimension === "app" ? (
     <AppPicker {...pickerProps} />
-  ) : (
+  ) : dimension === "app-category" ? (
     <AppCategoryPicker {...pickerProps} />
+  ) : dimension === "website" ? (
+    <WebsitePicker {...pickerProps} />
+  ) : (
+    <WebsiteCategoryPicker {...pickerProps} />
   );
 };

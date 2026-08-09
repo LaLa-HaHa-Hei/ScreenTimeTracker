@@ -1,6 +1,7 @@
+using ErrorOr;
 using FastEndpoints;
 using Mediator;
-using ScreenTimeTracker.BuildingBlocks.Types;
+using Microsoft.AspNetCore.Http;
 
 namespace ScreenTimeTracker.ScreenTime.Features.UserSettingsManagement.PatchUserSettings;
 
@@ -16,39 +17,33 @@ public class PatchUserSettingsEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(PatchUserSettingsRequest req, CancellationToken ct)
     {
-        await mediator.Send(
+        ErrorOr<Updated> result = await mediator.Send(
             new PatchUserSettingsCommand(
-                req.AppIconDirectory,
-                req.AppMetadataStaleThresholdMinutes.HasValue
-                    ? new(TimeSpan.FromMinutes(req.AppMetadataStaleThresholdMinutes.Value))
-                    : default,
-                req.ActiveAppUsageSessionAutoSaveIntervalSeconds.HasValue
-                    ? new(
-                        TimeSpan.FromSeconds(req.ActiveAppUsageSessionAutoSaveIntervalSeconds.Value)
-                    )
-                    : default,
-                req.IsIdleDetectionEnabled,
-                req.IdleThresholdSeconds.HasValue
-                    ? new(TimeSpan.FromSeconds(req.IdleThresholdSeconds.Value))
-                    : default,
-                req.IdleDetectionPollingIntervalSeconds.HasValue
-                    ? new(TimeSpan.FromSeconds(req.IdleDetectionPollingIntervalSeconds.Value))
-                    : default,
-                req.MinValidAppUsageSessionDurationSeconds.HasValue
-                    ? new(TimeSpan.FromSeconds(req.MinValidAppUsageSessionDurationSeconds.Value))
-                    : default,
-                req.AppUsageSessionMergeToleranceSeconds.HasValue
-                    ? new(TimeSpan.FromSeconds(req.AppUsageSessionMergeToleranceSeconds.Value))
-                    : default,
-                req.AppUsageSessionOptimizationIntervalMinutes.HasValue
-                    ? new(
-                        TimeSpan.FromMinutes(req.AppUsageSessionOptimizationIntervalMinutes.Value)
-                    )
-                    : default,
-                req.DayCutoffHour
+                req.AppTracking,
+                req.WebsiteTracking,
+                req.IdleDetection,
+                req.TimeBoundary,
+                req.Regional
             ),
             ct
         );
+
+        if (result.IsError)
+        {
+            var firstError = result.FirstError;
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: firstError.Description,
+                    statusCode: firstError.Type switch
+                    {
+                        _ => StatusCodes.Status500InternalServerError,
+                    },
+                    extensions: new Dictionary<string, object?> { ["code"] = firstError.Code }
+                )
+            );
+            return;
+        }
+
         await Send.NoContentAsync(ct);
     }
 }

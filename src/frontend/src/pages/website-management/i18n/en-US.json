@@ -1,0 +1,28 @@
+{
+  "entityName": "website",
+  "columns": {
+    "name": "Name",
+    "color": "Color",
+    "category": "Category",
+    "icon": "Icon",
+    "iconPath": "Icon Path",
+    "allowMetadataAutoRefresh": "Auto Update Metadata",
+    "metadataLastRefreshedAt": "Last Metadata Auto Updated",
+    "host": "Host",
+    "executablePath": "Executable Path",
+    "action": "Actions"
+  },
+  "deleteConfirm": {
+    "title": "Are you sure you want to delete the website \"{{name}}\"?",
+    "description": "All existing data for this website will also be deleted."
+  },
+  "errors": {
+    "noWebsiteSelected": "No website selected for deletion",
+    "updateFailed": "Failed to update {{field}}",
+    "deleteFailed": "Failed to delete {{field}}"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  }
+}

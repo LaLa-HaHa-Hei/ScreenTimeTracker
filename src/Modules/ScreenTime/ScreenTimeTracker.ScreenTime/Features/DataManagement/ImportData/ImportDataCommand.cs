@@ -1,5 +1,6 @@
+using ErrorOr;
 using Mediator;
 
 namespace ScreenTimeTracker.ScreenTime.Features.DataManagement.ImportData;
 
-public record ImportDataCommand(string RawJson) : IRequest<ImportDataResponse>;
+public record ImportDataCommand(string RawJson) : IRequest<ErrorOr<ImportDataResponse>>;

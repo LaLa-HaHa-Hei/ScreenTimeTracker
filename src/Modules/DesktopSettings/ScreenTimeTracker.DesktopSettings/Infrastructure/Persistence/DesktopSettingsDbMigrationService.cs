@@ -15,8 +15,6 @@ public partial class DesktopSettingsDbMigrationService(
     // 在所有服务启动之前执行
     public async Task StartingAsync(CancellationToken cancellationToken)
     {
-        LogLocalSettingsDbMigrationServiceStarting(logger);
-
         using var scope = scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<DesktopSettingsDbContext>();
 
@@ -36,20 +34,14 @@ public partial class DesktopSettingsDbMigrationService(
                 osLanguage = "en-US";
             var appSettings = await context.LocalSettings.SingleAsync(cancellationToken);
             appSettings.Update(language: osLanguage);
-            await context.SaveChangesAsync(cancellationToken);
             LogLanguageCorrected(logger, osLanguage);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "Desktop LocalSettingsDbMigrationService is Starting"
-    )]
-    private static partial void LogLocalSettingsDbMigrationServiceStarting(ILogger logger);
-
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "New database detected, correcting the current language."
+        Message = "New DesktopSettings database detected."
     )]
     private static partial void LogNewDatabaseDetected(ILogger logger);
 

@@ -2,7 +2,9 @@
   "DimensionTypeSelector": {
     "options": {
       "app": "应用",
-      "appCategory": "应用类别"
+      "appCategory": "类别",
+      "website": "网站",
+      "websiteCategory": "类别"
     }
   }
 }

@@ -6,11 +6,15 @@ import {
   appCategoryUsageItemDtoSchema,
   type GetAppCategoryUsageParams,
   type AppCategoryUsageItemDto,
+  type GetWebsiteUsageParams,
+  type WebsiteUsageItemDto,
+  websiteUsageItemDtoSchema,
+  type GetWebsiteCategoryUsageParams,
+  type WebsiteCategoryUsageItemDto,
+  websiteCategoryUsageItemDtoSchema,
 } from "./schemas";
 
-export const getAppUsage = async (
-  params: GetAppUsageParams,
-): Promise<AppUsageItemDto[]> => {
+export const getAppUsage = async (params: GetAppUsageParams): Promise<AppUsageItemDto[]> => {
   const { data } = await apiClient.get("/screen-time/usage/apps/", {
     params,
   });
@@ -31,6 +35,36 @@ export const getAppCategoryUsage = async (
   });
   return data.map((dto: unknown) => {
     const validated = appCategoryUsageItemDtoSchema.parse(dto);
+    return {
+      startTime: validated.startTime,
+      durationSeconds: validated.durationSeconds,
+    };
+  });
+};
+
+export const getWebsiteUsage = async (
+  params: GetWebsiteUsageParams,
+): Promise<WebsiteUsageItemDto[]> => {
+  const { data } = await apiClient.get("/screen-time/usage/websites/", {
+    params,
+  });
+  return data.map((dto: unknown) => {
+    const validated = websiteUsageItemDtoSchema.parse(dto);
+    return {
+      startTime: validated.startTime,
+      durationSeconds: validated.durationSeconds,
+    };
+  });
+};
+
+export const getWebsiteCategoryUsage = async (
+  params: GetWebsiteCategoryUsageParams,
+): Promise<WebsiteCategoryUsageItemDto[]> => {
+  const { data } = await apiClient.get("/screen-time/usage/website-categories/", {
+    params,
+  });
+  return data.map((dto: unknown) => {
+    const validated = websiteCategoryUsageItemDtoSchema.parse(dto);
     return {
       startTime: validated.startTime,
       durationSeconds: validated.durationSeconds,

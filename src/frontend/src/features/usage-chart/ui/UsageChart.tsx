@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import ReactECharts from "echarts-for-react";
-import { appCategoryUsageQueryOptions, appUsageQueryOptions } from "../api/queries";
+import {
+  appCategoryUsageQueryOptions,
+  appUsageQueryOptions,
+  websiteCategoryUsageQueryOptions,
+  websiteUsageQueryOptions,
+} from "../api/queries";
 import type { DateOnly } from "@/shared/lib/date-only";
 import { formatSecondsDuration } from "@/shared/lib/time";
 import { useMemo } from "react";
@@ -13,7 +18,7 @@ import { useTranslation } from "react-i18next";
 export type UsageChartProps = {
   className?: string;
   sx?: SxProps<Theme>;
-  type: "app" | "app-category";
+  type: "app" | "app-category" | "website" | "website-category";
   granularity: "hour" | "day";
   xAxisType: "hour" | "day" | "week";
   startDate: DateOnly;
@@ -54,12 +59,39 @@ export const UsageChart = ({
     }),
     enabled: type === "app-category",
   });
+  const { data: websiteUsageData } = useQuery({
+    ...websiteUsageQueryOptions({
+      granularity: granularity,
+      startDate: startDate,
+      endDate: endDate,
+      includedIds: includedIds,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website",
+  });
+  const { data: websiteCategoryUsageData } = useQuery({
+    ...websiteCategoryUsageQueryOptions({
+      granularity: granularity,
+      startDate: startDate,
+      endDate: endDate,
+      includedIds: includedIds,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website-category",
+  });
 
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
   const option = useMemo(() => {
-    const usageData = (type === "app" ? appUsageData : appCategoryUsageData) || [];
+    const usageData =
+      (type === "app"
+        ? appUsageData
+        : type === "app-category"
+          ? appCategoryUsageData
+          : type === "website"
+            ? websiteUsageData
+            : websiteCategoryUsageData) || [];
     const sum = usageData.reduce((acc, cur) => acc + cur.durationSeconds, 0);
     const avg = Math.round(sum / (usageData.length || 1));
     const normalized = usageData.map((item) => {
@@ -133,7 +165,16 @@ export const UsageChart = ({
         },
       ],
     };
-  }, [granularity, type, xAxisType, appUsageData, appCategoryUsageData, t]);
+  }, [
+    granularity,
+    type,
+    xAxisType,
+    appUsageData,
+    appCategoryUsageData,
+    websiteUsageData,
+    websiteCategoryUsageData,
+    t,
+  ]);
 
   return (
     <Box

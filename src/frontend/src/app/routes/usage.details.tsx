@@ -26,10 +26,13 @@ export const Route = createFileRoute("/usage/details")({
   beforeLoad: async ({ context, search }) => {
     if (search.startDate && search.endDate) return;
 
-    const { dayCutoffHour } = await context.queryClient.ensureQueryData(
+    const { timeBoundary } = await context.queryClient.ensureQueryData(
       userSettingsQueries.userSettings(),
     );
-    const logicalToday = dayjs().subtract(dayCutoffHour, "hour").startOf("day").toDate();
+    const logicalToday = dayjs()
+      .subtract(timeBoundary.dayCutoffHour, "hour")
+      .startOf("day")
+      .toDate();
     const logicalTodayDateOnly = dateToDateOnly(logicalToday);
 
     throw redirect({

@@ -66,9 +66,15 @@ When the application starts, it launches a local backend API service. The fronte
   pnpm install
   pnpm build
   ```
+- Build the browser extension (optional):
+  ```shell
+  cd ../web-extension
+  pnpm build
+  ```
+  The build output will be generated in the `.output` directory.
 - **Run Application**:
   ```shell
-  cd ../Hosts/Desktop
+  cd ../Hosts/ScreenTimeTracker.Desktop
   dotnet run
   ```
 

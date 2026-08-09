@@ -12,7 +12,6 @@ public class DesktopSettingsDbContext(DbContextOptions<DesktopSettingsDbContext>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        // 自动应用同程序集内所有 IEntityTypeConfiguration<>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DesktopSettingsDbContext).Assembly);
     }
 }

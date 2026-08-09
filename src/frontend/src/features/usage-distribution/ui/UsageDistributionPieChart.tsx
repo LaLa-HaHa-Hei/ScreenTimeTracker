@@ -3,6 +3,8 @@ import ReactECharts from "echarts-for-react";
 import {
   appCategoryUsageDistributionQueryOptions,
   appUsageDistributionQueryOptions,
+  websiteCategoryUsageDistributionQueryOptions,
+  websiteUsageDistributionQueryOptions,
 } from "../api/queries";
 import type { DateOnly } from "@/shared/lib/date-only";
 import { formatSecondsDuration } from "@/shared/lib/time";
@@ -10,16 +12,19 @@ import { useMemo } from "react";
 import { getAppCategoryIconUrl } from "@/entities/app-category";
 import { getAppIconUrl } from "@/entities/app";
 import UnknownApp from "@/shared/ui/UnknownApp.svg";
-import UnknownAppCategory from "@/shared/ui/UnknownAppCategory.svg";
+import UnknownCategory from "@/shared/ui/UnknownCategory.svg";
+import UnknownWebsite from "@/shared/ui/UnknownWebsite.svg";
 import type { Theme } from "@emotion/react";
 import { useTheme, type SxProps } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { useTranslation } from "react-i18next";
+import { getWebsiteIconUrl } from "@/entities/website";
+import { getWebsiteCategoryIconUrl } from "@/entities/website-category";
 
 export type UsageDistributionPieChartProps = {
   className?: string;
   sx?: SxProps<Theme>;
-  type: "app" | "app-category";
+  type: "app" | "app-category" | "website" | "website-category";
   startDate: DateOnly;
   endDate: DateOnly;
   topN: number;
@@ -59,8 +64,32 @@ export const UsageDistributionPieChart = ({
     }),
     enabled: type === "app-category",
   });
+  const { data: websiteUsageDistributionData } = useQuery({
+    ...websiteUsageDistributionQueryOptions({
+      startDate: startDate,
+      endDate: endDate,
+      topN: topN,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website",
+  });
+  const { data: websiteCategoryUsageDistributionData } = useQuery({
+    ...websiteCategoryUsageDistributionQueryOptions({
+      startDate: startDate,
+      endDate: endDate,
+      topN: topN,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website-category",
+  });
   const usageDistributiondata =
-    type === "app" ? appUsageDistributionData : appCategoryUsageDistributionData;
+    type === "app"
+      ? appUsageDistributionData
+      : type === "app-category"
+        ? appCategoryUsageDistributionData
+        : type === "website"
+          ? websiteUsageDistributionData
+          : websiteCategoryUsageDistributionData;
 
   const option = useMemo(() => {
     return {
@@ -80,8 +109,19 @@ export const UsageDistributionPieChart = ({
             const iconUrl =
               type === "app"
                 ? getAppIconUrl(v.id, v.iconPathLastUpdatedAt)
-                : getAppCategoryIconUrl(v.id, v.iconPathLastUpdatedAt);
-            const fallbackIconUrl = type === "app" ? UnknownApp : UnknownAppCategory;
+                : type === "app-category"
+                  ? getAppCategoryIconUrl(v.id, v.iconPathLastUpdatedAt)
+                  : type === "website"
+                    ? getWebsiteIconUrl(v.id, v.iconPathLastUpdatedAt)
+                    : getWebsiteCategoryIconUrl(v.id, v.iconPathLastUpdatedAt);
+            const fallbackIconUrl =
+              type === "app"
+                ? UnknownApp
+                : type === "app-category"
+                  ? UnknownCategory
+                  : type === "website"
+                    ? UnknownWebsite
+                    : UnknownCategory;
             acc[toRichKey(v.id)] = {
               backgroundColor: {
                 image: v.iconPath ? iconUrl : fallbackIconUrl,
@@ -137,9 +177,17 @@ export const UsageDistributionPieChart = ({
                         ? t(($) => $.feature_usageDistribution.pieChart.otherApps, {
                             count: usageDistributiondata.othersCount,
                           })
-                        : t(($) => $.feature_usageDistribution.pieChart.otherCategories, {
-                            count: usageDistributiondata.othersCount,
-                          }),
+                        : type === "app-category"
+                          ? t(($) => $.feature_usageDistribution.pieChart.otherCategories, {
+                              count: usageDistributiondata.othersCount,
+                            })
+                          : type === "website"
+                            ? t(($) => $.feature_usageDistribution.pieChart.otherWebsites, {
+                                count: usageDistributiondata.othersCount,
+                              })
+                            : t(($) => $.feature_usageDistribution.pieChart.otherCategories, {
+                                count: usageDistributiondata.othersCount,
+                              }),
                     value: usageDistributiondata?.othersDurationSeconds,
                     id: null,
                     itemStyle: {

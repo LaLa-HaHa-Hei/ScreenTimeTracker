@@ -15,6 +15,46 @@ public partial class ExportDataHandler(
         CancellationToken cancellationToken
     )
     {
+        // App
+
+        var apps = await context
+            .Apps.Select(x => new
+            {
+                x.Name,
+                x.Color,
+                x.ProcessName,
+                x.AllowMetadataAutoRefresh,
+                CategoryName = x.Category!.Name,
+                x.IconPath,
+            })
+            .ToListAsync(cancellationToken);
+
+        ExportDataResponse.App[] appResults;
+        using (var semaphore = new SemaphoreSlim(10))
+        {
+            appResults = await Task.WhenAll(
+                apps.Select(async x =>
+                {
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        return new ExportDataResponse.App(
+                            x.Name,
+                            x.Color,
+                            x.ProcessName,
+                            x.AllowMetadataAutoRefresh,
+                            x.CategoryName,
+                            await GetIconAsync(x.IconPath, cancellationToken)
+                        );
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                })
+            );
+        }
+
         var appCategories = await context
             .AppCategories.Select(x => new
             {
@@ -47,32 +87,42 @@ public partial class ExportDataHandler(
             );
         }
 
-        var apps = await context
-            .Apps.Select(x => new
+        var appUsageSessions = await context
+            .AppUsageSessions.Select(x => new ExportDataResponse.AppUsageSession(
+                x.App!.ProcessName,
+                x.StartTime,
+                x.EndTime
+            ))
+            .ToListAsync(cancellationToken);
+
+        // Website
+
+        var websites = await context
+            .Websites.Select(x => new
             {
                 x.Name,
                 x.Color,
-                x.ProcessName,
-                x.AllowMetadataAutoUpdate,
-                CategoryName = x.AppCategory!.Name,
+                x.Host,
+                x.AllowMetadataAutoRefresh,
+                CategoryName = x.Category!.Name,
                 x.IconPath,
             })
             .ToListAsync(cancellationToken);
 
-        ExportDataResponse.App[] appResults;
+        ExportDataResponse.Website[] websiteResults;
         using (var semaphore = new SemaphoreSlim(10))
         {
-            appResults = await Task.WhenAll(
-                apps.Select(async x =>
+            websiteResults = await Task.WhenAll(
+                websites.Select(async x =>
                 {
                     await semaphore.WaitAsync(cancellationToken);
                     try
                     {
-                        return new ExportDataResponse.App(
+                        return new ExportDataResponse.Website(
                             x.Name,
                             x.Color,
-                            x.ProcessName,
-                            IsAutoUpdateEnabled: x.AllowMetadataAutoUpdate,
+                            x.Host,
+                            x.AllowMetadataAutoRefresh,
                             x.CategoryName,
                             await GetIconAsync(x.IconPath, cancellationToken)
                         );
@@ -85,18 +135,53 @@ public partial class ExportDataHandler(
             );
         }
 
-        var appUsageSessions = await context
-            .AppUsageSessions.Select(x => new ExportDataResponse.AppUsageSession(
-                x.App!.ProcessName,
+        var websiteCategories = await context
+            .WebsiteCategories.Select(x => new
+            {
+                x.Name,
+                x.Color,
+                x.IconPath,
+            })
+            .ToListAsync(cancellationToken);
+
+        ExportDataResponse.WebsiteCategory[] websiteCategoryResults;
+        using (var semaphore = new SemaphoreSlim(10))
+        {
+            websiteCategoryResults = await Task.WhenAll(
+                websiteCategories.Select(async x =>
+                {
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        return new ExportDataResponse.WebsiteCategory(
+                            x.Name,
+                            x.Color,
+                            await GetIconAsync(x.IconPath, cancellationToken)
+                        );
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                })
+            );
+        }
+
+        var websiteUsageSessions = await context
+            .WebsiteUsageSessions.Select(x => new ExportDataResponse.WebsiteUsageSession(
+                x.Website!.Host,
                 x.StartTime,
                 x.EndTime
             ))
             .ToListAsync(cancellationToken);
 
         return new ExportDataResponse(
-            [.. appCategoryResults],
             [.. appResults],
-            [.. appUsageSessions]
+            [.. appCategoryResults],
+            [.. appUsageSessions],
+            [.. websiteResults],
+            [.. websiteCategoryResults],
+            [.. websiteUsageSessions]
         );
     }
 

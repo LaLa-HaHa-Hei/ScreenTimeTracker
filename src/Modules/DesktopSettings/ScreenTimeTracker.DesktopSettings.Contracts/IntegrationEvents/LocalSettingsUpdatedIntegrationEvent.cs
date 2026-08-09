@@ -5,7 +5,7 @@ namespace ScreenTimeTracker.DesktopSettings.Contracts.IntegrationEvents;
 
 public record LocalSettingsUpdatedIntegrationEvent(
     Guid EventId,
-    DateTime OccurredOn,
+    DateTimeOffset OccurredAt,
     UIOpenMode DefaultUIOpenMode,
     bool IsAutoStartEnabled,
     bool IsSilentStartEnabled,

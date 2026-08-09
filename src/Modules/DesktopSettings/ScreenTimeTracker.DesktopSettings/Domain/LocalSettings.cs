@@ -1,7 +1,6 @@
 using ScreenTimeTracker.BuildingBlocks.Domain;
 using ScreenTimeTracker.BuildingBlocks.Types;
 using ScreenTimeTracker.DesktopSettings.Contracts.Enums;
-using ScreenTimeTracker.DesktopSettings.Domain.Events;
 
 namespace ScreenTimeTracker.DesktopSettings.Domain;
 

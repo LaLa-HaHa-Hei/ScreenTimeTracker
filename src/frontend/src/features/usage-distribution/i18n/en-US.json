@@ -2,6 +2,8 @@
   "pieChart": {
     "otherApps_one": "Other {{count}} app",
     "otherApps_other": "Other {{count}} apps",
+    "otherWebsites_one": "Other {{count}} website",
+    "otherWebsites_other": "Other {{count}} websites",
     "otherCategories_one": "Other {{count}} category",
     "otherCategories_other": "Other {{count}} categories"
   }

@@ -1,42 +1,50 @@
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.PatchApp;
 
 public class PatchAppHandler(ScreenTimeDbContext context, TimeProvider timeProvider)
-    : IRequestHandler<PatchAppCommand>
+    : IRequestHandler<PatchAppCommand, ErrorOr<Updated>>
 {
-    public async ValueTask<Unit> Handle(
+    public async ValueTask<ErrorOr<Updated>> Handle(
         PatchAppCommand request,
         CancellationToken cancellationToken
     )
     {
-        App? app = await context.Apps.FindAsync([request.Id], cancellationToken);
-        if (app is null)
-            return Unit.Value;
+        App? app = await context.Apps.FindAsync([request.AppId], cancellationToken);
 
-        if (request.AppCategoryId.HasValue)
+        if (app is null)
+            return Error.NotFound(
+                code: "App.NotFound",
+                description: "The app with the specified ID was not found."
+            );
+
+        if (request.CategoryId.HasValue)
         {
-            bool categoryExists = await context.AppCategories.AnyAsync(
-                x => x.Id == request.AppCategoryId.Value,
+            var exists = await context.AppCategories.AnyAsync(
+                x => x.Id != request.AppId && x.Name == request.Name.Value,
                 cancellationToken
             );
-            if (!categoryExists)
-                return Unit.Value;
+            if (exists)
+                return Error.Conflict(
+                    "App.NameAlreadyExists",
+                    "An app with the same name already exists."
+                );
         }
 
         app.Update(
             request.Name,
             request.Color,
-            request.AllowMetadataAutoUpdate,
-            request.AppCategoryId,
+            request.AllowMetadataAutoRefresh,
+            request.CategoryId,
             request.IconPath,
-            timeProvider.GetLocalNow().DateTime
+            timeProvider.GetUtcNow()
         );
 
         await context.SaveChangesAsync(cancellationToken);
-        return Unit.Value;
+        return Result.Updated;
     }
 }

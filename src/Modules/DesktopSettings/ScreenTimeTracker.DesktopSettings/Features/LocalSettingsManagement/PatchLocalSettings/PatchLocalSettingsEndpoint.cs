@@ -1,3 +1,4 @@
+using ErrorOr;
 using FastEndpoints;
 using Mediator;
 

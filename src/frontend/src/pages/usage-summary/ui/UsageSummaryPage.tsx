@@ -1,21 +1,15 @@
 import type { SearchParams } from "../model/schemas";
-import {
-  DateRangeSelector,
-  TimeFrameSelector,
-  useDateFilter,
-} from "@/features/date-filter";
+import { DateRangeSelector, TimeFrameSelector, useDateFilter } from "@/features/date-filter";
 import { dateOnlyToDate, dateToDateOnly } from "@/shared/lib/date-only";
 import {
   DimensionMemberPicker,
+  dimensionSchema,
   DimensionTypeSelector,
   type Dimension,
 } from "@/features/dimension-control";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  UsageDistributionList,
-  UsageDistributionPieChart,
-} from "@/features/usage-distribution";
+import { UsageDistributionList, UsageDistributionPieChart } from "@/features/usage-distribution";
 import { UsageTimeline } from "@/features/usage-timeline";
 import { UsageChart } from "@/features/usage-chart";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -34,15 +28,14 @@ interface UsageSummaryPageProps {
   onSearchChange: (newParams: Partial<SearchParams>) => void;
 }
 
-const dimensionCacheSchema = z.record(
-  z.enum(["app", "app-category"]),
-  z.array(z.string()),
-);
+const dimensionCacheSchema = z.record(dimensionSchema, z.array(z.string()));
 type DimensionCache = z.infer<typeof dimensionCacheSchema>;
 
 const defaultDimensionCache: DimensionCache = {
   app: [],
   "app-category": [],
+  website: [],
+  "website-category": [],
 };
 
 const DIMENSION_CACHE_STORAGE_KEY = "page_usage_summary_page_dimension_cache";
@@ -59,10 +52,7 @@ function getSavedDimensionCache(): DimensionCache | null {
   else return null;
 }
 
-export const UsageSummaryPage = ({
-  search,
-  onSearchChange,
-}: UsageSummaryPageProps) => {
+export const UsageSummaryPage = ({ search, onSearchChange }: UsageSummaryPageProps) => {
   const { t } = useTranslation(["page_usageSummary"]);
   const {
     handleTimeFrameChange,
@@ -103,10 +93,7 @@ export const UsageSummaryPage = ({
   };
   const handleMemberIdsChange = (newMemberIds: string[]) => {
     dimensionCacheRef.current[search.dimension] = newMemberIds;
-    localStorage.setItem(
-      DIMENSION_CACHE_STORAGE_KEY,
-      JSON.stringify(dimensionCacheRef.current),
-    );
+    localStorage.setItem(DIMENSION_CACHE_STORAGE_KEY, JSON.stringify(dimensionCacheRef.current));
     onSearchChange({ excludedIds: newMemberIds });
   };
 
@@ -134,15 +121,9 @@ export const UsageSummaryPage = ({
       <Stack spacing={1}>
         <Stack direction="row" sx={{ alignItems: "center" }}>
           <Box sx={{ flex: 1, display: "flex", justifyContent: "start" }}>
-            <DimensionTypeSelector
-              value={search.dimension}
-              onValueChange={handleDimensionChange}
-            />
+            <DimensionTypeSelector value={search.dimension} onValueChange={handleDimensionChange} />
           </Box>
-          <TimeFrameSelector
-            value={search.timeFrame}
-            onValueChange={handleTimeFrameChange}
-          />
+          <TimeFrameSelector value={search.timeFrame} onValueChange={handleTimeFrameChange} />
           <Box sx={{ flex: 1, display: "flex", justifyContent: "end" }}>
             <DimensionMemberPicker
               sx={{ minWidth: "60%" }}
@@ -183,11 +164,7 @@ export const UsageSummaryPage = ({
           type={search.dimension}
           granularity={search.timeFrame === "day" ? "hour" : "day"}
           xAxisType={
-            search.timeFrame === "day"
-              ? "hour"
-              : search.timeFrame === "week"
-                ? "week"
-                : "day"
+            search.timeFrame === "day" ? "hour" : search.timeFrame === "week" ? "week" : "day"
           }
           startDate={search.startDate}
           endDate={search.endDate}
@@ -244,7 +221,9 @@ export const UsageSummaryPage = ({
               <ToggleButton value="pieChart">
                 {t(($) => $.page_usageSummary.viewTypes.pieChart)}
               </ToggleButton>
-              <ToggleButton value="list">{t(($) => $.page_usageSummary.viewTypes.list)}</ToggleButton>
+              <ToggleButton value="list">
+                {t(($) => $.page_usageSummary.viewTypes.list)}
+              </ToggleButton>
             </ToggleButtonGroup>
             <Select
               value={search.topN}

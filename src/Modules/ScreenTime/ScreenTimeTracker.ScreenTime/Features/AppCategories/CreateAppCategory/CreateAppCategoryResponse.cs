@@ -5,6 +5,6 @@ public record CreateAppCategoryResponse(
     string Name,
     string Color,
     string? IconPath,
-    DateTime IconPathLastUpdatedAt,
+    DateTimeOffset IconPathLastUpdatedAt,
     bool IsSystem
 );

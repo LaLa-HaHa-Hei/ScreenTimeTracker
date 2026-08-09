@@ -31,9 +31,11 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { useColorScheme } from "@mui/material/styles";
-import { useState } from "react";
+import { useRef } from "react";
 import Stack from "@mui/material/Stack";
 import { useTranslation } from "react-i18next";
+import TabIcon from "@mui/icons-material/Tab";
+import CategoryIcon from "@mui/icons-material/Category";
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -67,8 +69,18 @@ function RootComponent() {
     },
     {
       to: "/app-categories",
+      icon: <CategoryIcon />,
+      label: t(($) => $.app.navigation.appCategories),
+    },
+    {
+      to: "/websites",
+      icon: <TabIcon />,
+      label: t(($) => $.app.navigation.websites),
+    },
+    {
+      to: "/website-categories",
       icon: <CategoryOutlinedIcon />,
-      label: t(($) => $.app.navigation.categories),
+      label: t(($) => $.app.navigation.websiteCategories),
     },
     {
       to: "/data",
@@ -84,14 +96,8 @@ function RootComponent() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchMap, setSearchMap] = useState<Record<string, Record<string, unknown>>>({});
-  const savedSearch = searchMap[location.pathname];
-  if (JSON.stringify(savedSearch) !== JSON.stringify(location.search)) {
-    setSearchMap((prev) => ({
-      ...prev,
-      [location.pathname]: location.search,
-    }));
-  }
+  const searchMapRef = useRef(new Map<string, typeof location.search>());
+  searchMapRef.current.set(location.pathname, location.search);
 
   if (!mode) return null;
   const isDark = (mode === "system" ? systemMode : mode) === "dark";
@@ -185,7 +191,7 @@ function RootComponent() {
                     onClick={() => {
                       navigate({
                         to: item.to as never,
-                        search: searchMap[item.to] as never,
+                        search: searchMapRef.current.get(item.to) as never,
                       });
                     }}
                   >

@@ -1,14 +1,15 @@
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.DeleteAppCategory;
 
 public class DeleteAppCategoryHandler(ScreenTimeDbContext context)
-    : IRequestHandler<DeleteAppCategoryCommand>
+    : IRequestHandler<DeleteAppCategoryCommand, ErrorOr<Deleted>>
 {
-    public async ValueTask<Unit> Handle(
+    public async ValueTask<ErrorOr<Deleted>> Handle(
         DeleteAppCategoryCommand request,
         CancellationToken cancellationToken
     )
@@ -17,24 +18,30 @@ public class DeleteAppCategoryHandler(ScreenTimeDbContext context)
             [request.AppCategoryId],
             cancellationToken
         );
+
         if (appCategory is null)
-            return Unit.Value;
+            return Error.NotFound(
+                code: "AppCategory.NotFound",
+                description: "The app category with the specified ID was not found."
+            );
 
         if (appCategory.IsSystem)
-            throw new InvalidOperationException("Cannot delete a system app category.");
+            return Error.Conflict(
+                code: "AppCategory.SystemAppCategoryCannotBeDeleted",
+                description: "System app categories cannot be deleted."
+            );
 
         // 把所有这个类别的 App 都设置为默认类别
         await context
-            .Apps.Where(app => app.AppCategoryId == request.AppCategoryId)
+            .Apps.Where(app => app.CategoryId == request.AppCategoryId)
             .ExecuteUpdateAsync(
-                setters =>
-                    setters.SetProperty(app => app.AppCategoryId, AppCategory.UncategorizedId),
+                setters => setters.SetProperty(app => app.CategoryId, AppCategory.UncategorizedId),
                 cancellationToken
             );
 
         context.AppCategories.Remove(appCategory);
 
         await context.SaveChangesAsync(cancellationToken);
-        return Unit.Value;
+        return Result.Deleted;
     }
 }

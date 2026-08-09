@@ -5,66 +5,102 @@
       "label": "Language"
     },
     "defaultUIOpenMode": {
-      "label": "Default UI Open Mode",
-      "tooltip": "The opening mode of the interface when clicking the tray icon.",
+      "label": "Default Interface Open Mode",
+      "tooltip": "The mode used to open the interface when clicking the tray icon.",
       "options": {
         "window": "Window",
         "browser": "Browser"
       }
     },
     "isAutoStartEnabled": {
-      "label": "Launch on Startup",
-      "tooltip": "If the application is running as administrator, enabling 'Launch on Startup' will also launch it as administrator next time. Otherwise, it will launch as a standard user. Note: Auto-start will become invalid if you rename the executable or change its path; you will need to disable and re-enable it."
+      "label": "Launch at Startup",
+      "tooltip": "If the application is running with administrator privileges, enabling startup will launch it with administrator privileges after the next system boot. Otherwise, it will launch as a normal user. Changing the executable file name or path will disable startup and requires disabling and re-enabling it."
     },
     "autoStartAlert": {
-      "title": "Enabling this will modify the system configuration. Please make sure to disable it before deleting the program, otherwise residues will remain!"
+      "title": "Enabling this will modify system configuration. Please disable it before deleting the application, otherwise residual configuration may remain!"
     },
     "isSilentStartEnabled": {
       "label": "Silent Startup",
-      "tooltip": "Do not automatically open the interface when running the program."
+      "tooltip": "The interface will not open automatically after launching the application."
     }
   },
-  "screenTimeSettings": {
-    "title": "Screen Time Settings",
-    "appIconDirectory": {
-      "label": "App Icon Directory",
-      "tooltip": "App icons automatically fetched by the program will be saved under the folder path set here. Modifying this path will not change the location of existing icons; it will only affect newly fetched icons, including icons retrieved during information updates (if they have changed)."
+  "idleDetectionSettings": {
+    "title": "Idle Detection Settings",
+    "isEnabled": {
+      "label": "Enabled",
+      "tooltip": "The application considers the user idle after no keyboard or mouse activity exceeds the configured time. All usage time from the start of inactivity until the next keyboard or mouse activity will be counted as usage time for the Idle application."
     },
-    "appMetadataStaleThresholdMinutes": {
-      "label": "App Metadata Stale Threshold (Minutes)",
-      "tooltip": "The program fetches the executable file path, and icon when it first encounters an app. Next time it encounters this app, it determines whether the time elapsed since the last fetch exceeds the threshold set here. If it does, it refetches the information; otherwise, it keeps the old data. Note: If you need to customize an app icon and have manually modified its icon path, you should generally disable auto-update for that app, otherwise the update will overwrite your custom icon path."
+    "inactivityThresholdSeconds": {
+      "label": "Inactivity Threshold (Seconds)",
+      "tooltip": "The application considers the user idle after no keyboard or mouse activity exceeds the configured time. All usage time from the start of inactivity until the next keyboard or mouse activity will be counted as usage time for the Idle application."
     },
-    "activeAppUsageSessionAutoSaveIntervalSeconds": {
-      "label": "Active Session Auto-Save (Seconds)",
-      "tooltip": "The time interval to automatically save the currently active app usage session, preventing data loss during unexpected crashes and ensuring accurate screen time statistics."
-    },
-    "isIdleDetectionEnabled": {
-      "label": "Idle Detection",
-      "tooltip": "The program will consider the user idle after there is no keyboard or mouse activity for more than the set time, and will classify all usage duration from when key/mouse activity stopped until it resumes as the usage duration of the 'Idle' app."
-    },
-    "idleThresholdSeconds": {
-      "label": "Idle Threshold (Seconds)",
-      "tooltip": "The program will consider the user idle after there is no keyboard or mouse activity for more than the set time, and will classify all usage duration from when key/mouse activity stopped until it resumes as the usage duration of the 'Idle' app."
-    },
-    "idleDetectionPollingIntervalSeconds": {
-      "label": "Idle Detection Polling Interval (Seconds)",
-      "tooltip": "Detects whether the user is idle at the specified intervals."
-    },
-    "minValidAppUsageSessionDurationSeconds": {
-      "label": "Min Valid Session Duration (Seconds)",
-      "tooltip": "Each time optimization is triggered, session records with a duration shorter than this value will be automatically filtered and deleted."
-    },
-    "appUsageSessionMergeToleranceSeconds": {
-      "label": "Session Merge Tolerance (Seconds)",
-      "tooltip": "Each time optimization is triggered, two records of the same app with an interval smaller than this value will be merged into a single long record. Note: During merging, any other usage records in between will be deleted regardless."
-    },
-    "appUsageSessionOptimizationIntervalMinutes": {
-      "label": "Session Optimization Interval (Minutes)",
-      "tooltip": "A session optimization will be triggered at the interval set here."
-    },
+    "pollingIntervalSeconds": {
+      "label": "Polling Interval (Seconds)",
+      "tooltip": "The application checks whether the user is idle at the interval specified here."
+    }
+  },
+  "timeBoundarySettings": {
+    "title": "Time Boundary Settings",
     "dayCutoffHour": {
       "label": "Day Cutoff Hour",
-      "tooltip": "Defines at what hour a day starts and at what hour the next day ends."
+      "tooltip": "Defines when a day starts and when it ends on the following day."
+    }
+  },
+  "regionalSettings": {
+    "title": "Regional Settings",
+    "timeZoneId": {
+      "label": "Time Zone",
+      "tooltip": "The time zone used when displaying statistics."
+    }
+  },
+  "appTrackingSettings": {
+    "title": "Application Tracking Settings",
+    "iconDirectory": {
+      "label": "Icon Directory",
+      "tooltip": "Automatically retrieved application icons will be saved in the folder path configured here. Changing this setting will not affect existing icon paths; it only affects newly retrieved application icons, including icons obtained during metadata updates (if the icon changes)."
+    },
+    "metadataStaleThresholdMinutes": {
+      "label": "Metadata Expiration Time (Minutes)",
+      "tooltip": "When the application encounters an app for the first time, it retrieves the executable path and icon. The next time it encounters the same app, it checks whether the time since the last retrieval exceeds the expiration period configured here. If it does, the information will be retrieved again; otherwise, the existing information will be kept. Note: If you customize application icons by manually changing icon paths, it is generally recommended to disable automatic updates for that application, otherwise updates may overwrite the custom icon path."
+    },
+    "activeUsageSessionAutoSaveIntervalSeconds": {
+      "label": "Active Usage Session Auto Save Interval (Seconds)",
+      "tooltip": "The interval for automatically saving the current active usage session to prevent data loss caused by unexpected crashes and ensure accurate screen time statistics."
+    },
+    "minValidUsageSessionDurationSeconds": {
+      "label": "Minimum Valid Session Duration (Seconds)",
+      "tooltip": "Each time optimization is triggered, session records shorter than this duration will be automatically filtered out and deleted."
+    },
+    "usageSessionMergeToleranceSeconds": {
+      "label": "Session Merge Tolerance (Seconds)",
+      "tooltip": "Each time optimization is triggered, records of the same app with an interval shorter than this value will be merged into a single longer record. Note: During merging, any usage records in between will be deleted regardless of whether other usage records exist."
+    },
+    "usageSessionOptimizationIntervalMinutes": {
+      "label": "Session Optimization Interval (Minutes)",
+      "tooltip": "Session optimization will be triggered after every interval specified here."
+    }
+  },
+  "websiteTrackingSettings": {
+    "title": "Website Tracking Settings",
+    "iconDirectory": {
+      "label": "Icon Directory",
+      "tooltip": "Automatically retrieved website icons will be saved in the folder path configured here. Changing this setting will not affect existing icon paths; it only affects newly retrieved website icons, including icons obtained during metadata updates (if the icon changes)."
+    },
+    "activeUsageSessionAutoSaveIntervalSeconds": {
+      "label": "Active Usage Session Auto Save Interval (Seconds)",
+      "tooltip": "The interval for automatically saving the current active usage session to prevent data loss caused by unexpected crashes and ensure accurate screen time statistics."
+    },
+    "minValidUsageSessionDurationSeconds": {
+      "label": "Minimum Valid Session Duration (Seconds)",
+      "tooltip": "Each time optimization is triggered, session records shorter than this duration will be automatically filtered out and deleted."
+    },
+    "usageSessionMergeToleranceSeconds": {
+      "label": "Session Merge Tolerance (Seconds)",
+      "tooltip": "Each time optimization is triggered, records of the same app with an interval shorter than this value will be merged into a single longer record. Note: During merging, any usage records in between will be deleted regardless of whether other usage records exist."
+    },
+    "usageSessionOptimizationIntervalMinutes": {
+      "label": "Session Optimization Interval (Minutes)",
+      "tooltip": "Session optimization will be triggered after every interval specified here."
     }
   },
   "errors": {

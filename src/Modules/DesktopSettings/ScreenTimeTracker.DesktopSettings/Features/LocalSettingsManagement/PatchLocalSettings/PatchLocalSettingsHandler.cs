@@ -1,3 +1,4 @@
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ScreenTimeTracker.DesktopSettings.Domain;
@@ -8,9 +9,9 @@ namespace ScreenTimeTracker.DesktopSettings.Features.LocalSettingsManagement.Pat
 public class PatchLocalSettingsHandler(
     DesktopSettingsDbContext context,
     IStartupManager windowsStartupManager
-) : IRequestHandler<PatchLocalSettingsCommand>
+) : IRequestHandler<PatchLocalSettingsCommand, ErrorOr<Updated>>
 {
-    public async ValueTask<Unit> Handle(
+    public async ValueTask<ErrorOr<Updated>> Handle(
         PatchLocalSettingsCommand request,
         CancellationToken cancellationToken
     )
@@ -33,7 +34,7 @@ public class PatchLocalSettingsHandler(
         }
 
         await context.SaveChangesAsync(cancellationToken);
-        return Unit.Value;
+        return Result.Updated;
     }
 }
 

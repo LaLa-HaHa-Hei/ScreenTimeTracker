@@ -3,11 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ScreenTimeTracker.BuildingBlocks.Persistence;
-using ScreenTimeTracker.ScreenTime.Domain;
-using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsageSession;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Features.Tracking;
+using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
+using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackWebsiteUsage;
 using ScreenTimeTracker.ScreenTime.Infrastructure.OS;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
-using ScreenTimeTracker.ScreenTime.Infrastructure.State;
 
 namespace ScreenTimeTracker.ScreenTime;
 
@@ -34,14 +36,20 @@ public static class ServiceCollectionExtensions
             }
         );
         services.AddHostedService<ScreenTimeDbMigrationService>();
-
         // 后台服务
         services.AddHostedService<AppUsageActiveSessionTracker>();
         services.AddHostedService<AppUsageActiveSessionAutoSaver>();
+        services.AddHostedService<WebsiteUsageActiveSessionAutoSaver>();
         services.AddHostedService<AppUsageSessionOptimizer>();
+        services.AddHostedService<WebsiteUsageSessionOptimizer>();
+        services.AddHostedService<SystemSuspendMonitor>();
+        services.AddHostedService<UserIdleMonitor>();
 
         // 状态存储
-        services.AddSingleton<IActiveAppUsageSessionStore, InMemoryActiveAppUsageSessionStore>();
+        services.AddSingleton<ActiveAppUsageSessionStore>();
+        services.AddSingleton<ActiveWebsiteUsageSessionStore>();
+        services.AddSingleton<SystemSuspendStore>();
+        services.AddSingleton<UserIdleStore>();
 
         // 平台
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 0, 6000))
@@ -49,6 +57,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IForegroundWindowMonitor, WindowsForegroundWindowMonitor>();
             services.AddSingleton<IExecutableMetadataProvider, WindowsExecutableMetadataProvider>();
             services.AddSingleton<IIdleTimeProvider, WindowsIdleTimeProvider>();
+            services.AddSingleton<ISystemLifecycleProvider, WindowsSystemLifecycleProvider>();
         }
         else
         {

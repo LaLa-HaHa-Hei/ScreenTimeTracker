@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Websites;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
@@ -12,11 +14,8 @@ public partial class ScreenTimeDbMigrationService(
     IServiceScopeFactory scopeFactory
 ) : IHostedLifecycleService
 {
-    // 在所有服务启动之前执行
     public async Task StartingAsync(CancellationToken cancellationToken)
     {
-        LogScreenTimeDbMigrationServiceStarting(logger);
-
         using var scope = scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ScreenTimeDbContext>();
 
@@ -31,23 +30,31 @@ public partial class ScreenTimeDbMigrationService(
         if (isNewDatabase)
         {
             LogNewDatabaseDetected(logger);
-            DateTime now = timeProvider.GetLocalNow().DateTime;
+
+            DateTimeOffset now = timeProvider.GetUtcNow();
             await SeedDefaultCategoriesAsync(context, now, cancellationToken);
+
+            // 不支持复杂属性的种子数据，所以在这注入
+            var userSettings = UserSettings.CreateDefault();
+            string? localZoneId = TimeZoneInfo.Local.Id;
+            if (OperatingSystem.IsWindows())
+                TimeZoneInfo.TryConvertWindowsIdToIanaId(localZoneId, out localZoneId);
+            localZoneId ??= "America/New_York";
+            userSettings.Update(regional: new RegionalSettings(localZoneId));
+            context.UserSettings.Add(userSettings);
+            LogTimeZoneIdCorrected(logger, localZoneId);
             await context.SaveChangesAsync(cancellationToken);
         }
     }
 
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "ScreenTimeDbMigrationService is starting."
-    )]
-    private static partial void LogScreenTimeDbMigrationServiceStarting(ILogger logger);
+    [LoggerMessage(Level = LogLevel.Information, Message = "New ScreenTime database detected.")]
+    private static partial void LogNewDatabaseDetected(ILogger logger);
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "New database detected, seeding default categories."
+        Message = "Time zone ID corrected to: {timeZoneId}"
     )]
-    private static partial void LogNewDatabaseDetected(ILogger logger);
+    private static partial void LogTimeZoneIdCorrected(ILogger logger, string timeZoneId);
 
     private static async Task EnsureDatabaseDirectoryAsync(ScreenTimeDbContext context)
     {
@@ -67,26 +74,37 @@ public partial class ScreenTimeDbMigrationService(
 
     private static async Task SeedDefaultCategoriesAsync(
         ScreenTimeDbContext context,
-        DateTime now,
+        DateTimeOffset now,
         CancellationToken cancellationToken
     )
     {
-        var defaults = new List<AppCategory>
+        var defaultAppCategories = new List<AppCategory>
         {
-            AppCategory.Create(now, "Game", "#F2A65A", "./PrePreparedAppCategoryIcons/game.svg"),
-            AppCategory.Create(now, "Relax", "#65B891", "./PrePreparedAppCategoryIcons/relax.svg"),
-            AppCategory.Create(
+            AppCategory.Create(now, "Game", "#F2A65A", "./PrePreparedCategoryIcons/game.svg"),
+            AppCategory.Create(now, "Relax", "#65B891", "./PrePreparedCategoryIcons/relax.svg"),
+            AppCategory.Create(now, "Social", "#D878A8", "./PrePreparedCategoryIcons/social.svg"),
+            AppCategory.Create(now, "Study", "#4A90E2", "./PrePreparedCategoryIcons/study.svg"),
+            AppCategory.Create(now, "Video", "#E76F7A", "./PrePreparedCategoryIcons/video.svg"),
+            AppCategory.Create(now, "Work", "#7C6FF6", "./PrePreparedCategoryIcons/work.svg"),
+        };
+
+        var defaultWebsiteCategories = new List<WebsiteCategory>
+        {
+            WebsiteCategory.Create(now, "Game", "#F2A65A", "./PrePreparedCategoryIcons/game.svg"),
+            WebsiteCategory.Create(now, "Relax", "#65B891", "./PrePreparedCategoryIcons/relax.svg"),
+            WebsiteCategory.Create(
                 now,
                 "Social",
                 "#D878A8",
-                "./PrePreparedAppCategoryIcons/social.svg"
+                "./PrePreparedCategoryIcons/social.svg"
             ),
-            AppCategory.Create(now, "Study", "#4A90E2", "./PrePreparedAppCategoryIcons/study.svg"),
-            AppCategory.Create(now, "Video", "#E76F7A", "./PrePreparedAppCategoryIcons/video.svg"),
-            AppCategory.Create(now, "Work", "#7C6FF6", "./PrePreparedAppCategoryIcons/work.svg"),
+            WebsiteCategory.Create(now, "Study", "#4A90E2", "./PrePreparedCategoryIcons/study.svg"),
+            WebsiteCategory.Create(now, "Video", "#E76F7A", "./PrePreparedCategoryIcons/video.svg"),
+            WebsiteCategory.Create(now, "Work", "#7C6FF6", "./PrePreparedCategoryIcons/work.svg"),
         };
 
-        await context.AppCategories.AddRangeAsync(defaults, cancellationToken);
+        await context.AppCategories.AddRangeAsync(defaultAppCategories, cancellationToken);
+        await context.WebsiteCategories.AddRangeAsync(defaultWebsiteCategories, cancellationToken);
     }
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;

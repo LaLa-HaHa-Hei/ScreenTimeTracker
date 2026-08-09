@@ -2,7 +2,9 @@
   "DimensionTypeSelector": {
     "options": {
       "app": "App",
-      "appCategory": "App Category"
+      "appCategory": "Category",
+      "website": "Website",
+      "websiteCategory": "Category"
     }
   }
 }

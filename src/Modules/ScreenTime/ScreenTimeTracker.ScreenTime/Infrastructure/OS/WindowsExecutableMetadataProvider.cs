@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
-using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsageSession;
+using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.OS;
 

@@ -8,6 +8,8 @@ import LinearProgress from "@mui/material/LinearProgress";
 import {
   appCategoryUsageDistributionQueryOptions,
   appUsageDistributionQueryOptions,
+  websiteCategoryUsageDistributionQueryOptions,
+  websiteUsageDistributionQueryOptions,
 } from "../api/queries";
 import type { Theme } from "@emotion/react";
 import { type SxProps } from "@mui/material/styles";
@@ -16,11 +18,13 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
+import { WebsiteIcon } from "@/entities/website";
+import { WebsiteCategoryIcon } from "@/entities/website-category";
 
 export type UsageDistributionListProps = {
   className?: string;
   sx?: SxProps<Theme>;
-  type: "app" | "app-category";
+  type: "app" | "app-category" | "website" | "website-category";
   startDate: DateOnly;
   endDate: DateOnly;
   topN: number;
@@ -56,17 +60,38 @@ export const UsageDistributionList = ({
     }),
     enabled: type === "app-category",
   });
+  const { data: websiteUsageDistributionData } = useQuery({
+    ...websiteUsageDistributionQueryOptions({
+      startDate: startDate,
+      endDate: endDate,
+      topN: topN,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website",
+  });
+  const { data: websiteCategoryUsageDistributionData } = useQuery({
+    ...websiteCategoryUsageDistributionQueryOptions({
+      startDate: startDate,
+      endDate: endDate,
+      topN: topN,
+      excludedIds: excludedIds,
+    }),
+    enabled: type === "website-category",
+  });
   const usageDistributiondata =
     type === "app"
       ? appUsageDistributionData
-      : appCategoryUsageDistributionData;
+      : type === "app-category"
+        ? appCategoryUsageDistributionData
+        : type === "website"
+          ? websiteUsageDistributionData
+          : websiteCategoryUsageDistributionData;
 
   return (
     <List className={className} sx={[{}, ...(Array.isArray(sx) ? sx : [sx])]}>
       {usageDistributiondata?.items.map((item) => {
         const percentage =
-          (item.durationSeconds / usageDistributiondata.totalDurationSeconds) *
-          100;
+          (item.durationSeconds / usageDistributiondata.totalDurationSeconds) * 100;
         return (
           <ListItem disablePadding key={`${type}-${item.id}`}>
             <ListItemButton
@@ -85,8 +110,28 @@ export const UsageDistributionList = ({
                     iconPath={item.iconPath}
                     iconPathLastUpdatedAt={item.iconPathLastUpdatedAt}
                   />
-                ) : (
+                ) : type === "app-category" ? (
                   <AppCategoryIcon
+                    sx={{
+                      width: "2rem",
+                      height: "2rem",
+                    }}
+                    id={item.id}
+                    iconPath={item.iconPath}
+                    iconPathLastUpdatedAt={item.iconPathLastUpdatedAt}
+                  />
+                ) : type === "website" ? (
+                  <WebsiteIcon
+                    sx={{
+                      width: "2rem",
+                      height: "2rem",
+                    }}
+                    id={item.id}
+                    iconPath={item.iconPath}
+                    iconPathLastUpdatedAt={item.iconPathLastUpdatedAt}
+                  />
+                ) : (
+                  <WebsiteCategoryIcon
                     sx={{
                       width: "2rem",
                       height: "2rem",
@@ -100,9 +145,7 @@ export const UsageDistributionList = ({
               <Box sx={{ flex: 1, ml: 0.5 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography>{item.name}</Typography>
-                  <Typography>
-                    {formatSecondsDuration(item.durationSeconds)}
-                  </Typography>
+                  <Typography>{formatSecondsDuration(item.durationSeconds)}</Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Box sx={{ width: "100%", mr: 1 }}>
@@ -114,10 +157,7 @@ export const UsageDistributionList = ({
                       textAlign: "right",
                     }}
                   >
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
                       {`${Math.round(percentage)}%`}
                     </Typography>
                   </Box>

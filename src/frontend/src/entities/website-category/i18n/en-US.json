@@ -1,0 +1,11 @@
+{
+  "ui": {
+    "state": {
+      "loading": "Loading...",
+      "noOptions": "No options"
+    },
+    "picker": {
+      "selectedCount": "{{count}} selected"
+    }
+  }
+}

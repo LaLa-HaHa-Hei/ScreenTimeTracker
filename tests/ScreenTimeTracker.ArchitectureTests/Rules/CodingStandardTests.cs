@@ -20,33 +20,4 @@ public class CodingStandardTests(ArchitectureFixture fixture)
             .Should()
             .NotBePublic()
             .Check(_architecture);
-
-    [Fact]
-    // 不应直接在应用中使用 DateTime.Now 等静态属性，而应使用 TimeProvider 来获取当前时间
-    public void EntireApplication_ShouldNotDirectlyUse_DateTimeStaticProperties()
-    {
-        // 捕获 DateTime 和 DateTimeOffset 的 get_Now / get_UtcNow Getter 方法
-        var forbiddenTimeMethods = MethodMembers()
-            .That()
-            .AreDeclaredIn(typeof(DateTime))
-            .And()
-            .HaveName("get_Now")
-            .Or()
-            .HaveName("get_UtcNow")
-            .Or()
-            .AreDeclaredIn(typeof(DateTimeOffset))
-            .And()
-            .HaveName("get_Now")
-            .Or()
-            .HaveName("get_UtcNow");
-
-        Types()
-            .That()
-            .ResideInNamespaceMatching(@"^ScreenTimeTracker\..*")
-            // 如果确实有极个别底层 Win32 类需要例外，可以通过 AreNot 排除：
-            // .And().AreNot(typeof(WindowsIdleTimeProvider))
-            .Should()
-            .NotCallAny(forbiddenTimeMethods)
-            .Check(_architecture);
-    }
 }

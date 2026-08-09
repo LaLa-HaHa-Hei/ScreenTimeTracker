@@ -30,7 +30,7 @@ export const DateRangeSelector = ({
   const { data: userSettingsDtoData } = useQuery(userSettingsQueries.userSettings());
   if (!userSettingsDtoData) return null;
 
-  const dayCutoffHour = userSettingsDtoData.dayCutoffHour;
+  const dayCutoffHour = userSettingsDtoData.timeBoundary.dayCutoffHour;
   const logicalToday = dayjs().subtract(dayCutoffHour, "hour").startOf("day");
   const isEndToday = dayjs(value.end).isSame(logicalToday, "day");
   const dateLabel = (() => {

@@ -3,7 +3,9 @@
     "usageSummary": "Usage Summary",
     "usageDetails": "Usage Details",
     "apps": "App Management",
-    "categories": "Category Management",
+    "appCategories": "App Category",
+    "websites": "Website Management",
+    "websiteCategories": "Website Category",
     "data": "Data Management",
     "settings": "Settings"
   },

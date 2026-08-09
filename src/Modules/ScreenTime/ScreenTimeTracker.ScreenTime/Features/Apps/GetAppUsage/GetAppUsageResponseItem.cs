@@ -1,3 +1,7 @@
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.GetAppUsage;
 
-public record GetAppUsageResponseItem(DateTime StartTime, long DurationSeconds);
+public record GetAppUsageResponseItem(
+    DateTimeOffset StartTime,
+    DateTimeOffset EndTime,
+    long DurationSeconds
+);

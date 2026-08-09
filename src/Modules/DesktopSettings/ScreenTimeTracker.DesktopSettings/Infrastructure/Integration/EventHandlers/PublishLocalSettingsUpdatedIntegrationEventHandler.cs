@@ -1,10 +1,10 @@
 using Mediator;
 using ScreenTimeTracker.DesktopSettings.Contracts.IntegrationEvents;
-using ScreenTimeTracker.DesktopSettings.Domain.Events;
+using ScreenTimeTracker.DesktopSettings.Domain;
 
 namespace ScreenTimeTracker.DesktopSettings.Infrastructure.Integration.EventHandlers;
 
-public class LocalSettingsUpdatedHandler(IPublisher publisher)
+public class LocalSettingsUpdatedHandler(IPublisher publisher, TimeProvider timeProvider)
     : INotificationHandler<LocalSettingsUpdatedDomainEvent>
 {
     public async ValueTask Handle(
@@ -14,7 +14,7 @@ public class LocalSettingsUpdatedHandler(IPublisher publisher)
     {
         var integrationEvent = new LocalSettingsUpdatedIntegrationEvent(
             Guid.NewGuid(),
-            DateTime.UtcNow,
+            timeProvider.GetUtcNow(),
             notification.DefaultUIOpenMode,
             notification.IsAutoStartEnabled,
             notification.IsSilentStartEnabled,

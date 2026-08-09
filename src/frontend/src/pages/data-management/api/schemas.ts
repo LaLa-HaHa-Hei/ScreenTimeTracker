@@ -8,9 +8,13 @@ export const deleteUsageDataParamsSchema = z.object({
 export type DeleteUsageDataParams = z.infer<typeof deleteUsageDataParamsSchema>;
 
 export const importDataDtoSchema = z.object({
-  newAppCategories: z.number(),
   newApps: z.number(),
-  importedSessions: z.number(),
-  skippedSessions: z.number(),
+  newAppCategories: z.number(),
+  newWebsites: z.number(),
+  newWebsiteCategories: z.number(),
+  importedAppUsageSessions: z.number(),
+  skippedAppUsageSessions: z.number(),
+  importedWebsiteUsageSessions: z.number(),
+  skippedWebsiteUsageSessions: z.number(),
 });
 export type ImportDataDto = z.infer<typeof importDataDtoSchema>;

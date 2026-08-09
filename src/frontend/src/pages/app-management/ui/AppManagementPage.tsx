@@ -1,10 +1,4 @@
-import {
-  AppIcon,
-  appQueries,
-  useDeleteApp,
-  usePatchApp,
-  type App,
-} from "@/entities/app";
+import { AppIcon, appQueries, useDeleteApp, usePatchApp, type App } from "@/entities/app";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { LazyColorField } from "@/shared/ui/LazyColorField";
 import { useQuery } from "@tanstack/react-query";
@@ -25,11 +19,7 @@ import {
   type GridRenderCellParams,
   type GridRowsProp,
 } from "@mui/x-data-grid";
-import {
-  appCategoryQueries,
-  AppCategorySelecter,
-  type AppCategory,
-} from "@/entities/app-category";
+import { appCategoryQueries, AppCategorySelecter, type AppCategory } from "@/entities/app-category";
 import { LazyTextField } from "@/shared/ui/LazyTextField";
 import dayjs from "@/shared/lib/dayjs";
 import { useTranslation } from "react-i18next";
@@ -37,27 +27,23 @@ import { useTranslation } from "react-i18next";
 export const AppManagementPage = () => {
   const { t } = useTranslation(["page_appManagement"]);
   const { enqueueSnackbar } = useSnackbar();
-  const { data: appsData, isLoading: isAppsDataLoading } = useQuery(
-    appQueries.apps({}),
-  ) as {
+  const { data: appsData, isLoading: isAppsDataLoading } = useQuery(appQueries.apps({})) as {
     isLoading: boolean;
     data?: App[];
   };
   const { mutateAsync: patchAppAsync } = usePatchApp();
   const { mutateAsync: deleteAppAsync } = useDeleteApp();
-  const { data: appCategoriesData, isLoading: isAppCategoriesDataLoading } =
-    useQuery(appCategoryQueries.appCategories({ fields: "id,name" })) as {
-      isLoading: boolean;
-      data?: Pick<AppCategory, "id" | "name">[];
-    };
+  const { data: appCategoriesData, isLoading: isAppCategoriesDataLoading } = useQuery(
+    appCategoryQueries.appCategories({ fields: "id,name" }),
+  ) as {
+    isLoading: boolean;
+    data?: Pick<AppCategory, "id" | "name">[];
+  };
   const categoryMap = useMemo(() => {
-    return new Map(
-      appCategoriesData?.map((item) => [item.id, item.name]) ?? [],
-    );
+    return new Map(appCategoriesData?.map((item) => [item.id, item.name]) ?? []);
   }, [appCategoriesData]);
 
-  const [deleteAppComfirmDialogOpen, setDeleteAppComfirmDialogOpen] =
-    useState(false);
+  const [deleteAppComfirmDialogOpen, setDeleteAppComfirmDialogOpen] = useState(false);
   const [appToDelete, setAppToDelete] = useState<App | null>(null);
 
   const stopGridKeyboardEvent = (e: React.KeyboardEvent) => {
@@ -125,26 +111,26 @@ export const AppManagementPage = () => {
       ),
     },
     {
-      field: "appCategory",
-      headerName: t(($) => $.page_appManagement.columns.appCategory),
+      field: "category",
+      headerName: t(($) => $.page_appManagement.columns.category),
       width: 210,
       valueGetter: (_, row) => {
-        return categoryMap.get(row.appCategoryId) ?? "";
+        return categoryMap.get(row.categoryId) ?? "";
       },
       renderCell: (params: GridRenderCellParams<App>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
           <AppCategorySelecter
-            value={params.row.appCategoryId}
+            value={params.row.categoryId}
             onValueChange={async (value) => {
               try {
                 await patchAppAsync({
                   id: params.row.id,
-                  body: { appCategoryId: value },
+                  body: { categoryId: value },
                 });
               } catch {
                 enqueueSnackbar(
                   t(($) => $.page_appManagement.errors.updateFailed, {
-                    field: t(($) => $.page_appManagement.columns.appCategory),
+                    field: t(($) => $.page_appManagement.columns.category),
                   }),
                   { variant: "error" },
                 );
@@ -206,8 +192,8 @@ export const AppManagementPage = () => {
       ),
     },
     {
-      field: "allowMetadataAutoUpdate",
-      headerName: t(($) => $.page_appManagement.columns.allowMetadataAutoUpdate),
+      field: "allowMetadataAutoRefresh",
+      headerName: t(($) => $.page_appManagement.columns.allowMetadataAutoRefresh),
       width: 80,
       renderCell: (params: GridRenderCellParams<App, boolean>) => (
         <Switch
@@ -216,13 +202,13 @@ export const AppManagementPage = () => {
             try {
               await patchAppAsync({
                 id: params.row.id,
-                body: { allowMetadataAutoUpdate: event.target.checked },
+                body: { allowMetadataAutoRefresh: event.target.checked },
               });
             } catch {
-                enqueueSnackbar(
-                  t(($) => $.page_appManagement.errors.updateFailed, {
-                    field: t(($) => $.page_appManagement.columns.allowMetadataAutoUpdate),
-                  }),
+              enqueueSnackbar(
+                t(($) => $.page_appManagement.errors.updateFailed, {
+                  field: t(($) => $.page_appManagement.columns.allowMetadataAutoRefresh),
+                }),
                 { variant: "error" },
               );
             }
@@ -231,8 +217,8 @@ export const AppManagementPage = () => {
       ),
     },
     {
-      field: "metadataLastUpdatedAt",
-      headerName: t(($) => $.page_appManagement.columns.metadataLastUpdatedAt),
+      field: "metadataLastRefreshedAt",
+      headerName: t(($) => $.page_appManagement.columns.metadataLastRefreshedAt),
       width: 140,
       valueFormatter: (value) => dayjs(value).format("L LT"),
     },
@@ -307,18 +293,18 @@ export const AppManagementPage = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setDeleteAppComfirmDialogOpen(false)}
-            autoFocus
-          >
+          <Button onClick={() => setDeleteAppComfirmDialogOpen(false)} autoFocus>
             {t(($) => $.page_appManagement.actions.cancel)}
           </Button>
           <Button
             onClick={async () => {
               if (appToDelete == null) {
-                enqueueSnackbar(t(($) => $.page_appManagement.errors.noAppSelected), {
-                  variant: "error",
-                });
+                enqueueSnackbar(
+                  t(($) => $.page_appManagement.errors.noAppSelected),
+                  {
+                    variant: "error",
+                  },
+                );
                 return;
               }
               try {

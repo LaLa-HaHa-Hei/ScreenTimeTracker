@@ -1,5 +1,6 @@
+using ErrorOr;
 using Mediator;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.GetApp;
 
-public record GetAppQuery(Guid AppId) : IRequest<GetAppResponse?>;
+public record GetAppQuery(Guid AppId) : IRequest<ErrorOr<GetAppResponse>>;

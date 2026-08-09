@@ -33,6 +33,14 @@ export const DimensionTypeSelector = ({
       value: "app-category",
       label: t(($) => $.feature_dimensionControl.DimensionTypeSelector.options.appCategory),
     },
+    {
+      value: "website",
+      label: t(($) => $.feature_dimensionControl.DimensionTypeSelector.options.website),
+    },
+    {
+      value: "website-category",
+      label: t(($) => $.feature_dimensionControl.DimensionTypeSelector.options.websiteCategory),
+    },
   ];
 
   return (

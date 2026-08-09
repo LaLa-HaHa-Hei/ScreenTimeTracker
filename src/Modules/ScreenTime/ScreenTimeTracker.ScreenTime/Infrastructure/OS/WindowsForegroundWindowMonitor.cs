@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
-using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsageSession;
+using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
@@ -18,7 +18,7 @@ public partial class WindowsForegroundWindowMonitor : IForegroundWindowMonitor, 
 {
     public event EventHandler<WindowInfo?>? ForegroundWindowChanged;
     private readonly ILogger<WindowsForegroundWindowMonitor> _logger;
-
+    private bool _disposed;
     private WINEVENTPROC? _hookProc;
     private uint _threadId;
 
@@ -199,10 +199,27 @@ public partial class WindowsForegroundWindowMonitor : IForegroundWindowMonitor, 
         return actualPid != 0 ? actualPid : null;
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        if (_threadId != 0)
+        {
+            PInvoke.PostThreadMessage(_threadId, PInvoke.WM_QUIT, 0, 0);
+        }
+
+        if (disposing)
+        {
+            ForegroundWindowChanged = null;
+        }
+    }
+
     public void Dispose()
     {
-        if (_threadId != 0)
-            PInvoke.PostThreadMessage(_threadId, PInvoke.WM_QUIT, 0, 0);
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 }

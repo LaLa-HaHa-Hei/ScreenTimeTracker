@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.GetApps;
@@ -20,11 +20,14 @@ public class GetAppsHandler(ScreenTimeDbContext context)
         { nameof(GetAppsResponseItem.Color), [nameof(App.Color)] },
         { nameof(GetAppsResponseItem.ProcessName), [nameof(App.ProcessName)] },
         {
-            nameof(GetAppsResponseItem.AllowMetadataAutoUpdate),
-            [nameof(App.AllowMetadataAutoUpdate)]
+            nameof(GetAppsResponseItem.AllowMetadataAutoRefresh),
+            [nameof(App.AllowMetadataAutoRefresh)]
         },
-        { nameof(GetAppsResponseItem.MetadataLastUpdatedAt), [nameof(App.MetadataLastUpdatedAt)] },
-        { nameof(GetAppsResponseItem.AppCategoryId), [nameof(App.AppCategoryId)] },
+        {
+            nameof(GetAppsResponseItem.MetadataLastRefreshedAt),
+            [nameof(App.MetadataLastRefreshedAt)]
+        },
+        { nameof(GetAppsResponseItem.CategoryId), [nameof(App.CategoryId)] },
         { nameof(GetAppsResponseItem.ExecutablePath), [nameof(App.ExecutablePath)] },
         { nameof(GetAppsResponseItem.IconPath), [nameof(App.IconPath)] },
         { nameof(GetAppsResponseItem.IconPathLastUpdatedAt), [nameof(App.IconPathLastUpdatedAt)] },
@@ -40,9 +43,9 @@ public class GetAppsHandler(ScreenTimeDbContext context)
         [nameof(GetAppsResponseItem.Name)] = e => e.Name,
         [nameof(GetAppsResponseItem.Color)] = e => e.Color,
         [nameof(GetAppsResponseItem.ProcessName)] = e => e.ProcessName,
-        [nameof(GetAppsResponseItem.AllowMetadataAutoUpdate)] = e => e.AllowMetadataAutoUpdate,
-        [nameof(GetAppsResponseItem.MetadataLastUpdatedAt)] = e => e.MetadataLastUpdatedAt,
-        [nameof(GetAppsResponseItem.AppCategoryId)] = e => e.AppCategoryId,
+        [nameof(GetAppsResponseItem.AllowMetadataAutoRefresh)] = e => e.AllowMetadataAutoRefresh,
+        [nameof(GetAppsResponseItem.MetadataLastRefreshedAt)] = e => e.MetadataLastRefreshedAt,
+        [nameof(GetAppsResponseItem.CategoryId)] = e => e.CategoryId,
         [nameof(GetAppsResponseItem.ExecutablePath)] = e => e.ExecutablePath,
         [nameof(GetAppsResponseItem.IconPath)] = e => e.IconPath,
         [nameof(GetAppsResponseItem.IconPathLastUpdatedAt)] = e => e.IconPathLastUpdatedAt,
@@ -63,7 +66,7 @@ public class GetAppsHandler(ScreenTimeDbContext context)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var targetFields =
-            (requestedFields == null || requestedFields.Count == 0)
+            (requestedFields is null || requestedFields.Count == 0)
                 ? allAvailableFields
                 : [.. allAvailableFields.Where(f => requestedFields.Contains(f))];
 
@@ -112,7 +115,7 @@ public class GetAppsHandler(ScreenTimeDbContext context)
         foreach (var propName in requiredEntityProps)
         {
             var property = typeof(App).GetProperty(propName);
-            if (property == null)
+            if (property is null)
                 continue;
 
             bindings.Add(Expression.Bind(property, Expression.Property(parameter, property)));

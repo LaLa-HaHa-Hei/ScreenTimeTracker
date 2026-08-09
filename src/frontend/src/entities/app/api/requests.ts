@@ -1,14 +1,8 @@
 import { apiClient, baseApiUrl } from "@/shared/api";
-import {
-  appDtoSchema,
-  type GetAppsParams,
-  type PatchAppParams,
-} from "./schemas";
+import { appDtoSchema, type GetAppsParams, type PatchAppParams } from "./schemas";
 import type { App } from "../model/schemas";
 
-export const getApps = async (
-  params: GetAppsParams,
-): Promise<Partial<App>[]> => {
+export const getApps = async (params: GetAppsParams): Promise<Partial<App>[]> => {
   const { data } = await apiClient.get("/screen-time/apps", {
     params,
   });
@@ -19,9 +13,9 @@ export const getApps = async (
       name: validated.name,
       color: validated.color,
       processName: validated.processName,
-      allowMetadataAutoUpdate: validated.allowMetadataAutoUpdate,
-      metadataLastUpdatedAt: validated.metadataLastUpdatedAt,
-      appCategoryId: validated.appCategoryId,
+      allowMetadataAutoRefresh: validated.allowMetadataAutoRefresh,
+      metadataLastRefreshedAt: validated.metadataLastRefreshedAt,
+      categoryId: validated.categoryId,
       executablePath: validated.executablePath,
       iconPath: validated.iconPath,
       iconPathLastUpdatedAt: validated.iconPathLastUpdatedAt,
@@ -34,10 +28,7 @@ export const getAppIconUrl = (appId: string, iconPathLastUpdatedAt: Date) =>
   `${baseApiUrl}/screen-time/apps/${appId}/icon?v=${iconPathLastUpdatedAt.getTime()}`;
 
 export const patchApp = async (params: PatchAppParams) => {
-  const { data } = await apiClient.patch(
-    `/screen-time/apps/${params.id}`,
-    params.body,
-  );
+  const { data } = await apiClient.patch(`/screen-time/apps/${params.id}`, params.body);
   return data;
 };
 

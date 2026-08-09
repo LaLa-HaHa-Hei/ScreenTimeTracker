@@ -3,11 +3,11 @@
   "columns": {
     "name": "名称",
     "color": "颜色",
-    "appCategory": "应用类别",
+    "category": "类别",
     "icon": "图标",
     "iconPath": "图标路径",
-    "allowMetadataAutoUpdate": "自动更新元数据",
-    "metadataLastUpdatedAt": "上次元数据更新时间",
+    "allowMetadataAutoRefresh": "自动更新元数据",
+    "metadataLastRefreshedAt": "上次元数据更新时间",
     "processName": "进程名",
     "executablePath": "可执行文件路径",
     "action": "操作"

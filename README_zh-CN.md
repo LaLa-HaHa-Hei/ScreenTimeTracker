@@ -66,9 +66,15 @@
   pnpm install
   pnpm build
   ```
+- 构建浏览器扩展（可选）：
+  ```shell
+  cd ../web-extension
+  pnpm build
+  ```
+  构建产物在 `.output` 目录下。
 - 启动应用：
   ```shell
-  cd ../Hosts/Desktop
+  cd ../Hosts/ScreenTimeTracker.Desktop
   dotnet run
   ```
 

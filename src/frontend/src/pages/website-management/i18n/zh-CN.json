@@ -1,0 +1,28 @@
+{
+  "entityName": "网站",
+  "columns": {
+    "name": "名称",
+    "color": "颜色",
+    "category": "类别",
+    "icon": "图标",
+    "iconPath": "图标路径",
+    "allowMetadataAutoRefresh": "自动更新元数据",
+    "metadataLastRefreshedAt": "上次元数据更新时间",
+    "host": "主机",
+    "executablePath": "可执行文件路径",
+    "action": "操作"
+  },
+  "deleteConfirm": {
+    "title": "确定删除网站“{{name}}”吗？",
+    "description": "同时将删除所有该网站的已有数据。"
+  },
+  "errors": {
+    "noWebsiteSelected": "未选择要删除的网站",
+    "updateFailed": "更新{{field}}失败",
+    "deleteFailed": "删除{{field}}失败"
+  },
+  "actions": {
+    "cancel": "取消",
+    "confirm": "确认"
+  }
+}

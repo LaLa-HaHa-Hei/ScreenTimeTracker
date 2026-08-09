@@ -1,6 +1,5 @@
 using ScreenTimeTracker.DesktopSettings.Contracts.Enums;
 using ScreenTimeTracker.DesktopSettings.Domain;
-using ScreenTimeTracker.DesktopSettings.Domain.Events;
 using Shouldly;
 
 namespace ScreenTimeTracker.DesktopSettings.UnitTests.Domain;

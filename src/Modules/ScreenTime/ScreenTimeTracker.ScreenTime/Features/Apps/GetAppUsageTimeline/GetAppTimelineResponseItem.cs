@@ -4,6 +4,6 @@ public record GetAppUsageTimelineResponseItem(
     Guid Id,
     string Name,
     string Color,
-    DateTime StartTime,
-    DateTime EndTime
+    DateTimeOffset StartTime,
+    DateTimeOffset EndTime
 );

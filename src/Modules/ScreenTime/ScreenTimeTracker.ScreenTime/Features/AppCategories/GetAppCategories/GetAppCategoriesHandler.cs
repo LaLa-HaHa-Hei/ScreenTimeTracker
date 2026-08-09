@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategories;
@@ -53,7 +53,7 @@ public class GetAppCategoriesHandler(ScreenTimeDbContext context)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var targetFields =
-            (requestedFields == null || requestedFields.Count == 0)
+            (requestedFields is null || requestedFields.Count == 0)
                 ? allAvailableFields
                 : [.. allAvailableFields.Where(f => requestedFields.Contains(f))];
 
@@ -104,7 +104,7 @@ public class GetAppCategoriesHandler(ScreenTimeDbContext context)
         foreach (var propName in neededEntityProps)
         {
             var property = typeof(AppCategory).GetProperty(propName);
-            if (property == null)
+            if (property is null)
                 continue;
 
             bindings.Add(Expression.Bind(property, Expression.Property(parameter, property)));

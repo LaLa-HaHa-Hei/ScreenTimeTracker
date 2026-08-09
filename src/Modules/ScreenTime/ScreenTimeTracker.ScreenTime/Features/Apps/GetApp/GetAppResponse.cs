@@ -5,11 +5,11 @@ public record GetAppResponse(
     string Name,
     string Color,
     string ProcessName,
-    bool AllowMetadataAutoUpdate,
-    DateTime MetadataLastUpdatedAt,
-    Guid AppCategoryId,
+    bool AllowMetadataAutoRefresh,
+    DateTimeOffset MetadataLastRefreshedAt,
+    Guid CategoryId,
     string? ExecutablePath,
     string? IconPath,
-    DateTime IconPathLastUpdatedAt,
+    DateTimeOffset IconPathLastUpdatedAt,
     bool IsSystem
 );

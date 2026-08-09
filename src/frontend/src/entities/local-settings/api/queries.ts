@@ -1,13 +1,6 @@
-import {
-  queryOptions,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getLocalSettingsDto, patchLocalSettingsDto } from "./requests";
-import type {
-  PatchLocalSettingsParams as PatchLocalSettingsParams,
-  LocalSettingsDto as LocalSettingsDto,
-} from "./schemas";
+import type { PatchLocalSettingsParams, LocalSettingsDto } from "./schemas";
 
 export const localSettingsQueries = {
   localSettings: () => {
@@ -19,7 +12,7 @@ export const localSettingsQueries = {
   },
 };
 
-export const usePatchLocalettings = () => {
+export const usePatchLocalSettings = () => {
   const queryClient = useQueryClient();
   return useMutation<LocalSettingsDto, Error, PatchLocalSettingsParams>({
     mutationFn: patchLocalSettingsDto,

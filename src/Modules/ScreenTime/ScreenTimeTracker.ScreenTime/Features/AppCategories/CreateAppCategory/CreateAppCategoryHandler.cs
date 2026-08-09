@@ -1,15 +1,15 @@
+using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain;
-using ScreenTimeTracker.ScreenTime.Domain.Exceptions;
+using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.CreateAppCategory;
 
 public class CreateAppCategoryHandler(ScreenTimeDbContext context, TimeProvider timeProvider)
-    : IRequestHandler<CreateAppCategoryCommand, CreateAppCategoryResponse>
+    : IRequestHandler<CreateAppCategoryCommand, ErrorOr<CreateAppCategoryResponse>>
 {
-    public async ValueTask<CreateAppCategoryResponse> Handle(
+    public async ValueTask<ErrorOr<CreateAppCategoryResponse>> Handle(
         CreateAppCategoryCommand request,
         CancellationToken cancellationToken
     )
@@ -19,16 +19,21 @@ public class CreateAppCategoryHandler(ScreenTimeDbContext context, TimeProvider 
             cancellationToken
         );
         if (exists)
-            throw new AppCategoryAlreadyExistsException(request.Name);
+            return Error.Conflict(
+                "AppCategory.NameAlreadyExists",
+                "An app category with the same name already exists."
+            );
 
         AppCategory appCategory = AppCategory.Create(
-            timeProvider.GetLocalNow().DateTime,
+            timeProvider.GetUtcNow(),
             request.Name,
             request.Color,
             request.IconPath
         );
         context.AppCategories.Add(appCategory);
+
         await context.SaveChangesAsync(cancellationToken);
+
         return new CreateAppCategoryResponse(
             appCategory.Id,
             appCategory.Name,

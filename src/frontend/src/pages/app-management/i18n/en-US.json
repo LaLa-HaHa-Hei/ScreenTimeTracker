@@ -3,11 +3,11 @@
   "columns": {
     "name": "Name",
     "color": "Color",
-    "appCategory": "App Category",
+    "category": "Category",
     "icon": "Icon",
     "iconPath": "Icon Path",
-    "allowMetadataAutoUpdate": "Auto Update Metadata",
-    "metadataLastUpdatedAt": "Last Metadata Auto Updated",
+    "allowMetadataAutoRefresh": "Auto Update Metadata",
+    "metadataLastRefreshedAt": "Last Metadata Auto Updated",
     "processName": "Process Name",
     "executablePath": "Executable Path",
     "action": "Actions"

@@ -15,7 +15,7 @@ public class GetAppCategoryUsageEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(GetAppCategoryUsageRequest req, CancellationToken ct)
     {
-        var response = await mediator.Send(
+        var result = await mediator.Send(
             new GetAppCategoryUsageQuery(
                 req.Granularity,
                 req.StartDate,
@@ -25,6 +25,6 @@ public class GetAppCategoryUsageEndpoint(IMediator mediator)
             ),
             ct
         );
-        await Send.OkAsync(response, ct);
+        await Send.OkAsync(result, ct);
     }
 }

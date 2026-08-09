@@ -1,12 +1,9 @@
 import type { SearchParams } from "../model/schemas";
-import {
-  DateRangeSelector,
-  TimeFrameSelector,
-  useDateFilter,
-} from "@/features/date-filter";
+import { DateRangeSelector, TimeFrameSelector, useDateFilter } from "@/features/date-filter";
 import { dateOnlyToDate, dateToDateOnly } from "@/shared/lib/date-only";
 import {
   DimensionMemberPicker,
+  dimensionSchema,
   DimensionTypeSelector,
   type Dimension,
 } from "@/features/dimension-control";
@@ -26,15 +23,14 @@ interface UsageDetailsPageProps {
   onSearchChange: (newParams: Partial<SearchParams>) => void;
 }
 
-const dimensionCacheSchema = z.record(
-  z.enum(["app", "app-category"]),
-  z.string().nullable(),
-);
+const dimensionCacheSchema = z.record(dimensionSchema, z.string().nullable());
 type DimensionCache = z.infer<typeof dimensionCacheSchema>;
 
 const defaultDimensionCache: DimensionCache = {
   app: null,
   "app-category": null,
+  website: null,
+  "website-category": null,
 };
 
 const DIMENSION_CACHE_STORAGE_KEY = "page_usage_details_page_dimension_cache";
@@ -50,10 +46,7 @@ function getSavedDimensionCache(): DimensionCache | null {
   else return null;
 }
 
-export const UsageDetailsPage = ({
-  search,
-  onSearchChange,
-}: UsageDetailsPageProps) => {
+export const UsageDetailsPage = ({ search, onSearchChange }: UsageDetailsPageProps) => {
   const { t } = useTranslation(["page_usageDetails"]);
   const {
     handleTimeFrameChange,
@@ -96,10 +89,7 @@ export const UsageDetailsPage = ({
 
   const handleMemberIdChange = (newMemberId: string | null) => {
     dimensionCacheRef.current[search.dimension] = newMemberId;
-    localStorage.setItem(
-      DIMENSION_CACHE_STORAGE_KEY,
-      JSON.stringify(dimensionCacheRef.current),
-    );
+    localStorage.setItem(DIMENSION_CACHE_STORAGE_KEY, JSON.stringify(dimensionCacheRef.current));
     onSearchChange({ id: newMemberId });
   };
 
@@ -121,15 +111,9 @@ export const UsageDetailsPage = ({
       <Stack spacing={1}>
         <Stack direction="row" sx={{ alignItems: "center" }}>
           <Box sx={{ flex: 1, display: "flex", justifyContent: "start" }}>
-            <DimensionTypeSelector
-              value={search.dimension}
-              onValueChange={handleDimensionChange}
-            />
+            <DimensionTypeSelector value={search.dimension} onValueChange={handleDimensionChange} />
           </Box>
-          <TimeFrameSelector
-            value={search.timeFrame}
-            onValueChange={handleTimeFrameChange}
-          />
+          <TimeFrameSelector value={search.timeFrame} onValueChange={handleTimeFrameChange} />
           <Box sx={{ flex: 1, display: "flex", justifyContent: "end" }}>
             <DimensionMemberPicker
               sx={{ minWidth: "60%" }}
@@ -182,11 +166,7 @@ export const UsageDetailsPage = ({
               type={search.dimension}
               granularity={search.timeFrame === "day" ? "hour" : "day"}
               xAxisType={
-                search.timeFrame === "day"
-                  ? "hour"
-                  : search.timeFrame === "week"
-                    ? "week"
-                    : "day"
+                search.timeFrame === "day" ? "hour" : search.timeFrame === "week" ? "week" : "day"
               }
               startDate={search.startDate}
               endDate={search.endDate}

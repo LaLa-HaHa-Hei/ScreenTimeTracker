@@ -1,19 +1,14 @@
-import {
-  AppCategoryIcon,
-  appCategoryQueries,
-  type AppCategory,
-} from "@/entities/app-category";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { type SelectChangeEvent } from "@mui/material/Select";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
+import type { AppCategory } from "../model/schemas";
+import { appCategoryQueries } from "../api/queries";
+import { AppCategoryIcon } from "./AppCategoryIcon";
 
-type Item = Pick<
-  AppCategory,
-  "id" | "name" | "iconPath" | "iconPathLastUpdatedAt"
->;
+type Item = Pick<AppCategory, "id" | "name" | "iconPath" | "iconPathLastUpdatedAt">;
 
 export type AppCategorySelecterProps = {
   className?: string;

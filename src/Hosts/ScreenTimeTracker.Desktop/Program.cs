@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using ScreenTimeTracker.BuildingBlocks.Types;
+using ScreenTimeTracker.Desktop;
 using ScreenTimeTracker.Desktop.Hosting;
 using ScreenTimeTracker.Desktop.Platforms;
 using ScreenTimeTracker.Desktop.UI.Services;
@@ -66,6 +67,9 @@ try
     });
     builder.Services.AddSingleton(TimeProvider.System);
     // Web API
+    builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    builder.Services.AddSignalR();
     builder.Services.AddFastEndpoints();
     builder.Services.SwaggerDocument();
     builder.Services.AddCors();
@@ -126,6 +130,7 @@ try
     await instanceMessenger.StartListeningAsync();
 
     // 中间件
+    app.UseExceptionHandler();
     app.UseStaticFiles();
     app.UseCors(cors =>
     {
@@ -134,8 +139,11 @@ try
     app.UseFastEndpoints(config =>
     {
         config.Endpoints.RoutePrefix = "api";
-        // 枚举 <-> 字符串
-        config.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
+        // 枚举 <-> 字符串，保持枚举值名称不转换，禁用数字枚举
+        config.Serializer.Options.Converters.Add(
+            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false)
+        );
+
         // OptionalValue<T> JSON 转换器
         config.Serializer.Options.Converters.Add(new OptionalValueJsonConverterFactory());
     });

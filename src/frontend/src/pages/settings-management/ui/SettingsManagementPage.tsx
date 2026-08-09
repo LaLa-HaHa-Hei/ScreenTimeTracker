@@ -1,4 +1,4 @@
-import { localSettingsQueries, usePatchLocalettings } from "@/entities/local-settings";
+import { localSettingsQueries, usePatchLocalSettings } from "@/entities/local-settings";
 import { usePatchUserSettings, userSettingsQueries } from "@/entities/user-settings";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -21,6 +21,7 @@ import { LazyTextField } from "@/shared/ui/LazyTextField";
 import { LazyNumberField } from "@/shared/ui/LazyNumberField";
 import { SUPPORTED_LANGUAGES, type LanguageCode } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
+import Grid from "@mui/material/Grid";
 
 export const SettingsManagementPage = () => {
   const { t } = useTranslation(["page_settingsManagement"]);
@@ -31,7 +32,7 @@ export const SettingsManagementPage = () => {
     localSettingsQueries.localSettings(),
   );
   const { mutateAsync: patchUserSettingsAsync } = usePatchUserSettings();
-  const { mutateAsync: patchLocalSettingsAsync } = usePatchLocalettings();
+  const { mutateAsync: patchLocalSettingsAsync } = usePatchLocalSettings();
   const [autoStartAlertDialogOpen, setAutoStartAlertDialogOpen] = useState(false);
 
   if (isuserSettingsDataLoading || isLocalSettingsDataLoading)
@@ -59,459 +60,938 @@ export const SettingsManagementPage = () => {
     );
 
   return (
-    <Stack spacing={2} direction="column">
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 2,
-        }}
-      >
-        <Stack spacing={1} direction="column">
-          <Typography sx={{ fontWeight: "bold" }}>{t(($) => $.page_settingsManagement.localSettings.title)}</Typography>
-          {/* 语言设置 */}
-          <Stack
-            direction="row"
+    <Grid container spacing={2}>
+      {/* 第一列 */}
+      <Grid size={{ xs: 12, lg: 6 }}>
+        <Stack spacing={2} direction="column">
+          {/* 本地设置 */}
+          <Paper
+            variant="outlined"
             sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
+              p: 2,
             }}
           >
-            <Typography>{t(($) => $.page_settingsManagement.localSettings.language.label)}</Typography>
-            <Select
-              size="small"
-              value={localSettingsDtoData.language}
-              onChange={async (event: SelectChangeEvent<string>) => {
-                await patchLocalSettingsAsync({
-                  language: event.target.value as LanguageCode,
-                });
-              }}
-            >
-              {SUPPORTED_LANGUAGES.map((language) => (
-                <MenuItem key={language.code} value={language.code}>
-                  {language.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Stack>
-          {/* 打开模式设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <Select
-              size="small"
-              value={localSettingsDtoData.defaultUIOpenMode}
-              onChange={async (event: SelectChangeEvent<string>) => {
-                await patchLocalSettingsAsync({
-                  defaultUIOpenMode: event.target.value as "Window" | "Browser",
-                });
-              }}
-            >
-              <MenuItem value="Window">
-                {" "}
-                {t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.options.window)}
-              </MenuItem>
-              <MenuItem value="Browser">
-                {t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.options.browser)}
-              </MenuItem>
-            </Select>
-          </Stack>
-          {/* 开机启动设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.localSettings.isAutoStartEnabled.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.localSettings.isAutoStartEnabled.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <Switch
-              checked={localSettingsDtoData.isAutoStartEnabled}
-              onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
-                const {
-                  target: { checked },
-                } = event;
-                if (checked === true) setAutoStartAlertDialogOpen(true);
-
-                await patchLocalSettingsAsync({
-                  isAutoStartEnabled: checked,
-                });
-              }}
-            />
-          </Stack>
-          {/* 开机启动警告 Dialog */}
-          <Dialog
-            open={autoStartAlertDialogOpen}
-            onClose={() => setAutoStartAlertDialogOpen(false)}
-            role="alertdialog"
-          >
-            <DialogTitle>{t(($) => $.page_settingsManagement.localSettings.autoStartAlert.title)}</DialogTitle>
-            <DialogActions>
-              <Button
-                onClick={() => {
-                  setAutoStartAlertDialogOpen(false);
+            <Typography sx={{ fontWeight: "bold" }}>
+              {t(($) => $.page_settingsManagement.localSettings.title)}
+            </Typography>
+            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
+              {/* 语言设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                {t(($) => $.page_settingsManagement.actions.confirm)}
-              </Button>
-            </DialogActions>
-          </Dialog>
-          {/* 静默启动设置 */}
-          <Stack
-            direction="row"
+                <Typography>
+                  {t(($) => $.page_settingsManagement.localSettings.language.label)}
+                </Typography>
+                <Select
+                  size="small"
+                  value={localSettingsDtoData.language}
+                  onChange={async (event: SelectChangeEvent<string>) => {
+                    await patchLocalSettingsAsync({
+                      language: event.target.value as LanguageCode,
+                    });
+                  }}
+                >
+                  {SUPPORTED_LANGUAGES.map((language) => (
+                    <MenuItem key={language.code} value={language.code}>
+                      {language.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Stack>
+              {/* 打开模式设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) => $.page_settingsManagement.localSettings.defaultUIOpenMode.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Select
+                  size="small"
+                  value={localSettingsDtoData.defaultUIOpenMode}
+                  onChange={async (event: SelectChangeEvent<string>) => {
+                    await patchLocalSettingsAsync({
+                      defaultUIOpenMode: event.target.value as "Window" | "Browser",
+                    });
+                  }}
+                >
+                  <MenuItem value="Window">
+                    {" "}
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.localSettings.defaultUIOpenMode.options.window,
+                    )}
+                  </MenuItem>
+                  <MenuItem value="Browser">
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.localSettings.defaultUIOpenMode.options.browser,
+                    )}
+                  </MenuItem>
+                </Select>
+              </Stack>
+              {/* 开机启动设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.localSettings.isAutoStartEnabled.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) => $.page_settingsManagement.localSettings.isAutoStartEnabled.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Switch
+                  checked={localSettingsDtoData.isAutoStartEnabled}
+                  onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
+                    const {
+                      target: { checked },
+                    } = event;
+                    if (checked === true) setAutoStartAlertDialogOpen(true);
+
+                    await patchLocalSettingsAsync({
+                      isAutoStartEnabled: checked,
+                    });
+                  }}
+                />
+              </Stack>
+              {/* 开机启动警告 Dialog */}
+              <Dialog
+                open={autoStartAlertDialogOpen}
+                onClose={() => setAutoStartAlertDialogOpen(false)}
+                role="alertdialog"
+              >
+                <DialogTitle>
+                  {t(($) => $.page_settingsManagement.localSettings.autoStartAlert.title)}
+                </DialogTitle>
+                <DialogActions>
+                  <Button
+                    onClick={() => {
+                      setAutoStartAlertDialogOpen(false);
+                    }}
+                  >
+                    {t(($) => $.page_settingsManagement.actions.confirm)}
+                  </Button>
+                </DialogActions>
+              </Dialog>
+              {/* 静默启动设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.localSettings.isSilentStartEnabled.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) => $.page_settingsManagement.localSettings.isSilentStartEnabled.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Switch
+                  checked={localSettingsDtoData.isSilentStartEnabled}
+                  onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
+                    await patchLocalSettingsAsync({
+                      isSilentStartEnabled: event.target.checked,
+                    });
+                  }}
+                />
+              </Stack>
+            </Stack>
+          </Paper>
+          {/* 空闲检测 */}
+          <Paper
+            variant="outlined"
             sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
+              p: 2,
             }}
           >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.localSettings.isSilentStartEnabled.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.localSettings.isSilentStartEnabled.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
+            <Typography sx={{ fontWeight: "bold" }}>
+              {t(($) => $.page_settingsManagement.idleDetectionSettings.title)}
+            </Typography>
+            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
+              {/* 是否启用 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.idleDetectionSettings.isEnabled.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) => $.page_settingsManagement.idleDetectionSettings.isEnabled.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Switch
+                  checked={userSettingsDtoData.idleDetection.isEnabled}
+                  onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
+                    await patchUserSettingsAsync({
+                      idleDetection: {
+                        ...userSettingsDtoData.idleDetection,
+                        isEnabled: event.target.checked,
+                      },
+                    });
+                  }}
+                />
+              </Stack>
+              {/* 不活跃阈值设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.idleDetectionSettings.inactivityThresholdSeconds
+                          .label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.idleDetectionSettings.inactivityThresholdSeconds
+                          .tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.idleDetection.inactivityThresholdSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      idleDetection: {
+                        ...userSettingsDtoData.idleDetection,
+                        inactivityThresholdSeconds: value,
+                      },
+                    });
+                  }}
+                  min={1}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 空闲检测轮询间隔设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.idleDetectionSettings.pollingIntervalSeconds
+                          .label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.idleDetectionSettings.pollingIntervalSeconds
+                          .tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.idleDetection.pollingIntervalSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      idleDetection: {
+                        ...userSettingsDtoData.idleDetection,
+                        pollingIntervalSeconds: value,
+                      },
+                    });
+                  }}
+                  min={1}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
             </Stack>
-            <Switch
-              checked={localSettingsDtoData.isSilentStartEnabled}
-              onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
-                await patchLocalSettingsAsync({
-                  isSilentStartEnabled: event.target.checked,
-                });
-              }}
-            />
-          </Stack>
+          </Paper>
+          {/* 时间边界设置 */}
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+            }}
+          >
+            <Typography sx={{ fontWeight: "bold" }}>
+              {t(($) => $.page_settingsManagement.timeBoundarySettings.title)}
+            </Typography>
+            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
+              {/* 日期切换小时设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.timeBoundarySettings.dayCutoffHour.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) => $.page_settingsManagement.timeBoundarySettings.dayCutoffHour.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.timeBoundary.dayCutoffHour}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      timeBoundary: {
+                        ...userSettingsDtoData.timeBoundary,
+                        dayCutoffHour: value,
+                      },
+                    });
+                  }}
+                  min={0}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+            </Stack>
+          </Paper>
+          {/* 区域设置 */}
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+            }}
+          >
+            <Typography sx={{ fontWeight: "bold" }}>
+              {t(($) => $.page_settingsManagement.regionalSettings.title)}
+            </Typography>
+            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
+              {/* IANA 时区 ID */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.regionalSettings.timeZoneId.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(($) => $.page_settingsManagement.regionalSettings.timeZoneId.tooltip)}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Select
+                  size="small"
+                  value={userSettingsDtoData.regional.timeZoneId}
+                  onChange={async (event: SelectChangeEvent<string>) => {
+                    await patchUserSettingsAsync({
+                      regional: {
+                        ...userSettingsDtoData.regional,
+                        timeZoneId: event.target.value,
+                      },
+                    });
+                  }}
+                >
+                  {Intl.supportedValuesOf("timeZone").map((timeZoneId) => (
+                    <MenuItem key={timeZoneId} value={timeZoneId}>
+                      {timeZoneId}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Stack>
+            </Stack>
+          </Paper>
         </Stack>
-      </Paper>
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 2,
-        }}
-      >
-        <Stack spacing={1} direction="column">
-          <Typography sx={{ fontWeight: "bold" }}>{t(($) => $.page_settingsManagement.screenTimeSettings.title)}</Typography>
-          {/* 应用图标目录设置 */}
-          <Stack
-            direction="row"
+      </Grid>
+      {/* 第二列 */}
+      <Grid size={{ xs: 12, lg: 6 }}>
+        <Stack spacing={2} direction="column">
+          {/* 应用追踪 */}
+          <Paper
+            variant="outlined"
             sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
+              p: 2,
             }}
           >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.appIconDirectory.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.appIconDirectory.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyTextField
-              size="small"
-              value={userSettingsDtoData.appIconDirectory}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  appIconDirectory: value,
-                });
-              }}
-            />
-          </Stack>
-          {/* 应用信息过期阈值设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t(($) => $.page_settingsManagement.screenTimeSettings.appMetadataStaleThresholdMinutes.label)}
-              </Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.appMetadataStaleThresholdMinutes.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.appMetadataStaleThresholdMinutes}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  appMetadataStaleThresholdMinutes: value,
-                });
-              }}
-              min={0}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 活动会话自动保存设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t(($) => $.page_settingsManagement.screenTimeSettings.activeAppUsageSessionAutoSaveIntervalSeconds.label)}
-              </Typography>
-              <Tooltip
-                title={t(($) => $.page_settingsManagement.screenTimeSettings.activeAppUsageSessionAutoSaveIntervalSeconds.tooltip)}
+            <Typography sx={{ fontWeight: "bold" }}>
+              {t(($) => $.page_settingsManagement.appTrackingSettings.title)}
+            </Typography>
+            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
+              {/* 图标目录设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.activeAppUsageSessionAutoSaveIntervalSeconds}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  activeAppUsageSessionAutoSaveIntervalSeconds: value,
-                });
-              }}
-              min={1}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 空闲检测设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.isIdleDetectionEnabled.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.isIdleDetectionEnabled.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <Switch
-              checked={userSettingsDtoData.isIdleDetectionEnabled}
-              onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
-                await patchUserSettingsAsync({
-                  isIdleDetectionEnabled: event.target.checked,
-                });
-              }}
-            />
-          </Stack>
-          {/* 空闲阈值设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.idleThresholdSeconds.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.idleThresholdSeconds.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.idleThresholdSeconds}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  idleThresholdSeconds: value,
-                });
-              }}
-              min={1}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 空闲检测轮询间隔设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t(($) => $.page_settingsManagement.screenTimeSettings.idleDetectionPollingIntervalSeconds.label)}
-              </Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.idleDetectionPollingIntervalSeconds.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.idleDetectionPollingIntervalSeconds}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  idleDetectionPollingIntervalSeconds: value,
-                });
-              }}
-              min={1}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 最小有效会话时长设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t(($) => $.page_settingsManagement.screenTimeSettings.minValidAppUsageSessionDurationSeconds.label)}
-              </Typography>
-              <Tooltip
-                title={t(($) => $.page_settingsManagement.screenTimeSettings.minValidAppUsageSessionDurationSeconds.tooltip)}
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(($) => $.page_settingsManagement.appTrackingSettings.iconDirectory.label)}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) => $.page_settingsManagement.appTrackingSettings.iconDirectory.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyTextField
+                  size="small"
+                  value={userSettingsDtoData.appTracking.iconDirectory}
+                  onValueChange={async (value) => {
+                    await patchUserSettingsAsync({
+                      appTracking: {
+                        ...userSettingsDtoData.appTracking,
+                        iconDirectory: value,
+                      },
+                    });
+                  }}
+                />
+              </Stack>
+              {/* 元数据过期阈值设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.minValidAppUsageSessionDurationSeconds}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  minValidAppUsageSessionDurationSeconds: value,
-                });
-              }}
-              min={0}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 会话合并容差时间设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionMergeToleranceSeconds.label)}
-              </Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionMergeToleranceSeconds.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.appUsageSessionMergeToleranceSeconds}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  appUsageSessionMergeToleranceSeconds: value,
-                });
-              }}
-              min={0}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 会话优化间隔设置 */}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>
-                {t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionOptimizationIntervalMinutes.label)}
-              </Typography>
-              <Tooltip
-                title={t(($) => $.page_settingsManagement.screenTimeSettings.appUsageSessionOptimizationIntervalMinutes.tooltip)}
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings.metadataStaleThresholdMinutes
+                          .label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings.metadataStaleThresholdMinutes
+                          .tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.appTracking.metadataStaleThresholdMinutes}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      appTracking: {
+                        ...userSettingsDtoData.appTracking,
+                        metadataStaleThresholdMinutes: value,
+                      },
+                    });
+                  }}
+                  min={0}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 活跃应用会话自动保存设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .activeUsageSessionAutoSaveIntervalSeconds.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .activeUsageSessionAutoSaveIntervalSeconds.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.appTracking.activeUsageSessionAutoSaveIntervalSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      appTracking: {
+                        ...userSettingsDtoData.appTracking,
+                        activeUsageSessionAutoSaveIntervalSeconds: value,
+                      },
+                    });
+                  }}
+                  min={1}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 最小有效会话时长设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .minValidUsageSessionDurationSeconds.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .minValidUsageSessionDurationSeconds.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.appTracking.minValidUsageSessionDurationSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      appTracking: {
+                        ...userSettingsDtoData.appTracking,
+                        minValidUsageSessionDurationSeconds: value,
+                      },
+                    });
+                  }}
+                  min={0}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 会话合并容差时间设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .usageSessionMergeToleranceSeconds.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .usageSessionMergeToleranceSeconds.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.appTracking.usageSessionMergeToleranceSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      appTracking: {
+                        ...userSettingsDtoData.appTracking,
+                        usageSessionMergeToleranceSeconds: value,
+                      },
+                    });
+                  }}
+                  min={0}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 会话优化间隔设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .usageSessionOptimizationIntervalMinutes.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.appTrackingSettings
+                          .usageSessionOptimizationIntervalMinutes.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.appTracking.usageSessionOptimizationIntervalMinutes}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      appTracking: {
+                        ...userSettingsDtoData.appTracking,
+                        usageSessionOptimizationIntervalMinutes: value,
+                      },
+                    });
+                  }}
+                  min={1}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
             </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.appUsageSessionOptimizationIntervalMinutes}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  appUsageSessionOptimizationIntervalMinutes: value,
-                });
-              }}
-              min={1}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
-          {/* 日期切换小时设置 */}
-          <Stack
-            direction="row"
+          </Paper>
+          {/* 网站追踪 */}
+          <Paper
+            variant="outlined"
             sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
+              p: 2,
             }}
           >
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography>{t(($) => $.page_settingsManagement.screenTimeSettings.dayCutoffHour.label)}</Typography>
-              <Tooltip title={t(($) => $.page_settingsManagement.screenTimeSettings.dayCutoffHour.tooltip)}>
-                <IconButton size="small">
-                  <HelpIcon fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
+            <Typography sx={{ fontWeight: "bold" }}>
+              {t(($) => $.page_settingsManagement.websiteTrackingSettings.title)}
+            </Typography>
+            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
+              {/* 图标目录设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) => $.page_settingsManagement.websiteTrackingSettings.iconDirectory.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings.iconDirectory.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyTextField
+                  size="small"
+                  value={userSettingsDtoData.websiteTracking.iconDirectory}
+                  onValueChange={async (value) => {
+                    await patchUserSettingsAsync({
+                      websiteTracking: {
+                        ...userSettingsDtoData.websiteTracking,
+                        iconDirectory: value,
+                      },
+                    });
+                  }}
+                />
+              </Stack>
+              {/* 活跃网站会话自动保存设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .activeUsageSessionAutoSaveIntervalSeconds.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .activeUsageSessionAutoSaveIntervalSeconds.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={
+                    userSettingsDtoData.websiteTracking.activeUsageSessionAutoSaveIntervalSeconds
+                  }
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      websiteTracking: {
+                        ...userSettingsDtoData.websiteTracking,
+                        activeUsageSessionAutoSaveIntervalSeconds: value,
+                      },
+                    });
+                  }}
+                  min={1}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 最小有效会话时长设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .minValidUsageSessionDurationSeconds.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .minValidUsageSessionDurationSeconds.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.websiteTracking.minValidUsageSessionDurationSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      websiteTracking: {
+                        ...userSettingsDtoData.websiteTracking,
+                        minValidUsageSessionDurationSeconds: value,
+                      },
+                    });
+                  }}
+                  min={0}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 会话合并容差时间设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .usageSessionMergeToleranceSeconds.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .usageSessionMergeToleranceSeconds.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={userSettingsDtoData.websiteTracking.usageSessionMergeToleranceSeconds}
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      websiteTracking: {
+                        ...userSettingsDtoData.websiteTracking,
+                        usageSessionMergeToleranceSeconds: value,
+                      },
+                    });
+                  }}
+                  min={0}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
+              {/* 会话优化间隔设置 */}
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Stack direction="row" sx={{ alignItems: "center" }}>
+                  <Typography>
+                    {t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .usageSessionOptimizationIntervalMinutes.label,
+                    )}
+                  </Typography>
+                  <Tooltip
+                    title={t(
+                      ($) =>
+                        $.page_settingsManagement.websiteTrackingSettings
+                          .usageSessionOptimizationIntervalMinutes.tooltip,
+                    )}
+                  >
+                    <IconButton size="small">
+                      <HelpIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <LazyNumberField
+                  size="small"
+                  value={
+                    userSettingsDtoData.websiteTracking.usageSessionOptimizationIntervalMinutes
+                  }
+                  onValueChange={async (value) => {
+                    if (value === undefined) return;
+                    await patchUserSettingsAsync({
+                      websiteTracking: {
+                        ...userSettingsDtoData.websiteTracking,
+                        usageSessionOptimizationIntervalMinutes: value,
+                      },
+                    });
+                  }}
+                  min={1}
+                  allowDecimal={false}
+                  allowEmpty={false}
+                />
+              </Stack>
             </Stack>
-            <LazyNumberField
-              size="small"
-              value={userSettingsDtoData.dayCutoffHour}
-              onValueChange={async (value) => {
-                await patchUserSettingsAsync({
-                  dayCutoffHour: value,
-                });
-              }}
-              min={0}
-              allowDecimal={false}
-              allowEmpty={false}
-            />
-          </Stack>
+          </Paper>
         </Stack>
-      </Paper>
-    </Stack>
+      </Grid>
+    </Grid>
   );
 };

@@ -12,11 +12,22 @@ public class DeleteUsageDataHandler(ScreenTimeDbContext context)
         CancellationToken cancellationToken
     )
     {
-        var startTime = request.StartDate.ToDateTime(TimeOnly.MinValue);
-        var endTime = request.EndDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+        var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
+        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
+        var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
+        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+            request.StartDate,
+            dayCutoffHour,
+            timeZoneInfo
+        );
+        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+            request.EndDate.AddDays(1),
+            dayCutoffHour,
+            timeZoneInfo
+        );
 
         await context
-            .AppUsageSessions.Where(x => startTime <= x.StartTime && x.EndTime < endTime)
+            .AppUsageSessions.Where(x => minTime <= x.StartTime && x.EndTime < maxTime)
             .ExecuteDeleteAsync(cancellationToken);
 
         return Unit.Value;
