@@ -20,14 +20,5 @@ public class UpdateLocalSettingsRequestValidator : Validator<PatchLocalSettingsR
                     );
             }
         );
-        When(
-            x => x.DefaultUIOpenMode.HasValue,
-            () =>
-            {
-                RuleFor(x => x.DefaultUIOpenMode)
-                    .IsInEnum()
-                    .WithMessage("无效的界面打开模式，可选值为 Window 或 Tray");
-            }
-        );
     }
 }
