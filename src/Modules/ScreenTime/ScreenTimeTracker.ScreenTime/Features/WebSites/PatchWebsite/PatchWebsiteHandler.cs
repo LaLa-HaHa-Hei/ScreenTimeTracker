@@ -22,9 +22,9 @@ public class PatchWebsiteHandler(ScreenTimeDbContext context, TimeProvider timeP
                 description: "The website with the specified ID was not found."
             );
 
-        if (request.CategoryId.HasValue)
+        if (request.Name.HasValue)
         {
-            var exists = await context.WebsiteCategories.AnyAsync(
+            var exists = await context.Websites.AnyAsync(
                 x => x.Id != request.WebsiteId && x.Name == request.Name.Value,
                 cancellationToken
             );
@@ -32,6 +32,19 @@ public class PatchWebsiteHandler(ScreenTimeDbContext context, TimeProvider timeP
                 return Error.Conflict(
                     "Website.NameAlreadyExists",
                     "An website with the same name already exists."
+                );
+        }
+
+        if (request.CategoryId.HasValue)
+        {
+            var exists = await context.WebsiteCategories.AnyAsync(
+                x => x.Id == request.CategoryId,
+                cancellationToken
+            );
+            if (!exists)
+                return Error.Conflict(
+                    "Website.CategoryNotFound",
+                    "The website category with the specified ID was not found."
                 );
         }
 

@@ -49,9 +49,21 @@ public class GetWebsiteIconEndpoint(IMediator mediator)
                 Results.Problem(
                     detail: "This website category has no icon.",
                     statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?> { ["code"] = "Website.HasNoIcon" }
+                )
+            );
+            return;
+        }
+
+        if (!File.Exists(iconPath))
+        {
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: "The icon file does not exist.",
+                    statusCode: StatusCodes.Status404NotFound,
                     extensions: new Dictionary<string, object?>
                     {
-                        ["code"] = "WebsiteCategory.HasNoIcon",
+                        ["code"] = "Website.IconFileDoesNotExist",
                     }
                 )
             );

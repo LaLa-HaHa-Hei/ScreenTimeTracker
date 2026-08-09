@@ -45,9 +45,21 @@ public class GetAppIconEndpoint(IMediator mediator) : Endpoint<GetAppIconRequest
                 Results.Problem(
                     detail: "This app category has no icon.",
                     statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?> { ["code"] = "App.HasNoIcon" }
+                )
+            );
+            return;
+        }
+
+        if (!File.Exists(iconPath))
+        {
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: "The icon file does not exist.",
+                    statusCode: StatusCodes.Status404NotFound,
                     extensions: new Dictionary<string, object?>
                     {
-                        ["code"] = "AppCategory.HasNoIcon",
+                        ["code"] = "App.IconFileDoesNotExist",
                     }
                 )
             );

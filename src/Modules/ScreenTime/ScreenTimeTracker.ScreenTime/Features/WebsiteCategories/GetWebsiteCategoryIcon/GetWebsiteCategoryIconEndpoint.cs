@@ -51,12 +51,28 @@ public class GetWebsiteCategoryIconEndpoint(IMediator mediator)
                     statusCode: StatusCodes.Status404NotFound,
                     extensions: new Dictionary<string, object?>
                     {
-                        ["code"] = "AppCategory.HasNoIcon",
+                        ["code"] = "WebsiteCategory.HasNoIcon",
                     }
                 )
             );
             return;
         }
+
+        if (!File.Exists(iconPath))
+        {
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: "The icon file does not exist.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["code"] = "WebsiteCategory.IconFileDoesNotExist",
+                    }
+                )
+            );
+            return;
+        }
+
         var provider = new FileExtensionContentTypeProvider();
         if (!provider.TryGetContentType(iconPath, out var contentType))
         {

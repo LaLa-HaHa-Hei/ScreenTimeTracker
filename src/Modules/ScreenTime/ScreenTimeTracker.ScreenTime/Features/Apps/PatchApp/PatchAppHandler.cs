@@ -22,9 +22,9 @@ public class PatchAppHandler(ScreenTimeDbContext context, TimeProvider timeProvi
                 description: "The app with the specified ID was not found."
             );
 
-        if (request.CategoryId.HasValue)
+        if (request.Name.HasValue)
         {
-            var exists = await context.AppCategories.AnyAsync(
+            var exists = await context.Apps.AnyAsync(
                 x => x.Id != request.AppId && x.Name == request.Name.Value,
                 cancellationToken
             );
@@ -32,6 +32,19 @@ public class PatchAppHandler(ScreenTimeDbContext context, TimeProvider timeProvi
                 return Error.Conflict(
                     "App.NameAlreadyExists",
                     "An app with the same name already exists."
+                );
+        }
+
+        if (request.CategoryId.HasValue)
+        {
+            var exists = await context.AppCategories.AnyAsync(
+                x => x.Id == request.CategoryId,
+                cancellationToken
+            );
+            if (!exists)
+                return Error.Conflict(
+                    "App.CategoryNotFound",
+                    "The app category with the specified ID was not found."
                 );
         }
 

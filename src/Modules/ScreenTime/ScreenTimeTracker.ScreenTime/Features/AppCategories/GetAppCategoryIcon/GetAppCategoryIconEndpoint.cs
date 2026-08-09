@@ -58,6 +58,21 @@ public class GetAppCategoryIconEndpoint(IMediator mediator)
             return;
         }
 
+        if (!File.Exists(iconPath))
+        {
+            await Send.ResultAsync(
+                Results.Problem(
+                    detail: "The icon file does not exist.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["code"] = "AppCategory.IconFileDoesNotExist",
+                    }
+                )
+            );
+            return;
+        }
+
         var provider = new FileExtensionContentTypeProvider();
         if (!provider.TryGetContentType(iconPath, out var contentType))
         {
