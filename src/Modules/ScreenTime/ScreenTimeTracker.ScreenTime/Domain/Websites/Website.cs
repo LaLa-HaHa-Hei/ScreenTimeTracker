@@ -5,9 +5,9 @@ namespace ScreenTimeTracker.ScreenTime.Domain.Websites;
 
 public class Website : AggregateRoot
 {
-    public string Name { get; set; }
+    public string Name { get; private set; }
     public string Color { get; private set; }
-    public string Host { get; set; }
+    public string Host { get; private set; }
     public bool AllowMetadataAutoRefresh { get; private set; }
     public DateTimeOffset MetadataLastRefreshedAt { get; private set; }
     public Guid CategoryId { get; private set; }

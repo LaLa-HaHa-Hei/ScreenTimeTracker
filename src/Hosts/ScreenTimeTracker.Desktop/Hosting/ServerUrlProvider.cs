@@ -14,10 +14,11 @@ public class ServerUrlProvider(IServer server) : IServerUrlProvider
 
     public string GetServerUrl()
     {
-        var url = _server.Features.Get<IServerAddressesFeature>()?.Addresses?.FirstOrDefault();
-        if (string.IsNullOrEmpty(url))
-            throw new InvalidOperationException("Server has not started or URL is not available.");
-
+        var url =
+            (_server.Features.Get<IServerAddressesFeature>()?.Addresses?.FirstOrDefault())
+            ?? throw new InvalidOperationException(
+                "Server has not started or URL is not available."
+            );
         return url;
     }
 }

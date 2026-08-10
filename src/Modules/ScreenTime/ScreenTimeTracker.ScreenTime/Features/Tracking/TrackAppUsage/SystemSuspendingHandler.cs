@@ -1,5 +1,4 @@
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
@@ -7,7 +6,7 @@ namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
 public record SystemSuspendingCommand : IRequest;
 
-public class SystemSuspendingHandlerHandler(
+public class SystemSuspendingHandler(
     ActiveAppUsageSessionStore activeSessionStore,
     ScreenTimeDbContext context,
     TimeProvider timeProvider

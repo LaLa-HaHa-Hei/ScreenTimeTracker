@@ -4,10 +4,8 @@ namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
 public record UserActiveCommand : IRequest;
 
-public class UserActiveHandlerHandler(
-    IForegroundWindowMonitor foregroundWindowMonitor,
-    IMediator mediator
-) : IRequestHandler<UserActiveCommand>
+public class UserActiveHandler(IForegroundWindowMonitor foregroundWindowMonitor, IMediator mediator)
+    : IRequestHandler<UserActiveCommand>
 {
     public async ValueTask<Unit> Handle(
         UserActiveCommand request,

@@ -55,7 +55,7 @@ public partial class AppUsageSessionOptimizer(
                     .FirstOrDefaultAsync(stoppingToken);
 
                 if (firstUnoptimized is null)
-                    return; // 没有需要优化的数据，直接返回
+                    continue; // 没有需要优化的数据，直接返回
 
                 // 为了防止跨批次断层，拉取第一条未优化记录之前的“最后一条已优化的记录”
                 var anchor = await context

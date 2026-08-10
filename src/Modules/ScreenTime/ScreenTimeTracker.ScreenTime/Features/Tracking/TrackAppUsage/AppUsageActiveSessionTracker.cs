@@ -1,10 +1,7 @@
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using ScreenTimeTracker.ScreenTime.Domain.Apps;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;

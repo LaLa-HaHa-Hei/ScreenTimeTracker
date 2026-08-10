@@ -1,6 +1,5 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
 using ScreenTimeTracker.ScreenTime.Domain.Websites;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
@@ -8,7 +7,7 @@ namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackWebsiteUsage;
 
 public record UserIdleCommand(DateTimeOffset IdleStartedAt) : IRequest;
 
-public class UserIdleHandlerHandler(
+public class UserIdleHandler(
     ScreenTimeDbContext context,
     ActiveWebsiteUsageSessionStore activeSessionStore,
     TimeProvider timeProvider

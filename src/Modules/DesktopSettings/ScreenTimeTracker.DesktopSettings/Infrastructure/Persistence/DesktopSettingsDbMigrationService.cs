@@ -51,16 +51,16 @@ public partial class DesktopSettingsDbMigrationService(
     private static async Task EnsureDatabaseDirectoryAsync(DesktopSettingsDbContext context)
     {
         var connectionString = context.Database.GetConnectionString();
-        if (string.IsNullOrEmpty(connectionString))
+        if (string.IsNullOrWhiteSpace(connectionString))
             return;
         var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
         var dbPath = builder.DataSource;
 
-        if (string.IsNullOrEmpty(dbPath))
+        if (string.IsNullOrWhiteSpace(dbPath))
             return;
 
         var directory = Path.GetDirectoryName(dbPath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
     }
 

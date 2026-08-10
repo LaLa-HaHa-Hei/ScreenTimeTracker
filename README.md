@@ -16,6 +16,7 @@ An intuitive and lightweight desktop screen time tracking tool designed to help 
 
 ## Key Features
 - **Time Tracking**: Runs silently in the background, accurately recording the duration spent on each application.
+- * **Website Usage Statistics**: When used with a browser extension, it can track the amount of time spent on websites.
 - **Visual Analytics**: Provides a rich variety of intuitive charts and statistics, allowing you to clearly understand your time distribution.
 - **Privacy First**: All data is stored locally and never uploaded to the cloud, guaranteeing your personal privacy.
 - **Lightweight & Efficient**: Ultra-low CPU and RAM usage, ensuring it won't impact your daily experience.

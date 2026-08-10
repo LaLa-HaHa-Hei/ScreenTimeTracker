@@ -47,7 +47,7 @@ public class WindowsStartupManager : IStartupManager
     private static bool IsRegistryStartupEnabled(string RegistryAppName)
     {
         using var key = Registry.CurrentUser.OpenSubKey(RegistryRunKey, false);
-        return key?.GetValue(RegistryAppName) != null;
+        return key?.GetValue(RegistryAppName) is not null;
     }
 
     private static void EnableRegistryStartup(string RegistryAppName, string filePath)
@@ -65,7 +65,7 @@ public class WindowsStartupManager : IStartupManager
     private static bool IsTaskSchedulerStartupEnabled(string RegistryAppName)
     {
         using var ts = new TaskService();
-        return ts.FindTask(RegistryAppName) != null;
+        return ts.FindTask(RegistryAppName) is not null;
     }
 
     private static void EnableTaskSchedulerStartup(string RegistryAppName, string filePath)

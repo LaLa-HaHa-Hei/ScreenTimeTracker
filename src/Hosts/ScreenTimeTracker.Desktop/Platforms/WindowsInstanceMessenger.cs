@@ -87,7 +87,7 @@ public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> 
                 string msg = await reader.ReadToEndAsync(cancellationToken);
                 // 异步触发事件,避免外部订阅者的同步阻塞拖慢监听循环
                 var handler = MessageReceived;
-                if (handler != null)
+                if (handler is not null)
                 {
                     _ = Task.Run(
                         () =>

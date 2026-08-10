@@ -15,8 +15,11 @@ const noHostPlaceholder = "no-host"
 // host -> favicon
 const faviconCache = new Map<string, Icon | null>()
 
-export default defineBackground(async () => {
-    let userSettings = await userSettingsStorage.getValue();
+export default defineBackground(() => {
+    let userSettings = defaultUserSettings
+    userSettingsStorage.getValue().then((val) => {
+        userSettings = val;
+    });
     userSettingsStorage.watch((newValue) => {
         userSettings = newValue;
     });
@@ -29,16 +32,21 @@ export default defineBackground(async () => {
     });
 
     // 右键扩展图标的菜单
-    browser.contextMenus.create({
-        id: 'open-settings',
-        title: 'Open Settings',
-        contexts: ['action']
-    })
-    browser.contextMenus.create({
-        id: 'open-web-ui',
-        title: 'Open Web UI',
-        contexts: ['action']
-    })
+    browser.runtime.onInstalled.addListener(async () => {
+        await browser.contextMenus.removeAll();
+
+        browser.contextMenus.create({
+            id: 'open-settings',
+            title: 'Open Settings',
+            contexts: ['action']
+        });
+
+        browser.contextMenus.create({
+            id: 'open-web-ui',
+            title: 'Open Web UI',
+            contexts: ['action']
+        });
+    });
     browser.contextMenus.onClicked.addListener((info) => {
         if (info.menuItemId === 'open-settings') {
             browser.runtime.openOptionsPage()

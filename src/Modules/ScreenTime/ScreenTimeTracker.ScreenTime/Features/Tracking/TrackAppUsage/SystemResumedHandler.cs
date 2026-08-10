@@ -4,7 +4,7 @@ namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
 public record SystemResumedCommand : IRequest;
 
-public class SystemResumedHandlerHandler(
+public class SystemResumedHandler(
     IForegroundWindowMonitor foregroundWindowMonitor,
     IMediator mediator
 ) : IRequestHandler<SystemResumedCommand>

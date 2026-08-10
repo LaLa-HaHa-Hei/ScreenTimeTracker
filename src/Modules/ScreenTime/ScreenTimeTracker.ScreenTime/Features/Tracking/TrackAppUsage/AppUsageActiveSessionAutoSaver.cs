@@ -29,7 +29,7 @@ public partial class AppUsageActiveSessionAutoSaver(
                 }
 
                 if (activeSessionStore.Current is null)
-                    return;
+                    continue;
 
                 var now = timeProvider.GetUtcNow();
                 using var scope = scopeFactory.CreateScope();
