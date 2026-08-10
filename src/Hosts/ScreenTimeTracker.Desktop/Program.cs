@@ -15,6 +15,8 @@ using ScreenTimeTracker.Desktop.UI.State;
 using ScreenTimeTracker.DesktopSettings;
 using ScreenTimeTracker.ScreenTime;
 using Serilog;
+using Windows.Win32;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 [assembly: RootNamespace("ScreenTimeTracker.Desktop")]
 
@@ -94,7 +96,7 @@ try
             builder.Services.AddSingleton<ITrayService, WindowsTrayService>();
         }
         else
-            throw new PlatformNotSupportedException("Only Windows XP RTM or later is supported.");
+            throw new PlatformNotSupportedException("Only Windows5.1.2600 or later is supported.");
     }
     else if (OperatingSystem.IsLinux())
     {
@@ -120,7 +122,10 @@ try
     {
         Log.Information("Application is already running.");
         if (!await instanceMessenger.SendMessageAsync("OpenUI"))
+        {
             Log.Error("Failed to send message to existing instance.");
+            ShowErrorDialog("Program is already running, please check the tray icon.");
+        }
         Log.CloseAndFlush();
         return;
     }
@@ -187,6 +192,9 @@ try
     catch (IOException ex) when (ex.InnerException is AddressInUseException)
     {
         Log.Error(ex, "Address already in use.");
+        ShowErrorDialog(
+            "Address already in use, please close other instances or change the port in appsettings.json."
+        );
         await app.StopAsync();
     }
     Log.CloseAndFlush();
@@ -194,6 +202,22 @@ try
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly.");
+    ShowErrorDialog("Application terminated unexpectedly, please check the log.");
     Log.CloseAndFlush();
     Environment.Exit(1);
+}
+
+static void ShowErrorDialog(string message)
+{
+    if (OperatingSystem.IsWindowsVersionAtLeast(5, 1, 2600))
+    {
+        PInvoke.MessageBox(
+            default,
+            message,
+            "Error",
+            MESSAGEBOX_STYLE.MB_ICONERROR | MESSAGEBOX_STYLE.MB_OK
+        );
+    }
+    else
+        throw new PlatformNotSupportedException("Only Windows5.1.2600 or later is supported.");
 }

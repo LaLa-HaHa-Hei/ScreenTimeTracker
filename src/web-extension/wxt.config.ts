@@ -14,7 +14,7 @@ export default defineConfig({
             host: '0.0.0.0',
         },
     },
-    manifest: {
+    manifest: ({ browser }) => ({
         name: "STT Web Extension",
         description: "Collect website usage data for your local app.",
         host_permissions: [
@@ -24,11 +24,13 @@ export default defineConfig({
         action: {
             default_title: "STT Web Extension"
         },
-        applications: {
-            gecko: {
-                id: "stt-web-extension@local",
-                strict_min_version: "109.0"
+        ...(browser === 'firefox' ? {
+            browser_specific_settings: {
+                gecko: {
+                    id: "stt-web-extension@local",
+                    strict_min_version: "109.0"
+                }
             }
-        }
-    }
+        } : {})
+    })
 });

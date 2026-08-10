@@ -1,2 +1,3 @@
 LoadIcon
 IDI_APPLICATION
+MessageBox

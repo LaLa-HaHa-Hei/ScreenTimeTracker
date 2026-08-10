@@ -66,7 +66,7 @@ public static class ServiceCollectionExtensions
             }
             else
                 throw new PlatformNotSupportedException(
-                    "Only Windows XP RTM or later is supported."
+                    "Only Windows6.0.6000 or later is supported."
                 );
         }
         else if (OperatingSystem.IsLinux())
