@@ -39,7 +39,7 @@ public partial class UserIdleMonitor(
                     continue;
 
                 var now = timeProvider.GetUtcNow();
-                var systemIdleTime = await idleTimeProvider.GetSystemIdleTimeAsync();
+                var systemIdleTime = idleTimeProvider.GetSystemIdleTime();
                 // 处于空闲状态
                 if (systemIdleTime >= userSettings.IdleDetection.InactivityThreshold)
                 {

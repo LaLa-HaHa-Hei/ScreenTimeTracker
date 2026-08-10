@@ -83,8 +83,9 @@ public class ForegroundWindowChangedHandler(
                 app = App.CreateDiscovered(now, processName, processName, executablePath);
             else
             {
-                using ExecutableMetadata metadata =
-                    await executableMetadataProvider.GetMetadataAsync(executablePath);
+                using ExecutableMetadata metadata = executableMetadataProvider.GetMetadata(
+                    executablePath
+                );
                 string name = metadata.Name is null ? processName : metadata.Name;
                 app = App.CreateDiscovered(now, name, processName, executablePath);
                 string? iconPath = await EnsureIconUpdated(
@@ -107,8 +108,9 @@ public class ForegroundWindowChangedHandler(
                     app.RefreshMetadata(now, executablePath, null);
                 else
                 {
-                    using ExecutableMetadata metadata =
-                        await executableMetadataProvider.GetMetadataAsync(executablePath);
+                    using ExecutableMetadata metadata = executableMetadataProvider.GetMetadata(
+                        executablePath
+                    );
                     string? iconPath = await EnsureIconUpdated(
                         app,
                         metadata,
@@ -222,7 +224,7 @@ public class ForegroundWindowChangedHandler(
 
 public interface IExecutableMetadataProvider
 {
-    public Task<ExecutableMetadata> GetMetadataAsync(string executablePath);
+    public ExecutableMetadata GetMetadata(string executablePath);
 }
 
 public class ExecutableMetadata(string? name, Stream? iconStream, string? iconFileExtension)

@@ -7,7 +7,7 @@ namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
 public record UserIdleCommand(DateTimeOffset IdleStartedAt) : IRequest;
 
-public class UserIdleHandlerHandler(
+public class UserIdleHandler(
     ScreenTimeDbContext context,
     ActiveAppUsageSessionStore activeSessionStore,
     TimeProvider timeProvider

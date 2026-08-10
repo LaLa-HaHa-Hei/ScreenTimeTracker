@@ -13,19 +13,19 @@ public partial class WindowsIdleTimeProvider(ILogger<WindowsIdleTimeProvider> lo
 {
     private readonly ILogger<WindowsIdleTimeProvider> _logger = logger;
 
-    public Task<TimeSpan> GetSystemIdleTimeAsync()
+    public TimeSpan GetSystemIdleTime()
     {
         LASTINPUTINFO info = new();
         info.cbSize = (uint)Marshal.SizeOf(info);
         if (!PInvoke.GetLastInputInfo(ref info))
         {
             LogQueryIdleTimeFailed(_logger, Marshal.GetLastWin32Error());
-            return Task.FromResult(TimeSpan.Zero);
+            return TimeSpan.Zero;
         }
 
         uint tickCount = PInvoke.GetTickCount();
         uint idleTicks = tickCount - info.dwTime;
-        return Task.FromResult(TimeSpan.FromMilliseconds(idleTicks));
+        return TimeSpan.FromMilliseconds(idleTicks);
     }
 
     [LoggerMessage(
