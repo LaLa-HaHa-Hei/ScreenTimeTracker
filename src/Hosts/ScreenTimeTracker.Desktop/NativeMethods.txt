@@ -1,3 +1,2 @@
-MessageBox
 LoadIcon
 IDI_APPLICATION

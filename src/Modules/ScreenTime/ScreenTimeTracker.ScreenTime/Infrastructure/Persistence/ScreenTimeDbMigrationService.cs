@@ -52,7 +52,7 @@ public partial class ScreenTimeDbMigrationService(
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "Time zone ID corrected to: {timeZoneId}"
+        Message = "Time zone ID corrected to: {TimeZoneId}"
     )]
     private static partial void LogTimeZoneIdCorrected(ILogger logger, string timeZoneId);
 

@@ -45,7 +45,7 @@ public partial class DesktopSettingsDbMigrationService(
     )]
     private static partial void LogNewDatabaseDetected(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Language corrected to: {language}")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Language corrected to: {Language}")]
     private static partial void LogLanguageCorrected(ILogger logger, string language);
 
     private static async Task EnsureDatabaseDirectoryAsync(DesktopSettingsDbContext context)

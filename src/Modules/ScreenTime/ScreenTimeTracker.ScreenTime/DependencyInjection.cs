@@ -52,17 +52,32 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<UserIdleStore>();
 
         // 平台
-        if (OperatingSystem.IsWindowsVersionAtLeast(6, 0, 6000))
+        if (OperatingSystem.IsWindows())
         {
-            services.AddSingleton<IForegroundWindowMonitor, WindowsForegroundWindowMonitor>();
-            services.AddSingleton<IExecutableMetadataProvider, WindowsExecutableMetadataProvider>();
-            services.AddSingleton<IIdleTimeProvider, WindowsIdleTimeProvider>();
-            services.AddSingleton<ISystemLifecycleProvider, WindowsSystemLifecycleProvider>();
+            if (OperatingSystem.IsWindowsVersionAtLeast(6, 0, 6000))
+            {
+                services.AddSingleton<IForegroundWindowMonitor, WindowsForegroundWindowMonitor>();
+                services.AddSingleton<
+                    IExecutableMetadataProvider,
+                    WindowsExecutableMetadataProvider
+                >();
+                services.AddSingleton<IIdleTimeProvider, WindowsIdleTimeProvider>();
+                services.AddSingleton<ISystemLifecycleProvider, WindowsSystemLifecycleProvider>();
+            }
+            else
+                throw new PlatformNotSupportedException(
+                    "Only Windows XP RTM or later is supported."
+                );
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            services.AddSingleton<IForegroundWindowMonitor, LinuxForegroundWindowMonitor>();
+            services.AddSingleton<IExecutableMetadataProvider, LinuxExecutableMetadataProvider>();
+            services.AddSingleton<IIdleTimeProvider, LinuxIdleTimeProvider>();
+            services.AddSingleton<ISystemLifecycleProvider, LinuxSystemLifecycleProvider>();
         }
         else
-        {
-            throw new PlatformNotSupportedException("Only Windows XP RTM or later is supported.");
-        }
+            throw new PlatformNotSupportedException("Only Windows and Linux are supported.");
 
         return services;
     }

@@ -1,22 +1,19 @@
 using System.IO.Pipes;
 using System.Runtime.Versioning;
-using System.Security.AccessControl;
 using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using ScreenTimeTracker.Desktop.Hosting;
 
 namespace ScreenTimeTracker.Desktop.Platforms;
 
-[SupportedOSPlatform("windows")]
-public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> logger)
+[SupportedOSPlatform("linux")]
+public partial class LinuxInstanceMessenger(ILogger<LinuxInstanceMessenger> logger)
     : IInstanceMessenger,
         IDisposable
 {
-    // 绑定当前便携版目录哈希
-    private static readonly string PipeName = $"STT_Pipe_{GetPathHash()}";
-
+    // Pipe 名字绑定路径 Hash
+    private static readonly string PipeName = $"STT_{GetPathHash()}";
     private bool _disposed;
     private CancellationTokenSource? _cts;
     private Task? _listeningTask;
@@ -31,14 +28,7 @@ public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> 
         try
         {
             using var clientStream = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
-
-            // 增加 3 秒连接超时，防止服务端响应卡死导致客户端永久阻塞
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken
-            );
-            timeoutCts.CancelAfter(TimeSpan.FromSeconds(3));
-
-            await clientStream.ConnectAsync(timeoutCts.Token);
+            await clientStream.ConnectAsync(cancellationToken);
             byte[] msg = Encoding.UTF8.GetBytes(message);
             await clientStream.WriteAsync(msg.AsMemory(), cancellationToken);
             await clientStream.FlushAsync(cancellationToken);
@@ -59,36 +49,41 @@ public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> 
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _listeningTask = Task.Run(() => ListenLoopAsync(_cts.Token), _cts.Token);
-
         return Task.CompletedTask;
     }
 
     private async Task ListenLoopAsync(CancellationToken cancellationToken)
     {
-        // 提至循环外，允许所有用户（包含不同权限级别的实例）访问 Pipe
-        PipeSecurity pipeSecurity = new();
-        pipeSecurity.AddAccessRule(
-            new PipeAccessRule(
-                new SecurityIdentifier(WellKnownSidType.WorldSid, null),
-                PipeAccessRights.ReadWrite,
-                AccessControlType.Allow
-            )
-        );
-
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                using var serverStream = NamedPipeServerStreamAcl.Create(
+                using var serverStream = new NamedPipeServerStream(
                     pipeName: PipeName,
                     direction: PipeDirection.In,
                     maxNumberOfServerInstances: 1,
                     transmissionMode: PipeTransmissionMode.Byte,
-                    options: PipeOptions.Asynchronous,
-                    inBufferSize: 0,
-                    outBufferSize: 0,
-                    pipeSecurity: pipeSecurity
+                    options: PipeOptions.Asynchronous
                 );
+
+                // 设置通用读写权限，允许其他用户（如单例检测到的第二进程）向该 Socket 发送唤醒消息
+                string socketFilePath = Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{PipeName}");
+                if (File.Exists(socketFilePath))
+                {
+                    try
+                    {
+                        File.SetUnixFileMode(
+                            socketFilePath,
+                            UnixFileMode.UserRead
+                                | UnixFileMode.UserWrite
+                                | UnixFileMode.GroupRead
+                                | UnixFileMode.GroupWrite
+                                | UnixFileMode.OtherRead
+                                | UnixFileMode.OtherWrite
+                        );
+                    }
+                    catch { }
+                }
 
                 await serverStream.WaitForConnectionAsync(cancellationToken);
 
@@ -110,7 +105,6 @@ public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> 
                         CancellationToken.None
                     );
                 }
-                // Dispose 会自动断开连接，无需显式调用 serverStream.Disconnect()
             }
             catch (OperationCanceledException)
             {
@@ -133,15 +127,12 @@ public partial class WindowsInstanceMessenger(ILogger<WindowsInstanceMessenger> 
         return Convert.ToHexString(hash)[..16].ToLowerInvariant();
     }
 
-    [LoggerMessage(
-        Level = LogLevel.Error,
-        Message = "Failed to send message to instance on Windows."
-    )]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to send message to instance.")]
     private static partial void LogSendMessageFailed(ILogger logger, Exception ex);
 
     [LoggerMessage(
         Level = LogLevel.Error,
-        Message = "An error occurred while listening for messages on Windows."
+        Message = "An error occurred while listening for messages."
     )]
     private static partial void LogListenFailed(ILogger logger, Exception ex);
 

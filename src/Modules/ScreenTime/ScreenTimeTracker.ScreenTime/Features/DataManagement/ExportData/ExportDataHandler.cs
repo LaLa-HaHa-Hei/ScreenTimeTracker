@@ -206,6 +206,9 @@ public partial class ExportDataHandler(
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to read icon file: {iconPath}")]
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Failed to read icon file at path: {IconPath}"
+    )]
     private static partial void LogReadIconFileFailed(ILogger logger, string iconPath);
 }

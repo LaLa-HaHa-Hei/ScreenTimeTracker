@@ -15,8 +15,6 @@ using ScreenTimeTracker.Desktop.UI.State;
 using ScreenTimeTracker.DesktopSettings;
 using ScreenTimeTracker.ScreenTime;
 using Serilog;
-using Windows.Win32;
-using Windows.Win32.UI.WindowsAndMessaging;
 
 [assembly: RootNamespace("ScreenTimeTracker.Desktop")]
 
@@ -87,15 +85,26 @@ try
     builder.Services.AddSingleton<IAppUIManager, AppUIManager>();
     builder.Services.AddSingleton<IWindowPlacementStore, WindowPlacementStore>();
     // 平台特异
-    if (OperatingSystem.IsWindowsVersionAtLeast(5, 1, 2600))
+    if (OperatingSystem.IsWindows())
     {
-        builder.Services.AddSingleton<ISingleInstanceLock, WindowsSingleInstanceLock>();
-        builder.Services.AddSingleton<IInstanceMessenger, WindowsInstanceMessenger>();
-        builder.Services.AddSingleton<ITrayService, TrayService>();
+        if (OperatingSystem.IsWindowsVersionAtLeast(5, 1, 2600))
+        {
+            builder.Services.AddSingleton<ISingleInstanceLock, WindowsSingleInstanceLock>();
+            builder.Services.AddSingleton<IInstanceMessenger, WindowsInstanceMessenger>();
+            builder.Services.AddSingleton<ITrayService, WindowsTrayService>();
+        }
+        else
+            throw new PlatformNotSupportedException("Only Windows XP RTM or later is supported.");
+    }
+    else if (OperatingSystem.IsLinux())
+    {
+        builder.Services.AddSingleton<ISingleInstanceLock, LinuxSingleInstanceLock>();
+        builder.Services.AddSingleton<IInstanceMessenger, LinuxInstanceMessenger>();
+        builder.Services.AddSingleton<ITrayService, LinuxTrayService>();
     }
     else
     {
-        throw new PlatformNotSupportedException("Only Windows XP RTM or later is supported.");
+        throw new PlatformNotSupportedException("Only Windows or Linux is supported.");
     }
 
     // 模块注册
@@ -111,10 +120,7 @@ try
     {
         Log.Information("Application is already running.");
         if (!await instanceMessenger.SendMessageAsync("OpenUI"))
-        {
             Log.Error("Failed to send message to existing instance.");
-            ShowErrorDialog("错误！", "程序已经在运行，请查看托盘处");
-        }
         Log.CloseAndFlush();
         return;
     }
@@ -182,30 +188,12 @@ try
     {
         Log.Error(ex, "Address already in use.");
         await app.StopAsync();
-        ShowErrorDialog(
-            "错误！",
-            "端口已被占用，请修改程序目录下appsettings.json文件中Urls的端口号"
-        );
     }
     Log.CloseAndFlush();
 }
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly.");
-    ShowErrorDialog("错误！", "程序启动时出错，请检查日志");
     Log.CloseAndFlush();
     Environment.Exit(1);
-}
-
-static void ShowErrorDialog(string title, string message)
-{
-    if (OperatingSystem.IsWindows())
-    {
-        PInvoke.MessageBox(
-            default,
-            message,
-            title,
-            MESSAGEBOX_STYLE.MB_ICONERROR | MESSAGEBOX_STYLE.MB_OK
-        );
-    }
 }

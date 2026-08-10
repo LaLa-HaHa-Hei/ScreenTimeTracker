@@ -12,12 +12,12 @@ using Windows.Win32;
 namespace ScreenTimeTracker.Desktop.Platforms;
 
 [SupportedOSPlatform("windows5.1.2600")]
-public partial class TrayService : ITrayService, IDisposable
+public partial class WindowsTrayService : ITrayService, IDisposable
 {
-    private readonly ILogger<TrayService> _logger;
+    private readonly ILogger<WindowsTrayService> _logger;
     private readonly IAppUIManager _appUIManager;
     private readonly IDesktopLocalSettingsProvider _desktopLocalSettingsProvider;
-    private readonly IStringLocalizer<TrayService> _localizer;
+    private readonly IStringLocalizer<WindowsTrayService> _localizer;
     private readonly IHostApplicationLifetime _lifetime;
 
     private readonly PopupMenuItem _openAppDirItem;
@@ -32,11 +32,11 @@ public partial class TrayService : ITrayService, IDisposable
     private bool _isVisible;
     private bool _disposed;
 
-    public TrayService(
-        ILogger<TrayService> logger,
+    public WindowsTrayService(
+        ILogger<WindowsTrayService> logger,
         IAppUIManager appUIManager,
         IDesktopLocalSettingsProvider desktopLocalSettingsProvider,
-        IStringLocalizer<TrayService> localizer,
+        IStringLocalizer<WindowsTrayService> localizer,
         IHostApplicationLifetime lifetime
     )
     {

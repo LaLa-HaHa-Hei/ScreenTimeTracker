@@ -1,5 +1,4 @@
 using System.Runtime.Versioning;
-using System.Security.Principal;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using ScreenTimeTracker.DesktopSettings.Features.LocalSettingsManagement.PatchLocalSettings;
@@ -11,13 +10,7 @@ public class WindowsStartupManager : IStartupManager
 {
     private const string RegistryRunKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
     private const string RegistryAppName = "ScreenTimeTracker";
-
-    private static bool IsRunningAsAdmin()
-    {
-        var identity = WindowsIdentity.GetCurrent();
-        var principal = new WindowsPrincipal(identity);
-        return principal.IsInRole(WindowsBuiltInRole.Administrator);
-    }
+    private readonly bool _isRunningAsAdmin = Environment.IsPrivilegedProcess;
 
     public bool IsEnabled()
     {
@@ -30,7 +23,7 @@ public class WindowsStartupManager : IStartupManager
         string? currentPath =
             Environment.ProcessPath
             ?? throw new InvalidOperationException("Current process path is null.");
-        if (IsRunningAsAdmin())
+        if (_isRunningAsAdmin)
             EnableTaskSchedulerStartup(RegistryAppName, currentPath);
         else
             EnableRegistryStartup(RegistryAppName, currentPath);
@@ -38,7 +31,7 @@ public class WindowsStartupManager : IStartupManager
 
     public void Disable()
     {
-        if (IsRunningAsAdmin() && IsTaskSchedulerStartupEnabled(RegistryAppName))
+        if (_isRunningAsAdmin && IsTaskSchedulerStartupEnabled(RegistryAppName))
             DisableTaskSchedulerStartup(RegistryAppName);
         if (IsRegistryStartupEnabled(RegistryAppName))
             DisableRegistryStartup(RegistryAppName);

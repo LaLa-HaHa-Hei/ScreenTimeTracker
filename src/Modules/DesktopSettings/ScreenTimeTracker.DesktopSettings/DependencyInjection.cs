@@ -43,10 +43,14 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<IStartupManager, WindowsStartupManager>();
         }
+        else if (OperatingSystem.IsLinux())
+        {
+            services.AddSingleton<IStartupManager, LinuxStartupManager>();
+        }
         else
         {
             throw new PlatformNotSupportedException(
-                "DesktopSettings module is only supported on Windows."
+                "DesktopSettings module is only supported on Windows or Linux."
             );
         }
 

@@ -81,7 +81,7 @@ public partial class UserIdleMonitor(
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "User has become idle. Idle started at {idleStartedAt}."
+        Message = "User has become idle. Idle started at {IdleStartedAt}."
     )]
     private static partial void LogUserBecameIdle(ILogger logger, DateTimeOffset idleStartedAt);
 

@@ -1,6 +1,12 @@
 import { fileTypeFromBuffer } from "file-type"
 import { userSettingsStorage } from "@/utils/settings";
 
+const isChrome = import.meta.env.BROWSER === 'chrome';
+const isFirefox = import.meta.env.BROWSER === 'firefox';
+
+if (!isChrome && !isFirefox)
+    throw new Error('Only Chrome and Firefox are supported')
+
 type Icon = {
     extension: string,
     data: string
@@ -25,7 +31,7 @@ export default defineBackground(() => {
     });
 
     // 单击扩展图标
-    browser.action.onClicked.addListener(() => {
+    (isChrome ? browser.action : browser.browserAction).onClicked.addListener(() => {
         browser.tabs.create({
             url: userSettings.baseUrl,
         });
@@ -34,17 +40,16 @@ export default defineBackground(() => {
     // 右键扩展图标的菜单
     browser.runtime.onInstalled.addListener(async () => {
         await browser.contextMenus.removeAll();
-
         browser.contextMenus.create({
             id: 'open-settings',
             title: 'Open Settings',
-            contexts: ['action']
+            contexts: isChrome ? ['action'] : ['browser_action']
         });
 
         browser.contextMenus.create({
             id: 'open-web-ui',
             title: 'Open Web UI',
-            contexts: ['action']
+            contexts: isChrome ? ['action'] : ['browser_action']
         });
     });
     browser.contextMenus.onClicked.addListener((info) => {
@@ -54,13 +59,19 @@ export default defineBackground(() => {
 
         if (info.menuItemId === 'open-web-ui') {
             browser.tabs.create({
-                url: 'https://example.com'
+                url: userSettings.baseUrl,
             })
         }
     })
 
     browser.tabs.onActivated.addListener(async (activeInfo) => {
-        const tab = await browser.tabs.get(activeInfo.tabId);
+        let tab: Browser.tabs.Tab
+        // 可能事件刚触发标签页就被关闭导致获取失败
+        try {
+            tab = await browser.tabs.get(activeInfo.tabId);
+        } catch {
+            return
+        }
         if (!tab.url)
             return;
 

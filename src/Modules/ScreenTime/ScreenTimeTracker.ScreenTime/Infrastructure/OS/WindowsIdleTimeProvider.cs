@@ -30,7 +30,7 @@ public partial class WindowsIdleTimeProvider(ILogger<WindowsIdleTimeProvider> lo
 
     [LoggerMessage(
         Level = LogLevel.Warning,
-        Message = "GetLastInputInfo failed with Win32 error code: {errorCode}. Assuming active status (TimeSpan.Zero)."
+        Message = "GetLastInputInfo failed with Win32 error code: {ErrorCode}. Assuming active status (TimeSpan.Zero)."
     )]
     private static partial void LogQueryIdleTimeFailed(ILogger logger, int errorCode);
 }

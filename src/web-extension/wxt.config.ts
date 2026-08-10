@@ -20,7 +20,15 @@ export default defineConfig({
         host_permissions: [
             "<all_urls>"
         ],
-        permissions: ['contextMenus','storage'],
-        action: {}
+        permissions: ['contextMenus', 'storage'],
+        action: {
+            default_title: "STT Web Extension"
+        },
+        applications: {
+            gecko: {
+                id: "stt-web-extension@local",
+                strict_min_version: "109.0"
+            }
+        }
     }
 });
