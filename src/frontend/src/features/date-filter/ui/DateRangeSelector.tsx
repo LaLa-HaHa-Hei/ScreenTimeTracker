@@ -104,7 +104,7 @@ export const DateRangeSelector = ({
       }
       case "month": {
         if (isForward) {
-          const newEnd = dayjs(value.end).add(1, "month");
+          const newEnd = dayjs(value.end).add(1, "month").endOf("month");
           if (newEnd.isSameOrAfter(logicalToday, "day")) {
             newEndDate = logicalToday.toDate();
             newStartDate = logicalToday.subtract(30, "day").toDate();
