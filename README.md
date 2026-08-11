@@ -9,14 +9,21 @@
 </div>
 
 ## Overview
-An intuitive and lightweight desktop screen time tracking tool designed to help you understand your computer usage habits, boost productivity, and maintain a healthy work-life balance.
+A simple and lightweight Windows desktop app for tracking screen time, helping you gain insights into your computer usage, boost productivity, and maintain a healthier work-life balance.
 
-![Screen Time Tracker Screenshot 1](assets/screenshot1.png)
-![Screen Time Tracker Screenshot 2](assets/screenshot2.png)
+<details>
+<summary>Click to view screenshots</summary>
+<p align="center">
+    <img src="./assets/screenshot1.jpeg" width="90%">
+    <img src="./assets/screenshot2.jpeg" width="90%">
+    <img src="./assets/screenshot3.jpeg" width="90%">
+    <img src="./assets/screenshot4.jpeg" width="90%">
+</p>
+</details>
 
 ## Key Features
 - **Time Tracking**: Runs silently in the background, accurately recording the duration spent on each application.
-- * **Website Usage Statistics**: When used with a browser extension, it can track the amount of time spent on websites.
+- **Website Usage Statistics**: When used with a browser extension, it can track the amount of time spent on websites.
 - **Visual Analytics**: Provides a rich variety of intuitive charts and statistics, allowing you to clearly understand your time distribution.
 - **Privacy First**: All data is stored locally and never uploaded to the cloud, guaranteeing your personal privacy.
 - **Lightweight & Efficient**: Ultra-low CPU and RAM usage, ensuring it won't impact your daily experience.

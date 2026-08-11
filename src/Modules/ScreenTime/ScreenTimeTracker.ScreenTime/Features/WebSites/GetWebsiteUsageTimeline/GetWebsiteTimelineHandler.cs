@@ -34,9 +34,9 @@ public class GetWebsiteUsageTimelineHandler(
             .Where(x => x.StartTime < maxTime && minTime <= x.EndTime);
 
         if (request.IncludedIds is not null)
-            query = query.Where(x => request.IncludedIds.Contains(x.Website!.CategoryId));
+            query = query.Where(x => request.IncludedIds.Contains(x.Website!.Id));
         else if (request.ExcludedIds is not null)
-            query = query.Where(x => !request.ExcludedIds.Contains(x.Website!.CategoryId));
+            query = query.Where(x => !request.ExcludedIds.Contains(x.Website!.Id));
 
         var sessions = await query
             .Select(x => new

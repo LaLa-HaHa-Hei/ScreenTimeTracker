@@ -1,12 +1,6 @@
 import { fileTypeFromBuffer } from "file-type"
 import { userSettingsStorage } from "@/utils/settings";
 
-const isChrome = import.meta.env.BROWSER === 'chrome';
-const isFirefox = import.meta.env.BROWSER === 'firefox';
-
-if (!isChrome && !isFirefox)
-    throw new Error('Only Chrome and Firefox are supported')
-
 type Icon = {
     extension: string,
     data: string
@@ -31,7 +25,7 @@ export default defineBackground(() => {
     });
 
     // 单击扩展图标
-    (isChrome ? browser.action : browser.browserAction).onClicked.addListener(() => {
+    browser.action.onClicked.addListener(() => {
         browser.tabs.create({
             url: userSettings.baseUrl,
         });
@@ -43,13 +37,13 @@ export default defineBackground(() => {
         browser.contextMenus.create({
             id: 'open-settings',
             title: 'Open Settings',
-            contexts: isChrome ? ['action'] : ['browser_action']
+            contexts: ['action']
         });
 
         browser.contextMenus.create({
             id: 'open-web-ui',
             title: 'Open Web UI',
-            contexts: isChrome ? ['action'] : ['browser_action']
+            contexts: ['action']
         });
     });
     browser.contextMenus.onClicked.addListener((info) => {
@@ -64,6 +58,7 @@ export default defineBackground(() => {
         }
     })
 
+    // 标签页激活事件
     browser.tabs.onActivated.addListener(async (activeInfo) => {
         let tab: Browser.tabs.Tab
         // 可能事件刚触发标签页就被关闭导致获取失败

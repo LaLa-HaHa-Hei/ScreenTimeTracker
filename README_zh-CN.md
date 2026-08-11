@@ -9,10 +9,17 @@
 </div>
 
 ## 简介
-一款直观、轻量级的桌面端屏幕使用时间统计工具，助你掌握电脑使用习惯、提升工作效率，保持健康的工作与生活平衡。
+一款适用于 Windows 的直观、轻量级的桌面端屏幕使用时间统计工具，助你掌握电脑使用习惯、提升工作效率，保持健康的工作与生活平衡。
 
-![Screen Time Tracker 截图1](assets/screenshot1_zh-CN.png)
-![Screen Time Tracker 截图2](assets/screenshot2_zh-CN.png)
+<details>
+<summary>点击查看应用截图</summary>
+<p align="center">
+    <img src="./assets/screenshot1_zh-CN.jpeg" width="90%">
+    <img src="./assets/screenshot2_zh-CN.jpeg" width="90%">
+    <img src="./assets/screenshot3_zh-CN.jpeg" width="90%">
+    <img src="./assets/screenshot4_zh-CN.jpeg" width="90%">
+</p>
+</details>
 
 ## 核心功能
 - **时长统计**：后台静默运行，精准记录各个软件的使用时长。

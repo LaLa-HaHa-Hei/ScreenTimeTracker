@@ -35,9 +35,9 @@ public class GetAppUsageTimelineHandler(
             .Where(x => x.StartTime < maxTime && minTime <= x.EndTime);
 
         if (request.IncludedIds is not null)
-            query = query.Where(x => request.IncludedIds.Contains(x.App!.CategoryId));
+            query = query.Where(x => request.IncludedIds.Contains(x.App!.Id));
         else if (request.ExcludedIds is not null)
-            query = query.Where(x => !request.ExcludedIds.Contains(x.App!.CategoryId));
+            query = query.Where(x => !request.ExcludedIds.Contains(x.App!.Id));
 
         var sessions = await query
             .Select(x => new
