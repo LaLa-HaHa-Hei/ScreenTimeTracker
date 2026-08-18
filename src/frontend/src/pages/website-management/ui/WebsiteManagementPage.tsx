@@ -132,12 +132,12 @@ export const WebsiteManagementPage = () => {
       renderCell: (params: GridRenderCellParams<Website>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
           <WebsiteCategorySelecter
-            value={params.row.categoryId}
+            value={params.row.websiteCategoryId}
             onValueChange={async (value) => {
               try {
                 await patchWebsiteAsync({
                   id: params.row.id,
-                  body: { categoryId: value },
+                  body: { websiteCategoryId: value },
                 });
               } catch {
                 enqueueSnackbar(
@@ -240,11 +240,6 @@ export const WebsiteManagementPage = () => {
       width: 150,
     },
     {
-      field: "executablePath",
-      headerName: t(($) => $.page_websiteManagement.columns.executablePath),
-      width: 200,
-    },
-    {
       field: "action",
       headerName: t(($) => $.page_websiteManagement.columns.action),
       width: 60,
@@ -277,11 +272,7 @@ export const WebsiteManagementPage = () => {
           initialState={{
             pagination: { paginationModel: { pageSize: 10 } },
             columns: {
-              columnVisibilityModel: {
-                lastAutoUpdated: false,
-                processName: false,
-                executablePath: false,
-              },
+              columnVisibilityModel: {},
             },
           }}
           pageSizeOptions={[5, 10, 20, 40]}

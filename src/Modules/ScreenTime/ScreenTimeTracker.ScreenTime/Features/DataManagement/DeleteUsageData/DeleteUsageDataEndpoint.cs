@@ -16,7 +16,11 @@ public class DeleteUsageDataEndpoint(IMediator mediator)
     public override async Task HandleAsync(DeleteUsageDataRequest req, CancellationToken ct)
     {
         await mediator.Send(
-            new DeleteUsageDataCommand(StartDate: req.StartDate, EndDate: req.EndDate),
+            new DeleteUsageDataCommand(
+                StartDate: req.StartDate,
+                EndDate: req.EndDate,
+                TimeZoneInfo: TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId)
+            ),
             ct
         );
         await Send.NoContentAsync(ct);

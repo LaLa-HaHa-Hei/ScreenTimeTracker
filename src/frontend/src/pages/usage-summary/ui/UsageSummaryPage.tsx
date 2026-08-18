@@ -72,6 +72,7 @@ export const UsageSummaryPage = ({ search, onSearchChange }: UsageSummaryPagePro
       });
     },
   });
+  const timeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     if (search.excludedIds !== undefined) return;
@@ -168,6 +169,7 @@ export const UsageSummaryPage = ({ search, onSearchChange }: UsageSummaryPagePro
           }
           startDate={search.startDate}
           endDate={search.endDate}
+          timeZoneId={timeZoneId}
           excludedIds={search.excludedIds}
         />
       </Paper>
@@ -186,6 +188,7 @@ export const UsageSummaryPage = ({ search, onSearchChange }: UsageSummaryPagePro
             }}
             type={search.dimension}
             date={search.startDate}
+            timeZoneId={timeZoneId}
             excludedIds={search.excludedIds}
           />
         </Paper>
@@ -243,6 +246,7 @@ export const UsageSummaryPage = ({ search, onSearchChange }: UsageSummaryPagePro
               type={search.dimension}
               startDate={search.startDate}
               endDate={search.endDate}
+              timeZoneId={timeZoneId}
               topN={search.topN}
               onItemClick={(id) =>
                 navigate({
@@ -263,6 +267,7 @@ export const UsageSummaryPage = ({ search, onSearchChange }: UsageSummaryPagePro
               type={search.dimension}
               startDate={search.startDate}
               endDate={search.endDate}
+              timeZoneId={timeZoneId}
               topN={search.topN}
               onItemClick={(id) =>
                 navigate({

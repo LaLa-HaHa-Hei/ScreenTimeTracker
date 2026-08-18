@@ -1,7 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Websites.PatchWebsite;
@@ -35,10 +35,10 @@ public class PatchWebsiteHandler(ScreenTimeDbContext context, TimeProvider timeP
                 );
         }
 
-        if (request.CategoryId.HasValue)
+        if (request.WebsiteCategoryId.HasValue)
         {
             var exists = await context.WebsiteCategories.AnyAsync(
-                x => x.Id == request.CategoryId.Value,
+                x => x.Id == request.WebsiteCategoryId.Value,
                 cancellationToken
             );
             if (!exists)
@@ -52,7 +52,7 @@ public class PatchWebsiteHandler(ScreenTimeDbContext context, TimeProvider timeP
             request.Name,
             request.Color,
             request.AllowMetadataAutoRefresh,
-            request.CategoryId,
+            request.WebsiteCategoryId,
             request.IconPath,
             timeProvider.GetUtcNow()
         );

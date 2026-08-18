@@ -9,7 +9,6 @@
     "allowMetadataAutoRefresh": "自动更新元数据",
     "metadataLastRefreshedAt": "上次元数据更新时间",
     "host": "主机",
-    "executablePath": "可执行文件路径",
     "action": "操作"
   },
   "deleteConfirm": {

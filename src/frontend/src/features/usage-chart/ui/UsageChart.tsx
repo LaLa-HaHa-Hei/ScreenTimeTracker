@@ -23,6 +23,7 @@ export type UsageChartProps = {
   xAxisType: "hour" | "day" | "week";
   startDate: DateOnly;
   endDate: DateOnly;
+  timeZoneId: string;
   includedIds?: string[];
   excludedIds?: string[];
 };
@@ -35,49 +36,55 @@ export const UsageChart = ({
   xAxisType,
   startDate,
   endDate,
+  timeZoneId,
   includedIds,
   excludedIds,
 }: UsageChartProps) => {
   const { t } = useTranslation(["feature_usageChart"]);
+  const isDateValid = dayjs(startDate).isSameOrBefore(dayjs(endDate));
   const { data: appUsageData } = useQuery({
     ...appUsageQueryOptions({
       granularity: granularity,
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
-    enabled: type === "app",
+    enabled: isDateValid && type === "app",
   });
   const { data: appCategoryUsageData } = useQuery({
     ...appCategoryUsageQueryOptions({
       granularity: granularity,
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
-    enabled: type === "app-category",
+    enabled: isDateValid && type === "app-category",
   });
   const { data: websiteUsageData } = useQuery({
     ...websiteUsageQueryOptions({
       granularity: granularity,
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
-    enabled: type === "website",
+    enabled: isDateValid && type === "website",
   });
   const { data: websiteCategoryUsageData } = useQuery({
     ...websiteCategoryUsageQueryOptions({
       granularity: granularity,
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
-    enabled: type === "website-category",
+    enabled: isDateValid && type === "website-category",
   });
 
   const theme = useTheme();

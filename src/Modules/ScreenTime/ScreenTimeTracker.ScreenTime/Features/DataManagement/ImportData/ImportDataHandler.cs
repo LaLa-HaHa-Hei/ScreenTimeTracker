@@ -2,8 +2,13 @@ using System.Text.Json;
 using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions;
+using ScreenTimeTracker.ScreenTime.Domain.ValueObjects;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.DataManagement.ImportData;
@@ -368,15 +373,6 @@ public class ImportDataHandler(
                         appIconDirectory,
                         cancellationToken
                     );
-                    app = App.Import(
-                        appData.Name,
-                        appData.Color,
-                        appData.ProcessName,
-                        appData.AllowMetadataAutoRefresh,
-                        AppCategory.UncategorizedId,
-                        iconPath
-                    );
-
                     existingCategories.TryGetValue(
                         appData.AppCategoryName,
                         out var matchedCategory
@@ -392,7 +388,14 @@ public class ImportDataHandler(
                         existingCategories[appData.AppCategoryName] = matchedCategory;
                         newAppCategories++;
                     }
-                    app.Update(categoryId: matchedCategory.Id);
+                    app = App.Import(
+                        appData.Name,
+                        appData.Color,
+                        appData.ProcessName,
+                        appData.AllowMetadataAutoRefresh,
+                        matchedCategory.Id,
+                        iconPath
+                    );
 
                     context.Apps.Add(app);
                     existingApps[appData.ProcessName] = app;
@@ -407,13 +410,16 @@ public class ImportDataHandler(
                 var maxEnd = data.AppUsageSessions.Max(s => s.EndTime);
 
                 var existingSessions = await context
-                    .AppUsageSessions.Where(s => s.StartTime < maxEnd && minStart < s.EndTime)
+                    .AppUsageSessions.Where(s => minStart < s.EndTime && s.StartTime < maxEnd)
                     .ToListAsync(cancellationToken);
 
                 var activeSession = activeAppUsageSessionStore.Current;
                 if (activeSession is not null && activeSession.StartTime < maxEnd && minStart < now)
                     existingSessions.Add(
-                        AppUsageSession.Create(activeSession.AppId, activeSession.StartTime, now)
+                        AppUsageSession.Create(
+                            activeSession.AppId,
+                            new TimeRange(activeSession.StartTime, now)
+                        )
                     );
 
                 foreach (var session in data.AppUsageSessions)
@@ -425,7 +431,7 @@ public class ImportDataHandler(
                     }
 
                     var hasOverlap = existingSessions.Any(s =>
-                        s.StartTime < session.EndTime && session.StartTime < s.EndTime
+                        s.UsagePeriod.Overlaps(new TimeRange(session.StartTime, session.EndTime))
                     );
                     if (hasOverlap)
                     {
@@ -449,9 +455,7 @@ public class ImportDataHandler(
 
                     var usageSession = AppUsageSession.Import(
                         app.Id,
-                        session.StartTime,
-                        session.EndTime,
-                        false
+                        new TimeRange(session.StartTime, session.EndTime)
                     );
                     existingSessions.Add(usageSession);
                     context.AppUsageSessions.Add(usageSession);
@@ -504,15 +508,6 @@ public class ImportDataHandler(
                         websiteIconDirectory,
                         cancellationToken
                     );
-                    website = Website.Import(
-                        websiteData.Name,
-                        websiteData.Color,
-                        websiteData.Host,
-                        websiteData.AllowMetadataAutoRefresh,
-                        WebsiteCategory.UncategorizedId,
-                        iconPath
-                    );
-
                     existingCategories.TryGetValue(
                         websiteData.WebsiteCategoryName,
                         out var matchedCategory
@@ -528,7 +523,14 @@ public class ImportDataHandler(
                         existingCategories[websiteData.WebsiteCategoryName] = matchedCategory;
                         newWebsiteCategories++;
                     }
-                    website.Update(categoryId: matchedCategory.Id);
+                    website = Website.Import(
+                        websiteData.Name,
+                        websiteData.Color,
+                        websiteData.Host,
+                        websiteData.AllowMetadataAutoRefresh,
+                        matchedCategory.Id,
+                        iconPath
+                    );
 
                     context.Websites.Add(website);
                     existingWebsites[websiteData.Host] = website;
@@ -543,7 +545,7 @@ public class ImportDataHandler(
                 var maxEnd = data.WebsiteUsageSessions.Max(s => s.EndTime);
 
                 var existingSessions = await context
-                    .WebsiteUsageSessions.Where(s => s.StartTime < maxEnd && minStart < s.EndTime)
+                    .WebsiteUsageSessions.Where(s => minStart < s.EndTime && s.StartTime < maxEnd)
                     .ToListAsync(cancellationToken);
 
                 var activeSession = activeWebsiteUsageSessionStore.Current;
@@ -555,8 +557,7 @@ public class ImportDataHandler(
                     existingSessions.Add(
                         WebsiteUsageSession.Create(
                             activeSession.WebsiteId,
-                            activeSession.StartTime,
-                            activeSession.LastActiveAt
+                            new TimeRange(activeSession.StartTime, activeSession.LastActiveAt)
                         )
                     );
 
@@ -569,7 +570,7 @@ public class ImportDataHandler(
                     }
 
                     var hasOverlap = existingSessions.Any(s =>
-                        s.StartTime < session.EndTime && session.StartTime < s.EndTime
+                        s.UsagePeriod.Overlaps(new TimeRange(session.StartTime, session.EndTime))
                     );
                     if (hasOverlap)
                     {
@@ -593,9 +594,7 @@ public class ImportDataHandler(
 
                     var usageSession = WebsiteUsageSession.Import(
                         website.Id,
-                        session.StartTime,
-                        session.EndTime,
-                        false
+                        new TimeRange(session.StartTime, session.EndTime)
                     );
                     existingSessions.Add(usageSession);
                     context.WebsiteUsageSessions.Add(usageSession);

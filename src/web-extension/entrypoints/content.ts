@@ -1,3 +1,4 @@
+import { connectionStatusStorage } from "@/utils/connection-status.ts";
 import { userSettingsStorage } from "@/utils/settings";
 
 export default defineContentScript({
@@ -40,7 +41,9 @@ export default defineContentScript({
                 }),
               }
             );
+            connectionStatusStorage.setValue("connected");
           } catch (e) {
+            connectionStatusStorage.setValue("disconnected");
           }
         }, intervalMs)
     }

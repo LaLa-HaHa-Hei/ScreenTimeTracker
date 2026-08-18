@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
 {
@@ -10,7 +11,7 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
         {
             // 多个 AppUsageSession 对应一个 App
             builder
-                .HasOne(x => x.App)
+                .HasOne<App>()
                 .WithMany()
                 .HasForeignKey(x => x.AppId)
                 .OnDelete(DeleteBehavior.Cascade); // 删 App 时连带删 AppUsageSession

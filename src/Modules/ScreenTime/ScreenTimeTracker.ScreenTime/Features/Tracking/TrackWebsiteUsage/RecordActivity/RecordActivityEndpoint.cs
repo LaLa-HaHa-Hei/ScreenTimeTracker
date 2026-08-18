@@ -1,9 +1,11 @@
 using FastEndpoints;
-using Mediator;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackWebsiteUsage.RecordActivity;
 
-public class RecordActivityEndpoint(IMediator mediator) : Endpoint<RecordActivityRequest>
+public class RecordActivityEndpoint(
+    WebsiteActivityProcessor websiteActivityProcessor,
+    TimeProvider timeProvider
+) : Endpoint<RecordActivityRequest>
 {
     public override void Configure()
     {
@@ -14,14 +16,14 @@ public class RecordActivityEndpoint(IMediator mediator) : Endpoint<RecordActivit
 
     public override async Task HandleAsync(RecordActivityRequest req, CancellationToken ct)
     {
-        var result = await mediator.Send(
-            new RecordActivityCommand(
+        websiteActivityProcessor.Enqueue(
+            new(
                 req.Host,
                 req.Name,
-                TimeSpan.FromMilliseconds(req.DurationMilliseconds)
-            ),
-            ct
+                TimeSpan.FromMilliseconds(req.DurationMilliseconds),
+                timeProvider.GetUtcNow()
+            )
         );
-        await Send.OkAsync(result, ct);
+        await Send.NoContentAsync(ct);
     }
 }

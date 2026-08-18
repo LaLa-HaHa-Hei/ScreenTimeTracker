@@ -8,7 +8,7 @@ export const appDtoSchema = z.object({
   processName: z.string(),
   allowMetadataAutoRefresh: z.boolean(),
   metadataLastRefreshedAt: z.coerce.date(),
-  categoryId: z.string(),
+  appCategoryId: z.string(),
   executablePath: z.string().nullable(),
   iconPath: z.string().nullable(),
   iconPathLastUpdatedAt: z.coerce.date(),
@@ -29,7 +29,7 @@ export const patchAppSchema = z.object({
       name: true,
       color: true,
       allowMetadataAutoRefresh: true,
-      categoryId: true,
+      appCategoryId: true,
       iconPath: true,
     })
     .partial(),

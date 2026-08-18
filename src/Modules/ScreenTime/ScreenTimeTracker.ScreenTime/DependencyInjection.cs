@@ -3,8 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ScreenTimeTracker.BuildingBlocks.Persistence;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions;
 using ScreenTimeTracker.ScreenTime.Features.Tracking;
 using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackWebsiteUsage;
@@ -25,25 +25,33 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<ScreenTimeDbContext>(
             (serviceProvider, options) =>
             {
-                var persistenceOptions = serviceProvider
+                var databaseOptions = serviceProvider
                     .GetRequiredService<IOptions<DatabaseOptions>>()
                     .Value;
 
                 options.UseSqlite(
-                    $"Data Source={persistenceOptions.DBFilePath}",
+                    $"Data Source={databaseOptions.DBFilePath}",
                     x => x.MigrationsHistoryTable("__EFMigrationsHistory_ScreenTime")
                 );
             }
         );
         services.AddHostedService<ScreenTimeDbMigrationService>();
+
+        // 处理器服务
+        services.AddSingleton<ForegroundWindowProcessor>();
+        services.AddHostedService(sp => sp.GetRequiredService<ForegroundWindowProcessor>());
+        services.AddSingleton<WebsiteActivityProcessor>();
+        services.AddHostedService(sp => sp.GetRequiredService<WebsiteActivityProcessor>());
+
         // 后台服务
         services.AddHostedService<AppUsageActiveSessionTracker>();
         services.AddHostedService<AppUsageActiveSessionAutoSaver>();
         services.AddHostedService<WebsiteUsageActiveSessionAutoSaver>();
-        services.AddHostedService<AppUsageSessionOptimizer>();
-        services.AddHostedService<WebsiteUsageSessionOptimizer>();
+        services.AddHostedService<AppUsageSessionOptimizationWorker>();
+        services.AddHostedService<WebsiteUsageSessionOptimizationWorker>();
         services.AddHostedService<SystemSuspendMonitor>();
         services.AddHostedService<UserIdleMonitor>();
+        services.AddHostedService<TimerDriftMonitor>();
 
         // 状态存储
         services.AddSingleton<ActiveAppUsageSessionStore>();
@@ -51,7 +59,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SystemSuspendStore>();
         services.AddSingleton<UserIdleStore>();
 
-        // 平台
+        // 平台特异服务
         if (OperatingSystem.IsWindows())
         {
             if (OperatingSystem.IsWindowsVersionAtLeast(6, 0, 6000))

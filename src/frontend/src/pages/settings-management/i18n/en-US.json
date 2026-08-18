@@ -46,13 +46,6 @@
       "tooltip": "Defines when a day starts and when it ends on the following day."
     }
   },
-  "regionalSettings": {
-    "title": "Regional Settings",
-    "timeZoneId": {
-      "label": "Time Zone",
-      "tooltip": "The time zone used when displaying statistics."
-    }
-  },
   "appTrackingSettings": {
     "title": "Application Tracking Settings",
     "iconDirectory": {

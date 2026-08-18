@@ -18,82 +18,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Apps.App", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("AllowMetadataAutoRefresh")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ExecutablePath")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("IconPath")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("IconPathLastUpdatedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsSystem")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("MetadataLastRefreshedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProcessName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("ProcessName")
-                        .IsUnique();
-
-                    b.ToTable("ScreenTime_Apps");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
-                            AllowMetadataAutoRefresh = false,
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Color = "#636366",
-                            IconPathLastUpdatedAt = -62135596800000L,
-                            IsSystem = true,
-                            MetadataLastRefreshedAt = -62135596800000L,
-                            Name = "Unknown",
-                            ProcessName = "Unknown"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
-                            AllowMetadataAutoRefresh = false,
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Color = "#C7C7CC",
-                            IconPathLastUpdatedAt = -62135596800000L,
-                            IsSystem = true,
-                            MetadataLastRefreshedAt = -62135596800000L,
-                            Name = "Idle",
-                            ProcessName = "Idle"
-                        });
-                });
-
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Apps.AppCategory", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories.AppCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -134,7 +59,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Apps.AppUsageSession", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions.AppUsageSession", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -163,13 +88,88 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                     b.ToTable("ScreenTime_AppUsageSessions");
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.UserSettings.UserSettings", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps.App", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "AppTracking", "ScreenTimeTracker.ScreenTime.Domain.UserSettings.UserSettings.AppTracking#AppTrackingSettings", b1 =>
+                    b.Property<bool>("AllowMetadataAutoRefresh")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("AppCategoryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExecutablePath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IconPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("IconPathLastUpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("MetadataLastRefreshedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProcessName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppCategoryId");
+
+                    b.HasIndex("ProcessName")
+                        .IsUnique();
+
+                    b.ToTable("ScreenTime_Apps");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            AllowMetadataAutoRefresh = false,
+                            AppCategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            Color = "#636366",
+                            IconPathLastUpdatedAt = -62135596800000L,
+                            IsSystem = true,
+                            MetadataLastRefreshedAt = -62135596800000L,
+                            Name = "Unknown",
+                            ProcessName = "Unknown"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
+                            AllowMetadataAutoRefresh = false,
+                            AppCategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            Color = "#C7C7CC",
+                            IconPathLastUpdatedAt = -62135596800000L,
+                            IsSystem = true,
+                            MetadataLastRefreshedAt = -62135596800000L,
+                            Name = "Idle",
+                            ProcessName = "Idle"
+                        });
+                });
+
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings.UserSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "AppTracking", "ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings.UserSettings.AppTracking#AppTrackingSettings", b1 =>
                         {
                             b1.IsRequired();
 
@@ -199,7 +199,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                                 .HasColumnName("AppTracking_UsageSessionOptimizationInterval");
                         });
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "IdleDetection", "ScreenTimeTracker.ScreenTime.Domain.UserSettings.UserSettings.IdleDetection#IdleDetectionSettings", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "IdleDetection", "ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings.UserSettings.IdleDetection#IdleDetectionSettings", b1 =>
                         {
                             b1.IsRequired();
 
@@ -216,17 +216,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                                 .HasColumnName("IdleDetection_PollingInterval");
                         });
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Regional", "ScreenTimeTracker.ScreenTime.Domain.UserSettings.UserSettings.Regional#RegionalSettings", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("TimeZoneId")
-                                .IsRequired()
-                                .HasColumnType("TEXT")
-                                .HasColumnName("Regional_TimeZoneId");
-                        });
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "TimeBoundary", "ScreenTimeTracker.ScreenTime.Domain.UserSettings.UserSettings.TimeBoundary#TimeBoundarySettings", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "TimeBoundary", "ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings.UserSettings.TimeBoundary#TimeBoundarySettings", b1 =>
                         {
                             b1.IsRequired();
 
@@ -235,7 +225,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                                 .HasColumnName("TimeBoundary_DayCutoffHour");
                         });
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "WebsiteTracking", "ScreenTimeTracker.ScreenTime.Domain.UserSettings.UserSettings.WebsiteTracking#WebsiteTrackingSettings", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "WebsiteTracking", "ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings.UserSettings.WebsiteTracking#WebsiteTrackingSettings", b1 =>
                         {
                             b1.IsRequired();
 
@@ -266,53 +256,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                     b.ToTable("ScreenTime_UserSettings");
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Websites.Website", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("AllowMetadataAutoRefresh")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Host")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("IconPath")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("IconPathLastUpdatedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsSystem")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("MetadataLastRefreshedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("Host")
-                        .IsUnique();
-
-                    b.ToTable("ScreenTime_Websites");
-                });
-
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Websites.WebsiteCategory", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories.WebsiteCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -353,7 +297,7 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Websites.WebsiteUsageSession", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions.WebsiteUsageSession", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -382,48 +326,86 @@ namespace ScreenTimeTracker.ScreenTime.Migrations
                     b.ToTable("ScreenTime_WebsiteUsageSessions");
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Apps.App", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites.Website", b =>
                 {
-                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Apps.AppCategory", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
 
-                    b.Navigation("Category");
+                    b.Property<bool>("AllowMetadataAutoRefresh")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IconPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("IconPathLastUpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("MetadataLastRefreshedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WebsiteCategoryId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Host")
+                        .IsUnique();
+
+                    b.HasIndex("WebsiteCategoryId");
+
+                    b.ToTable("ScreenTime_Websites");
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Apps.AppUsageSession", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions.AppUsageSession", b =>
                 {
-                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Apps.App", "App")
+                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps.App", null)
                         .WithMany()
                         .HasForeignKey("AppId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("App");
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Websites.Website", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps.App", b =>
                 {
-                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Websites.WebsiteCategory", "Category")
+                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories.AppCategory", null)
                         .WithMany()
-                        .HasForeignKey("CategoryId")
+                        .HasForeignKey("AppCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Websites.WebsiteUsageSession", b =>
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions.WebsiteUsageSession", b =>
                 {
-                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Websites.Website", "Website")
+                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites.Website", null)
                         .WithMany()
                         .HasForeignKey("WebsiteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
 
-                    b.Navigation("Website");
+            modelBuilder.Entity("ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites.Website", b =>
+                {
+                    b.HasOne("ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories.WebsiteCategory", null)
+                        .WithMany()
+                        .HasForeignKey("WebsiteCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -10,10 +10,9 @@ namespace ScreenTimeTracker.Desktop.Platforms;
 
 public partial class LinuxTrayService : ITrayService, IDisposable
 {
-    private static readonly string _iconRelativePath = "./Resources/Icon.png";
     private static readonly string _iconPath = Path.Combine(
         AppContext.BaseDirectory,
-        _iconRelativePath
+        "./Resources/Icon.png"
     );
 
     private readonly ILogger<LinuxTrayService> _logger;

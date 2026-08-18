@@ -7,7 +7,7 @@ public record GetAppsResponseItem(
     string ProcessName,
     bool AllowMetadataAutoRefresh,
     DateTimeOffset MetadataLastRefreshedAt,
-    Guid CategoryId,
+    Guid AppCategoryId,
     string? ExecutablePath,
     string? IconPath,
     DateTimeOffset IconPathLastUpdatedAt,

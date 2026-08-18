@@ -8,7 +8,7 @@ export const websiteDtoSchema = z.object({
   host: z.string(),
   allowMetadataAutoRefresh: z.boolean(),
   metadataLastRefreshedAt: z.coerce.date(),
-  categoryId: z.string(),
+  websiteCategoryId: z.string(),
   iconPath: z.string().nullable(),
   iconPathLastUpdatedAt: z.coerce.date(),
   isSystem: z.boolean(),
@@ -28,7 +28,7 @@ export const patchWebsiteSchema = z.object({
       name: true,
       color: true,
       allowMetadataAutoRefresh: true,
-      categoryId: true,
+      websiteCategoryId: true,
       iconPath: true,
     })
     .partial(),

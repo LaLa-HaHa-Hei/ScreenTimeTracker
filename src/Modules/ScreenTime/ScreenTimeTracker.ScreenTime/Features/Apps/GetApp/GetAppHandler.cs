@@ -30,7 +30,7 @@ public class GetAppHandler(ScreenTimeDbContext context)
             app.ProcessName,
             app.AllowMetadataAutoRefresh,
             app.MetadataLastRefreshedAt,
-            app.CategoryId,
+            app.AppCategoryId,
             app.ExecutablePath,
             app.IconPath,
             app.IconPathLastUpdatedAt,

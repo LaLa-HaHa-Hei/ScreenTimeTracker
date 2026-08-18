@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
 {
@@ -9,13 +10,13 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<Website> builder)
         {
             builder
-                .HasOne(a => a.Category)
+                .HasOne<WebsiteCategory>()
                 .WithMany()
-                .HasForeignKey(a => a.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict); //阻止删除Category，如果存在Website。
+                .HasForeignKey(a => a.WebsiteCategoryId)
+                .OnDelete(DeleteBehavior.Restrict); // 如果存在 Website，阻止删除 Category。
 
             builder.HasIndex(x => x.Host).IsUnique();
-            builder.HasIndex(x => x.CategoryId);
+            builder.HasIndex(x => x.WebsiteCategoryId);
         }
     }
 }

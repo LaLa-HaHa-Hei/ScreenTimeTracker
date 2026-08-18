@@ -9,7 +9,6 @@
     "allowMetadataAutoRefresh": "Auto Update Metadata",
     "metadataLastRefreshedAt": "Last Metadata Auto Updated",
     "host": "Host",
-    "executablePath": "Executable Path",
     "action": "Actions"
   },
   "deleteConfirm": {

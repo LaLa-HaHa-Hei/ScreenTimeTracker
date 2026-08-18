@@ -19,6 +19,7 @@ public class GetAppUsageTimelineEndpoint(IMediator mediator)
             new GetAppUsageTimelineQuery(
                 req.StartDate,
                 req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
                 req.IncludedIds,
                 req.ExcludedIds
             ),

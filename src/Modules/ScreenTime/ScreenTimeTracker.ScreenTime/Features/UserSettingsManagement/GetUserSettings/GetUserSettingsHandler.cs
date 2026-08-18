@@ -1,6 +1,6 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.UserSettingsManagement.GetUserSettings;
@@ -38,8 +38,7 @@ public class GetUserSettingsHandler(ScreenTimeDbContext context)
                 (int)userSettings.IdleDetection.InactivityThreshold.TotalSeconds,
                 (int)userSettings.IdleDetection.PollingInterval.TotalSeconds
             ),
-            new TimeBoundarySettingsDto(userSettings.TimeBoundary.DayCutoffHour),
-            new RegionalSettingsDto(userSettings.Regional.TimeZoneId)
+            new TimeBoundarySettingsDto(userSettings.TimeBoundary.DayCutoffHour)
         );
     }
 }

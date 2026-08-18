@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
 
-export const baseUrl = import.meta.env.DEV ? "http://127.0.0.1:5124" : "";
+export const baseUrl = import.meta.env.DEV ? "http://localhost:5124" : "";
 
 export const baseApiUrl = `${baseUrl}/api`;
 

@@ -1,7 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.PatchApp;
@@ -35,10 +35,10 @@ public class PatchAppHandler(ScreenTimeDbContext context, TimeProvider timeProvi
                 );
         }
 
-        if (request.CategoryId.HasValue)
+        if (request.AppCategoryId.HasValue)
         {
             var exists = await context.AppCategories.AnyAsync(
-                x => x.Id == request.CategoryId.Value,
+                x => x.Id == request.AppCategoryId.Value,
                 cancellationToken
             );
             if (!exists)
@@ -52,7 +52,7 @@ public class PatchAppHandler(ScreenTimeDbContext context, TimeProvider timeProvi
             request.Name,
             request.Color,
             request.AllowMetadataAutoRefresh,
-            request.CategoryId,
+            request.AppCategoryId,
             request.IconPath,
             timeProvider.GetUtcNow()
         );

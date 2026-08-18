@@ -20,6 +20,7 @@ import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { WebsiteIcon } from "@/entities/website";
 import { WebsiteCategoryIcon } from "@/entities/website-category";
+import dayjs from "dayjs";
 
 export type UsageDistributionListProps = {
   className?: string;
@@ -27,6 +28,7 @@ export type UsageDistributionListProps = {
   type: "app" | "app-category" | "website" | "website-category";
   startDate: DateOnly;
   endDate: DateOnly;
+  timeZoneId: string;
   topN: number;
   excludedIds?: string[];
   onItemClick?: (id: string) => void;
@@ -38,45 +40,51 @@ export const UsageDistributionList = ({
   type,
   startDate,
   endDate,
+  timeZoneId,
   topN,
   excludedIds,
   onItemClick,
 }: UsageDistributionListProps) => {
+  const isDateValid = dayjs(startDate).isSameOrBefore(dayjs(endDate));
   const { data: appUsageDistributionData } = useQuery({
     ...appUsageDistributionQueryOptions({
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       topN: topN,
       excludedIds: excludedIds,
     }),
-    enabled: type === "app",
+    enabled: isDateValid && type === "app",
   });
   const { data: appCategoryUsageDistributionData } = useQuery({
     ...appCategoryUsageDistributionQueryOptions({
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       topN: topN,
       excludedIds: excludedIds,
     }),
-    enabled: type === "app-category",
+    enabled: isDateValid && type === "app-category",
   });
   const { data: websiteUsageDistributionData } = useQuery({
     ...websiteUsageDistributionQueryOptions({
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       topN: topN,
       excludedIds: excludedIds,
     }),
-    enabled: type === "website",
+    enabled: isDateValid && type === "website",
   });
   const { data: websiteCategoryUsageDistributionData } = useQuery({
     ...websiteCategoryUsageDistributionQueryOptions({
       startDate: startDate,
       endDate: endDate,
+      timeZoneId: timeZoneId,
       topN: topN,
       excludedIds: excludedIds,
     }),
-    enabled: type === "website-category",
+    enabled: isDateValid && type === "website-category",
   });
   const usageDistributiondata =
     type === "app"

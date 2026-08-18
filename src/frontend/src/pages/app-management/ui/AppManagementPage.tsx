@@ -114,18 +114,18 @@ export const AppManagementPage = () => {
       field: "category",
       headerName: t(($) => $.page_appManagement.columns.category),
       width: 210,
-      valueGetter: (_, row) => {
-        return categoryMap.get(row.categoryId) ?? "";
+      valueGetter: (_, row: App) => {
+        return categoryMap.get(row.appCategoryId) ?? "";
       },
       renderCell: (params: GridRenderCellParams<App>) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
           <AppCategorySelecter
-            value={params.row.categoryId}
+            value={params.row.appCategoryId}
             onValueChange={async (value) => {
               try {
                 await patchAppAsync({
                   id: params.row.id,
-                  body: { categoryId: value },
+                  body: { appCategoryId: value },
                 });
               } catch {
                 enqueueSnackbar(

@@ -1,5 +1,6 @@
 import { fileTypeFromBuffer } from "file-type"
 import { userSettingsStorage } from "@/utils/settings";
+import { ConnectionStatus, connectionStatusStorage } from "@/utils/connection-status.ts";
 
 type Icon = {
     extension: string,
@@ -10,18 +11,22 @@ type Website = {
     id: string
 }
 
-const noHostPlaceholder = "no-host"
-
-// host -> favicon
-const faviconCache = new Map<string, Icon | null>()
-
 export default defineBackground(() => {
     let userSettings = defaultUserSettings
+    // host -> favicon
+    const faviconCache = new Map<string, Icon | null>()
+
     userSettingsStorage.getValue().then((val) => {
         userSettings = val;
     });
     userSettingsStorage.watch((newValue) => {
         userSettings = newValue;
+    });
+    connectionStatusStorage.getValue().then((val: ConnectionStatus) => {
+        updateActionIcon(val);
+    });
+    connectionStatusStorage.watch((newValue: ConnectionStatus) => {
+        updateActionIcon(newValue);
     });
 
     // 单击扩展图标
@@ -70,6 +75,7 @@ export default defineBackground(() => {
         if (!tab.url)
             return;
 
+        const noHostPlaceholder = "no-host"
         const host = new URL(tab.url).host || noHostPlaceholder
 
         const website = await getWebsiteByHost(host)
@@ -90,6 +96,15 @@ export default defineBackground(() => {
 
         await refreshWebsiteMetadata(website.id, icon)
     });
+
+    browser.action.setIcon({
+        path: {
+            16: '/icons/disconnected-16.png',
+            32: '/icons/disconnected-32.png',
+            48: '/icons/disconnected-48.png',
+            128: '/icons/disconnected-128.png',
+        },
+    })
 
     async function getWebsiteByHost(host: string): Promise<Website | null> {
         try {
@@ -121,11 +136,24 @@ export default defineBackground(() => {
                     }),
                 }
             );
+            connectionStatusStorage.setValue("connected");
         }
         catch (e) {
+            connectionStatusStorage.setValue("disconnected");
         }
     }
 })
+
+function updateActionIcon(connectionStatus: ConnectionStatus) {
+    browser.action.setIcon({
+        path: {
+            16: connectionStatus === 'connected' ? '/icons/connected-16.png' : '/icons/disconnected-16.png',
+            32: connectionStatus === 'connected' ? '/icons/connected-32.png' : '/icons/disconnected-32.png',
+            48: connectionStatus === 'connected' ? '/icons/connected-48.png' : '/icons/disconnected-48.png',
+            128: connectionStatus === 'connected' ? '/icons/connected-128.png' : '/icons/disconnected-128.png',
+        },
+    })
+}
 
 async function getIcon(iconUrl: string): Promise<Icon | null> {
     try {

@@ -66,6 +66,7 @@ export const UsageDetailsPage = ({ search, onSearchChange }: UsageDetailsPagePro
       });
     },
   });
+  const timeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     if (search.id !== undefined) return;
@@ -170,6 +171,7 @@ export const UsageDetailsPage = ({ search, onSearchChange }: UsageDetailsPagePro
               }
               startDate={search.startDate}
               endDate={search.endDate}
+              timeZoneId={timeZoneId}
               includedIds={[search.id]}
             />
           </Paper>
@@ -188,6 +190,7 @@ export const UsageDetailsPage = ({ search, onSearchChange }: UsageDetailsPagePro
                 }}
                 type={search.dimension}
                 date={search.startDate}
+                timeZoneId={timeZoneId}
                 includedIds={[search.id]}
               />
             </Paper>

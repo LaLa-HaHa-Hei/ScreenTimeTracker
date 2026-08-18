@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Photino.NET;
@@ -21,7 +20,6 @@ public interface IAppUIManager
 public partial class AppUIManager : IAppUIManager
 {
     private readonly ILogger<AppUIManager> _logger;
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IServerUrlProvider _urlProvider;
     private readonly IWindowPlacementStore _placementStore;
     private readonly IDesktopLocalSettingsProvider _desktopLocalSettingsProvider;
@@ -30,7 +28,6 @@ public partial class AppUIManager : IAppUIManager
 
     public AppUIManager(
         ILogger<AppUIManager> logger,
-        IServiceScopeFactory scopeFactory,
         IServerUrlProvider urlProvider,
         IWindowPlacementStore placementStore,
         IHostApplicationLifetime lifetime,
@@ -38,10 +35,17 @@ public partial class AppUIManager : IAppUIManager
     )
     {
         _logger = logger;
-        _scopeFactory = scopeFactory;
         _placementStore = placementStore;
         _urlProvider = urlProvider;
         _desktopLocalSettingsProvider = desktopLocalSettingsProvider;
+
+        if (OperatingSystem.IsWindows())
+            Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", "./Data/WebView2");
+        else if (OperatingSystem.IsLinux())
+        {
+            Environment.SetEnvironmentVariable("XDG_DATA_HOME", "./Data/WebKitGTK/data");
+            Environment.SetEnvironmentVariable("XDG_CACHE_HOME", "./Data/WebKitGTK/cache");
+        }
 
         lifetime.ApplicationStopping.Register(() =>
         {

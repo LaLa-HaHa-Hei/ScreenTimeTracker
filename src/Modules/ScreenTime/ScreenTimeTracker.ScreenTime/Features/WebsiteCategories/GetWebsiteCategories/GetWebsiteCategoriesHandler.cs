@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.WebsiteCategories.GetWebsiteCategories;

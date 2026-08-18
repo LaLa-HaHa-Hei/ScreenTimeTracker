@@ -1,7 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.DeleteAppCategory;
@@ -33,9 +33,10 @@ public class DeleteAppCategoryHandler(ScreenTimeDbContext context)
 
         // 把所有这个类别的 App 都设置为默认类别
         await context
-            .Apps.Where(app => app.CategoryId == request.AppCategoryId)
+            .Apps.Where(app => app.AppCategoryId == request.AppCategoryId)
             .ExecuteUpdateAsync(
-                setters => setters.SetProperty(app => app.CategoryId, AppCategory.UncategorizedId),
+                setters =>
+                    setters.SetProperty(app => app.AppCategoryId, AppCategory.UncategorizedId),
                 cancellationToken
             );
 

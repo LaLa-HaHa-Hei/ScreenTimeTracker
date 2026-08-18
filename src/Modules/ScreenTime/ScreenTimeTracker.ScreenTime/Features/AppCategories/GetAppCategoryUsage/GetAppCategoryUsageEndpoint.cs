@@ -20,6 +20,7 @@ public class GetAppCategoryUsageEndpoint(IMediator mediator)
                 req.Granularity,
                 req.StartDate,
                 req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
                 req.IncludedIds,
                 req.ExcludedIds
             ),

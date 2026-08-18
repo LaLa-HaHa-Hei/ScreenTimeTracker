@@ -17,6 +17,7 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.OS;
 public partial class WindowsForegroundWindowMonitor : IForegroundWindowMonitor, IDisposable
 {
     public event EventHandler<WindowInfo?>? ForegroundWindowChanged;
+
     private readonly ILogger<WindowsForegroundWindowMonitor> _logger;
     private bool _disposed;
     private WINEVENTPROC? _hookProc;
@@ -66,7 +67,7 @@ public partial class WindowsForegroundWindowMonitor : IForegroundWindowMonitor, 
             }
             catch (Exception ex)
             {
-                LogForegroundWindowThreadCrashed(_logger, ex);
+                LogForegroundWindowMonitorThreadCrashed(_logger, ex);
             }
         })
         {
@@ -78,7 +79,10 @@ public partial class WindowsForegroundWindowMonitor : IForegroundWindowMonitor, 
     }
 
     [LoggerMessage(Level = LogLevel.Critical, Message = "ForegroundWindowMonitor thread crashed.")]
-    private static partial void LogForegroundWindowThreadCrashed(ILogger logger, Exception ex);
+    private static partial void LogForegroundWindowMonitorThreadCrashed(
+        ILogger logger,
+        Exception ex
+    );
 
     public WindowInfo? GetForegroundWindow()
     {

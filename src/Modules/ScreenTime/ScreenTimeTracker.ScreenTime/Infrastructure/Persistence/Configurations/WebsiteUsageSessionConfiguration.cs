@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
 {
@@ -10,7 +11,7 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
         {
             // 多个 WebsiteUsageSession 对应一个 Website
             builder
-                .HasOne(x => x.Website)
+                .HasOne<Website>()
                 .WithMany()
                 .HasForeignKey(x => x.WebsiteId)
                 .OnDelete(DeleteBehavior.Cascade); // 删 Website 时连带删 WebsiteUsageSession

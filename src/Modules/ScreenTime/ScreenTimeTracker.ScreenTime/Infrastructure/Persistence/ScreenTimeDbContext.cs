@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScreenTimeTracker.BuildingBlocks.Persistence;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 

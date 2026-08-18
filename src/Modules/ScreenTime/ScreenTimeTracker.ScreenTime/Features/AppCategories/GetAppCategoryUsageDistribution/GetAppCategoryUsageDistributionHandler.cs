@@ -1,15 +1,12 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.ValueObjects;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategoryUsageDistribution;
 
-public class GetAppCategoryUsageDistributionHandler(
-    ScreenTimeDbContext context,
-    ActiveAppUsageSessionStore activeSessionStore,
-    TimeProvider timeProvider
-) : IRequestHandler<GetAppCategoryUsageDistributionQuery, GetAppCategoryUsageDistributionResponse>
+public class GetAppCategoryUsageDistributionHandler(ScreenTimeDbContext context)
+    : IRequestHandler<GetAppCategoryUsageDistributionQuery, GetAppCategoryUsageDistributionResponse>
 {
     public async ValueTask<GetAppCategoryUsageDistributionResponse> Handle(
         GetAppCategoryUsageDistributionQuery request,
@@ -17,134 +14,97 @@ public class GetAppCategoryUsageDistributionHandler(
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
         var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
-        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+        var timeRange = LogicalDay.CalculateUtcWindow(
             request.StartDate,
-            dayCutoffHour,
-            timeZoneInfo
+            request.EndDate,
+            settings.TimeBoundary.DayCutoffHour,
+            request.TimeZoneInfo
         );
-        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
-            request.EndDate.AddDays(1),
-            dayCutoffHour,
-            timeZoneInfo
-        );
-        var excludedIds = request.ExcludedIds?.ToHashSet() ?? [];
+
+        var appCategoryQuery = context.AppCategories.AsNoTracking();
+
+        if (request.IncludedIds is not null)
+            appCategoryQuery = appCategoryQuery.Where(c => request.IncludedIds.Contains(c.Id));
+        else if (request.ExcludedIds is not null)
+            appCategoryQuery = appCategoryQuery.Where(c => !request.ExcludedIds.Contains(c.Id));
+
+        var appCategoryMap = await appCategoryQuery
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Color,
+                c.IconPath,
+                c.IconPathLastUpdatedAt,
+            })
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
+
+        if (appCategoryMap.Count == 0)
+            return new GetAppCategoryUsageDistributionResponse([], 0, 0, 0, 0);
+
+        var appCategoryIds = appCategoryMap.Keys;
 
         var sessions = await context
-            .AppUsageSessions.Where(x =>
-                !excludedIds.Contains(x.App!.CategoryId)
-                && x.StartTime < maxTime
-                && minTime <= x.EndTime
+            .AppUsageSessions.AsNoTracking()
+            .Join(
+                context.Apps.AsNoTracking(),
+                session => session.AppId,
+                app => app.Id,
+                (session, app) =>
+                    new
+                    {
+                        app.AppCategoryId,
+                        session.UsagePeriod,
+                        session.StartTime,
+                        session.EndTime,
+                    }
             )
-            .Select(x => new
-            {
-                Id = x.App!.CategoryId,
-                x.App!.Category!.Name,
-                x.App!.Category!.Color,
-                x.App.Category!.IconPath,
-                x.App.Category!.IconPathLastUpdatedAt,
-                x.StartTime,
-                x.EndTime,
-            })
+            .Where(x =>
+                appCategoryIds.Contains(x.AppCategoryId)
+                && timeRange.Start < x.EndTime
+                && x.StartTime < x.EndTime
+            )
+            .Select(x => new { x.AppCategoryId, x.UsagePeriod })
             .ToListAsync(cancellationToken);
 
-        var activeSession = activeSessionStore.Current;
-        if (activeSession is not null)
-        {
-            var activeSessionEnd = timeProvider.GetUtcNow();
-
-            if (activeSession.StartTime < maxTime && minTime < activeSessionEnd)
-            {
-                var activeApp = await context
-                    .Apps.Include(a => a.Category)
-                    .AsNoTracking()
-                    .SingleAsync(x => x.Id == activeSession.AppId, cancellationToken);
-
-                if (!excludedIds.Contains(activeApp.CategoryId))
-                    sessions.Add(
-                        new
-                        {
-                            Id = activeApp.CategoryId,
-                            activeApp.Category!.Name,
-                            activeApp.Category!.Color,
-                            activeApp.Category!.IconPath,
-                            activeApp.Category!.IconPathLastUpdatedAt,
-                            activeSession.StartTime,
-                            EndTime = activeSessionEnd,
-                        }
-                    );
-            }
-        }
-
-        var aggregatedUsage =
-            new Dictionary<
-                Guid,
-                (
-                    string Name,
-                    string Color,
-                    string? IconPath,
-                    DateTimeOffset IconPathLastUpdatedAt,
-                    long DurationMilliseconds
-                )
-            >();
+        var durationByAppCategoryId = new Dictionary<Guid, TimeSpan>();
 
         foreach (var session in sessions)
         {
-            // 截取和请求时间段交集的时间 (避免多算范围外的时长)
-            DateTimeOffset actualStart = minTime < session.StartTime ? session.StartTime : minTime;
-            DateTimeOffset actualEnd = session.EndTime < maxTime ? session.EndTime : maxTime;
+            TimeSpan overlap = timeRange.OverlapDuration(session.UsagePeriod);
+            if (overlap == TimeSpan.Zero)
+                continue;
 
-            if (actualStart < actualEnd)
-            {
-                long durationMilliseconds = (long)(actualEnd - actualStart).TotalMilliseconds;
-
-                if (!aggregatedUsage.TryGetValue(session.Id, out var current))
-                    aggregatedUsage[session.Id] = (
-                        session.Name,
-                        session.Color,
-                        session.IconPath,
-                        session.IconPathLastUpdatedAt,
-                        durationMilliseconds
-                    );
-                else
-                    aggregatedUsage[session.Id] = (
-                        current.Name,
-                        current.Color,
-                        current.IconPath,
-                        current.IconPathLastUpdatedAt,
-                        current.DurationMilliseconds + durationMilliseconds
-                    );
-            }
+            durationByAppCategoryId[session.AppCategoryId] =
+                durationByAppCategoryId.GetValueOrDefault(session.AppCategoryId) + overlap;
         }
 
-        // 计算总体宏观指标
-        int totalCount = aggregatedUsage.Count;
-        // 先把毫秒转为秒，防止 topN 是全部时加和少于总时长
-        long totalDurationSeconds = aggregatedUsage.Values.Sum(x => x.DurationMilliseconds / 1000);
+        int totalCount = durationByAppCategoryId.Count;
 
-        // 排序截取Top N列表
-        var topNItems = aggregatedUsage
-            // 先按照使用时长倒序排列，再保留到秒，防止顺序不准确
-            .OrderByDescending(x => x.Value.DurationMilliseconds)
-            .Select(kvp => new AppCategoryUsageDistributionItem(
-                Id: kvp.Key,
-                Name: kvp.Value.Name,
-                Color: kvp.Value.Color,
-                IconPath: kvp.Value.IconPath,
-                IconPathLastUpdatedAt: kvp.Value.IconPathLastUpdatedAt,
-                DurationSeconds: kvp.Value.DurationMilliseconds / 1000
-            ))
-            // 取前 TopN
+        long totalDurationSeconds = durationByAppCategoryId.Values.Sum(x => (long)x.TotalSeconds);
+
+        var topNItems = durationByAppCategoryId
+            .OrderByDescending(x => x.Value)
             .Take(request.TopN)
+            .Select(kvp =>
+            {
+                var category = appCategoryMap[kvp.Key];
+                return new AppCategoryUsageDistributionItem(
+                    Id: kvp.Key,
+                    Name: category.Name,
+                    Color: category.Color,
+                    IconPath: category.IconPath,
+                    IconPathLastUpdatedAt: category.IconPathLastUpdatedAt,
+                    DurationSeconds: (long)kvp.Value.TotalSeconds
+                );
+            })
             .ToList();
 
-        // 倒推“其他”数据
         int othersCount = totalCount - topNItems.Count;
         long topNDurationSeconds = topNItems.Sum(x => x.DurationSeconds);
         long othersDurationSeconds = Math.Max(0, totalDurationSeconds - topNDurationSeconds);
 
-        // 排序、格式化并取前 TopN 返回
         return new GetAppCategoryUsageDistributionResponse(
             Items: topNItems,
             TotalCount: totalCount,

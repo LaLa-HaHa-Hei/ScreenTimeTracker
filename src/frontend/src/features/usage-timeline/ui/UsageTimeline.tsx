@@ -21,6 +21,7 @@ export type UsageTimelineProps = {
   sx?: SxProps<Theme>;
   type: "app" | "app-category" | "website" | "website-category";
   date: DateOnly;
+  timeZoneId: string;
   includedIds?: string[];
   excludedIds?: string[];
 };
@@ -69,6 +70,7 @@ export const UsageTimeline = ({
   sx,
   date,
   type,
+  timeZoneId,
   includedIds,
   excludedIds,
 }: UsageTimelineProps) => {
@@ -81,6 +83,7 @@ export const UsageTimeline = ({
     ...appUsageTimelineQueryOptions({
       startDate: date,
       endDate: date,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
@@ -90,6 +93,7 @@ export const UsageTimeline = ({
     ...appCategoryUsageTimelineQueryOptions({
       startDate: date,
       endDate: date,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
@@ -99,6 +103,7 @@ export const UsageTimeline = ({
     ...websiteUsageTimelineQueryOptions({
       startDate: date,
       endDate: date,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),
@@ -108,6 +113,7 @@ export const UsageTimeline = ({
     ...websiteCategoryUsageTimelineQueryOptions({
       startDate: date,
       endDate: date,
+      timeZoneId: timeZoneId,
       includedIds: includedIds,
       excludedIds: excludedIds,
     }),

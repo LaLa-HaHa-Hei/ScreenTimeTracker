@@ -1,15 +1,12 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.ValueObjects;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.WebsiteCategories.GetWebsiteCategoryUsage;
 
-public class GetWebsiteCategoryUsageHandler(
-    ScreenTimeDbContext context,
-    ActiveWebsiteUsageSessionStore activeSessionStore,
-    TimeProvider timeProvider
-) : IRequestHandler<GetWebsiteCategoryUsageQuery, List<GetWebsiteCategoryUsageResponseItem>>
+public class GetWebsiteCategoryUsageHandler(ScreenTimeDbContext context)
+    : IRequestHandler<GetWebsiteCategoryUsageQuery, List<GetWebsiteCategoryUsageResponseItem>>
 {
     public async ValueTask<List<GetWebsiteCategoryUsageResponseItem>> Handle(
         GetWebsiteCategoryUsageQuery request,
@@ -17,101 +14,96 @@ public class GetWebsiteCategoryUsageHandler(
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
-        var timeRanges = GenerateUtcTimeRanges(
+        var timeRange = LogicalDay.CalculateUtcWindow(
+            request.StartDate,
+            request.EndDate,
+            settings.TimeBoundary.DayCutoffHour,
+            request.TimeZoneInfo
+        );
+
+        var timeBuckets = GenerateBuckets(
             request.StartDate,
             request.EndDate,
             request.Granularity,
-            timeZoneInfo,
+            request.TimeZoneInfo,
             settings.TimeBoundary.DayCutoffHour
         );
 
-        if (timeRanges.Count == 0)
+        if (timeBuckets.Count == 0)
             return [];
 
-        var minTime = timeRanges.First().Start;
-        var maxTime = timeRanges.Last().End;
-
-        var query = context
-            .WebsiteUsageSessions.AsNoTracking()
-            .Where(x => x.StartTime < maxTime && minTime <= x.EndTime);
+        List<TimeRange> sessions;
 
         if (request.IncludedIds is not null)
-            query = query.Where(x => request.IncludedIds.Contains(x.Website!.CategoryId));
+            sessions = await context
+                .WebsiteUsageSessions.AsNoTracking()
+                .Join(
+                    context.Websites.AsNoTracking(),
+                    session => session.WebsiteId,
+                    website => website.Id,
+                    (session, website) => new { session, website }
+                )
+                .Where(x =>
+                    request.IncludedIds.Contains(x.website.WebsiteCategoryId)
+                    && timeRange.Start < x.session.EndTime
+                    && x.session.StartTime < timeRange.End
+                )
+                .Select(x => new TimeRange(x.session.StartTime, x.session.EndTime))
+                .ToListAsync(cancellationToken);
         else if (request.ExcludedIds is not null)
-            query = query.Where(x => !request.ExcludedIds.Contains(x.Website!.CategoryId));
-
-        var sessions = await query
-            .Select(x => new { x.StartTime, x.EndTime })
-            .ToListAsync(cancellationToken);
-
-        var activeSession = activeSessionStore.Current;
-        if (activeSession is not null)
+            sessions = await context
+                .WebsiteUsageSessions.AsNoTracking()
+                .Join(
+                    context.Websites.AsNoTracking(),
+                    session => session.WebsiteId,
+                    website => website.Id,
+                    (session, website) => new { session, website }
+                )
+                .Where(x =>
+                    !request.ExcludedIds.Contains(x.website.WebsiteCategoryId)
+                    && timeRange.Start < x.session.EndTime
+                    && x.session.StartTime < timeRange.End
+                )
+                .Select(x => new TimeRange(x.session.StartTime, x.session.EndTime))
+                .ToListAsync(cancellationToken);
+        else
         {
-            var activeSessionEnd = timeProvider.GetUtcNow();
-
-            if (activeSession.StartTime < maxTime && minTime < activeSessionEnd)
-            {
-                var activeWebsite = await context
-                    .Websites.AsNoTracking()
-                    .SingleAsync(x => x.Id == activeSession.WebsiteId, cancellationToken);
-                var included = request.IncludedIds?.Contains(activeWebsite.CategoryId) ?? true;
-                var notExcluded =
-                    request.ExcludedIds is null
-                    || !request.ExcludedIds.Contains(activeWebsite.CategoryId);
-                var shouldInclude = request.IncludedIds is not null ? included : notExcluded;
-
-                if (shouldInclude)
-                    sessions.Add(
-                        new { activeSession.StartTime, EndTime = timeProvider.GetUtcNow() }
-                    );
-            }
+            sessions = await context
+                .WebsiteUsageSessions.AsNoTracking()
+                .Where(x => timeRange.Start < x.EndTime && x.StartTime < timeRange.End)
+                .Select(x => new TimeRange(x.StartTime, x.EndTime))
+                .ToListAsync(cancellationToken);
         }
 
-        var durationMilliseconds = new long[timeRanges.Count];
+        var duration = new TimeSpan[timeBuckets.Count];
 
-        // 计算 UTC 区间交集
         foreach (var session in sessions)
         {
-            // 裁剪 Session 时间在查询总范围内
-            var sessionStart = session.StartTime < minTime ? minTime : session.StartTime;
-            var sessionEnd = maxTime < session.EndTime ? maxTime : session.EndTime;
+            TimeRange? validPart = session.Intersect(timeRange);
 
-            if (sessionStart >= sessionEnd)
+            if (validPart is null)
                 continue;
 
-            // 找到该 Session 影响的第一个桶索引
-            int startIdx = FindFirstBucketIndex(timeRanges, sessionStart);
+            int startIdx = FindFirstBucketIndex(timeBuckets, validPart.Value.Start);
 
-            // 只遍历可能重叠的桶
-            for (int i = startIdx; i < timeRanges.Count; i++)
+            for (int i = startIdx; i < timeBuckets.Count; i++)
             {
-                var bucket = timeRanges[i];
-
-                // 如果桶的开始时间已经大于等于 Session 结束时间，后续桶不可能再重叠，直接 break
-                if (bucket.Start >= sessionEnd)
+                var bucket = timeBuckets[i];
+                if (bucket.Start >= validPart.Value.End)
                     break;
 
-                // 计算重叠区间 [max(start), min(end)]
-                var overlapStart = sessionStart > bucket.Start ? sessionStart : bucket.Start;
-                var overlapEnd = sessionEnd < bucket.End ? sessionEnd : bucket.End;
-
-                if (overlapStart < overlapEnd)
-                {
-                    durationMilliseconds[i] += (long)(overlapEnd - overlapStart).TotalMilliseconds;
-                }
+                duration[i] += bucket.OverlapDuration(validPart.Value);
             }
         }
 
-        // 组装最终结果（保留到秒）
-        var result = new List<GetWebsiteCategoryUsageResponseItem>(timeRanges.Count);
-        for (int i = 0; i < timeRanges.Count; i++)
+        var result = new List<GetWebsiteCategoryUsageResponseItem>(duration.Length);
+        for (int i = 0; i < duration.Length; i++)
         {
             result.Add(
                 new GetWebsiteCategoryUsageResponseItem(
-                    timeRanges[i].Start,
-                    timeRanges[i].End,
-                    durationMilliseconds[i] / 1000
+                    timeBuckets[i].Start,
+                    timeBuckets[i].End,
+                    (long)duration[i].TotalSeconds
                 )
             );
         }
@@ -119,25 +111,60 @@ public class GetWebsiteCategoryUsageHandler(
         return result;
     }
 
-    /// <summary>
-    /// 二分查找第一个 End > sessionStart 的桶索引
-    /// </summary>
+    private static List<TimeRange> GenerateBuckets(
+        DateOnly startDate,
+        DateOnly endDate,
+        UsageGranularity granularity,
+        TimeZoneInfo timeZoneInfo,
+        int dayCutoffHour
+    )
+    {
+        var timeRanges = new List<TimeRange>();
+
+        if (granularity == UsageGranularity.Hour)
+        {
+            var startDay = LogicalDay.From(startDate, dayCutoffHour, timeZoneInfo);
+            var endDay = LogicalDay.From(endDate, dayCutoffHour, timeZoneInfo);
+
+            var overallStartUtc = startDay.UtcWindow.Start;
+            var overallEndUtc = endDay.UtcWindow.End;
+
+            var currentUtc = overallStartUtc;
+            while (currentUtc < overallEndUtc)
+            {
+                var nextUtc = currentUtc.AddHours(1);
+                timeRanges.Add(new TimeRange(currentUtc, nextUtc));
+                currentUtc = nextUtc;
+            }
+        }
+        else if (granularity == UsageGranularity.Day)
+        {
+            for (var d = startDate; d <= endDate; d = d.AddDays(1))
+            {
+                var logicalDay = LogicalDay.From(d, dayCutoffHour, timeZoneInfo);
+                timeRanges.Add(logicalDay.UtcWindow);
+            }
+        }
+
+        return timeRanges;
+    }
+
     private static int FindFirstBucketIndex(
-        List<UtcTimeRange> timeRanges,
+        List<TimeRange> timeBuckets,
         DateTimeOffset sessionStart
     )
     {
         int low = 0,
-            high = timeRanges.Count - 1;
-        int result = timeRanges.Count;
+            high = timeBuckets.Count - 1;
+        int result = timeBuckets.Count;
 
         while (low <= high)
         {
             int mid = low + (high - low) / 2;
-            if (timeRanges[mid].End > sessionStart)
+            if (timeBuckets[mid].End > sessionStart)
             {
                 result = mid;
-                high = mid - 1; // 尝试向前继续寻找更早重叠的桶
+                high = mid - 1;
             }
             else
             {
@@ -146,81 +173,5 @@ public class GetWebsiteCategoryUsageHandler(
         }
 
         return result;
-    }
-
-    public readonly record struct UtcTimeRange
-    {
-        public DateTimeOffset Start { get; }
-        public DateTimeOffset End { get; }
-
-        public UtcTimeRange(DateTimeOffset start, DateTimeOffset end)
-        {
-            if (end < start)
-            {
-                throw new ArgumentException(
-                    "End time must be greater than or equal to Start time."
-                );
-            }
-
-            Start = start;
-            End = end;
-        }
-    }
-
-    private static List<UtcTimeRange> GenerateUtcTimeRanges(
-        DateOnly startDate,
-        DateOnly endDate,
-        UsageGranularity granularity,
-        TimeZoneInfo timeZoneInfo,
-        int dayCutoffHour
-    )
-    {
-        var timeRanges = new List<UtcTimeRange>();
-
-        if (granularity == UsageGranularity.Day)
-        {
-            // 按逻辑天循环（闭区间 [startDate, endDate]）
-            for (DateOnly d = startDate; d <= endDate; d = d.AddDays(1))
-            {
-                // 计算当前逻辑天的开始与结束时间（转换为 UTC）
-                var dayStartUtc = UsageTimeCalculator.GetLogicalDayStartInUtc(
-                    d,
-                    dayCutoffHour,
-                    timeZoneInfo
-                );
-                var dayEndUtc = UsageTimeCalculator.GetLogicalDayStartInUtc(
-                    d.AddDays(1),
-                    dayCutoffHour,
-                    timeZoneInfo
-                );
-
-                timeRanges.Add(new(dayStartUtc, dayEndUtc));
-            }
-        }
-        else if (granularity == UsageGranularity.Hour)
-        {
-            // 计算整体查询范围的起点和终点 UTC 时间
-            var overallStartUtc = UsageTimeCalculator.GetLogicalDayStartInUtc(
-                startDate,
-                dayCutoffHour,
-                timeZoneInfo
-            );
-            var overallEndUtc = UsageTimeCalculator.GetLogicalDayStartInUtc(
-                endDate.AddDays(1),
-                dayCutoffHour,
-                timeZoneInfo
-            );
-
-            // 物理 1 小时递增生成桶
-            var currentUtc = overallStartUtc;
-            while (currentUtc < overallEndUtc)
-            {
-                var nextUtc = currentUtc.AddHours(1);
-                timeRanges.Add(new(currentUtc, nextUtc));
-                currentUtc = nextUtc;
-            }
-        }
-
-        return timeRanges;
     }
 }

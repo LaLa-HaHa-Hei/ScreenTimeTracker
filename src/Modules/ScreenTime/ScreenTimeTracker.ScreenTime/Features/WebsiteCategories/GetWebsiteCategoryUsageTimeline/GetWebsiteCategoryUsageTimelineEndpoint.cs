@@ -25,6 +25,7 @@ public class GetWebsiteCategoryUsageTimelineEndpoint(IMediator mediator)
             new GetWebsiteCategoryUsageTimelineQuery(
                 req.StartDate,
                 req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
                 req.IncludedIds,
                 req.ExcludedIds
             ),

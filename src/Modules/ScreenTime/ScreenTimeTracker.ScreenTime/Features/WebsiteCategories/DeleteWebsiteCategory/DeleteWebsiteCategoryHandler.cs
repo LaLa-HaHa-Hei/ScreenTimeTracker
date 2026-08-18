@@ -1,7 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.WebsiteCategories.DeleteWebsiteCategory;
@@ -33,11 +33,11 @@ public class DeleteWebsiteCategoryHandler(ScreenTimeDbContext context)
 
         // 把所有这个类别的 Website 都设置为默认类别
         await context
-            .Websites.Where(website => website.CategoryId == request.WebsiteCategoryId)
+            .Websites.Where(website => website.WebsiteCategoryId == request.WebsiteCategoryId)
             .ExecuteUpdateAsync(
                 setters =>
                     setters.SetProperty(
-                        website => website.CategoryId,
+                        website => website.WebsiteCategoryId,
                         WebsiteCategory.UncategorizedId
                     ),
                 cancellationToken

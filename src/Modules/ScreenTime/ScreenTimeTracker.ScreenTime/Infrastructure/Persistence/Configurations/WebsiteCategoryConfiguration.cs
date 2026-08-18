@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
 {

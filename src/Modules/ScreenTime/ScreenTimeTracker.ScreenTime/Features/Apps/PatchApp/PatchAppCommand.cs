@@ -9,6 +9,6 @@ public record PatchAppCommand(
     OptionalValue<string> Name = default,
     OptionalValue<string> Color = default,
     OptionalValue<bool> AllowMetadataAutoRefresh = default,
-    OptionalValue<Guid> CategoryId = default,
+    OptionalValue<Guid> AppCategoryId = default,
     OptionalValue<string?> IconPath = default
 ) : IRequest<ErrorOr<Updated>>;

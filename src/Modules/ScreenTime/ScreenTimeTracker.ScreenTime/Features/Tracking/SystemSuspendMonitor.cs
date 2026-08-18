@@ -2,14 +2,18 @@ using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking;
+
+public record SystemSuspendingEvent : INotification;
+
+public record SystemResumedEvent : INotification;
 
 public partial class SystemSuspendMonitor(
     ILogger<SystemSuspendMonitor> logger,
     ISystemLifecycleProvider systemLifecycleProvider,
-    IServiceScopeFactory scopeFactory
+    IServiceScopeFactory scopeFactory,
+    SystemSuspendStore systemSuspendStore
 ) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -18,17 +22,19 @@ public partial class SystemSuspendMonitor(
         {
             LogSystemSuspending(logger);
 
+            systemSuspendStore.Current = new(true);
             using var scope = scopeFactory.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-            await mediator.Send(new SystemSuspendingCommand(), stoppingToken);
+            var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            await publisher.Publish(new SystemSuspendingEvent(), stoppingToken);
         };
         systemLifecycleProvider.Resumed += async (_, _) =>
         {
             LogSystemResumed(logger);
 
+            systemSuspendStore.Current = new(false);
             using var scope = scopeFactory.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-            await mediator.Send(new SystemResumedCommand(), stoppingToken);
+            var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            await publisher.Publish(new SystemResumedEvent(), stoppingToken);
         };
 
         try
@@ -43,4 +49,11 @@ public partial class SystemSuspendMonitor(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "System has resumed.")]
     private static partial void LogSystemResumed(ILogger logger);
+}
+
+public interface ISystemLifecycleProvider
+{
+    event EventHandler? Suspending;
+    event EventHandler? Resumed;
+    event EventHandler? ShuttingDown;
 }

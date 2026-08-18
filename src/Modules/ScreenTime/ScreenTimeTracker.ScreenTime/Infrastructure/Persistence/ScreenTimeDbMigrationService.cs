@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteCategories;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
@@ -36,13 +36,7 @@ public partial class ScreenTimeDbMigrationService(
 
             // 不支持复杂属性的种子数据，所以在这注入
             var userSettings = UserSettings.CreateDefault();
-            string? localZoneId = TimeZoneInfo.Local.Id;
-            if (OperatingSystem.IsWindows())
-                TimeZoneInfo.TryConvertWindowsIdToIanaId(localZoneId, out localZoneId);
-            localZoneId ??= "America/New_York";
-            userSettings.Update(regional: new RegionalSettings(localZoneId));
             context.UserSettings.Add(userSettings);
-            LogTimeZoneIdCorrected(logger, localZoneId);
             await context.SaveChangesAsync(cancellationToken);
         }
     }

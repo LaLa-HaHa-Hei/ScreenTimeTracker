@@ -4,8 +4,7 @@ public record GetUserSettingsResponse(
     AppTrackingSettingsDto AppTracking,
     WebsiteTrackingSettingsDto WebsiteTracking,
     IdleDetectionSettingsDto IdleDetection,
-    TimeBoundarySettingsDto TimeBoundary,
-    RegionalSettingsDto Regional
+    TimeBoundarySettingsDto TimeBoundary
 );
 
 public record AppTrackingSettingsDto(
@@ -32,5 +31,3 @@ public record IdleDetectionSettingsDto(
 );
 
 public record TimeBoundarySettingsDto(int DayCutoffHour);
-
-public record RegionalSettingsDto(string TimeZoneId);

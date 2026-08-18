@@ -16,7 +16,14 @@ public class GetAppUsageDistributionEndpoint(IMediator mediator)
     public override async Task HandleAsync(GetAppUsageDistributionRequest req, CancellationToken ct)
     {
         var result = await mediator.Send(
-            new GetAppUsageDistributionQuery(req.StartDate, req.EndDate, req.TopN, req.ExcludedIds),
+            new GetAppUsageDistributionQuery(
+                req.StartDate,
+                req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
+                req.TopN,
+                req.IncludedIds,
+                req.ExcludedIds
+            ),
             ct
         );
         await Send.OkAsync(result, ct);

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppCategories;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.Apps;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
 {
@@ -12,13 +13,13 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
             builder.HasData(App.CreateIdleApp());
 
             builder
-                .HasOne(a => a.Category)
+                .HasOne<AppCategory>()
                 .WithMany()
-                .HasForeignKey(a => a.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict); //阻止删除Category，如果存在App。
+                .HasForeignKey(a => a.AppCategoryId)
+                .OnDelete(DeleteBehavior.Restrict); // 如果存在 App，阻止删除 AppCategory。
 
             builder.HasIndex(x => x.ProcessName).IsUnique();
-            builder.HasIndex(x => x.CategoryId);
+            builder.HasIndex(x => x.AppCategoryId);
         }
     }
 }

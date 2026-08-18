@@ -30,7 +30,7 @@ public class GetWebsiteHandler(ScreenTimeDbContext context)
             website.Host,
             website.AllowMetadataAutoRefresh,
             website.MetadataLastRefreshedAt,
-            website.CategoryId,
+            website.WebsiteCategoryId,
             website.IconPath,
             website.IconPathLastUpdatedAt,
             website.IsSystem

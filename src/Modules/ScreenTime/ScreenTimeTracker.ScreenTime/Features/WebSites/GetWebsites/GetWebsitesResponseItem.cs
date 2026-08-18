@@ -7,7 +7,7 @@ public record GetWebsitesResponseItem(
     string Host,
     bool AllowMetadataAutoRefresh,
     DateTimeOffset MetadataLastRefreshedAt,
-    Guid CategoryId,
+    Guid WebsiteCategoryId,
     string? IconPath,
     DateTimeOffset IconPathLastUpdatedAt,
     bool IsSystem

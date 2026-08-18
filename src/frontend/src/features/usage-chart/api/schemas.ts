@@ -30,6 +30,7 @@ export const getAppUsageParamsSchema = z.object({
   granularity: z.enum(["hour", "day"]),
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
@@ -39,6 +40,7 @@ export const getAppCategoryUsageParamsSchema = z.object({
   granularity: z.enum(["hour", "day"]),
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
@@ -48,6 +50,7 @@ export const getWebsiteUsageParamsSchema = z.object({
   granularity: z.enum(["hour", "day"]),
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
@@ -57,6 +60,7 @@ export const getWebsiteCategoryUsageParamsSchema = z.object({
   granularity: z.enum(["hour", "day"]),
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });

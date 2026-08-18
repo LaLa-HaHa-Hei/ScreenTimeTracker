@@ -1,8 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.BuildingBlocks.Types;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.UserSettingsManagement.PatchUserSettings;
@@ -29,8 +28,7 @@ public class PatchUserSettingsHandler(ScreenTimeDbContext context)
                 : default,
             timeBoundary: request.TimeBoundary.HasValue
                 ? new(MapTimeBoundary(request.TimeBoundary.Value))
-                : default,
-            regional: request.Regional.HasValue ? new(MapRegional(request.Regional.Value)) : default
+                : default
         );
 
         await context.SaveChangesAsync(cancellationToken);
@@ -72,10 +70,5 @@ public class PatchUserSettingsHandler(ScreenTimeDbContext context)
     private static TimeBoundarySettings MapTimeBoundary(TimeBoundarySettingsDto dto)
     {
         return new TimeBoundarySettings(dto.DayCutoffHour);
-    }
-
-    private static RegionalSettings MapRegional(RegionalSettingsDto dto)
-    {
-        return new RegionalSettings(dto.TimeZoneId);
     }
 }

@@ -25,7 +25,9 @@ public class GetWebsiteCategoryUsageDistributionEndpoint(IMediator mediator)
             new GetWebsiteCategoryUsageDistributionQuery(
                 req.StartDate,
                 req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
                 req.TopN,
+                req.IncludedIds,
                 req.ExcludedIds
             ),
             ct

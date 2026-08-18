@@ -1,30 +1,28 @@
 using Mediator;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.AppUsageSessions;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
-
-public record SystemSuspendingCommand : IRequest;
 
 public class SystemSuspendingHandler(
     ActiveAppUsageSessionStore activeSessionStore,
     ScreenTimeDbContext context,
     TimeProvider timeProvider
-) : IRequestHandler<SystemSuspendingCommand>
+) : INotificationHandler<SystemSuspendingEvent>
 {
-    public async ValueTask<Unit> Handle(
-        SystemSuspendingCommand request,
+    public async ValueTask Handle(
+        SystemSuspendingEvent notification,
         CancellationToken cancellationToken
     )
     {
         if (activeSessionStore.Current is null)
-            return Unit.Value;
+            return;
 
         var now = timeProvider.GetUtcNow();
-        await activeSessionStore.Current.PersistSessionAsync(context, now, cancellationToken);
+        await context.PersistActiveSessionAsync(activeSessionStore.Current, now, cancellationToken);
         activeSessionStore.Current = null;
         await context.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return;
     }
 }

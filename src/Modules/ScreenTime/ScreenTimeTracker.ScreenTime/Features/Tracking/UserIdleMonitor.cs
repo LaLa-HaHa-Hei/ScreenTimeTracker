@@ -3,10 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking;
+
+public record UserBecameIdleEvent(DateTimeOffset IdleStartedAt) : INotification;
+
+public record UserBecameActiveEvent : INotification;
 
 public partial class UserIdleMonitor(
     ILogger<UserIdleMonitor> logger,
@@ -47,18 +51,18 @@ public partial class UserIdleMonitor(
                     if (!userIdleStore.Current.IsUserIdle)
                     {
                         var idleStartedAt = now - systemIdleTime;
-                        LogUserBecameIdle(logger, idleStartedAt);
+                        if (logger.IsEnabled(LogLevel.Information))
+#pragma warning disable CA1873 // Avoid potentially expensive logging
+                            LogUserBecameIdle(logger, idleStartedAt.ToLocalTime());
+#pragma warning restore CA1873 // Avoid potentially expensive logging
                         userIdleStore.Current = new(true);
                         using var scope = scopeFactory.CreateScope();
-                        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                        await mediator.Send(
-                            new TrackAppUsage.UserIdleCommand(idleStartedAt),
+                        var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+                        await publisher.Publish(
+                            new UserBecameIdleEvent(idleStartedAt),
                             stoppingToken
                         );
-                        await mediator.Send(
-                            new TrackWebsiteUsage.UserIdleCommand(idleStartedAt),
-                            stoppingToken
-                        );
+                        await publisher.Publish(new UserBecameActiveEvent(), stoppingToken);
                     }
                 }
                 // 处于活跃状态
@@ -70,8 +74,8 @@ public partial class UserIdleMonitor(
                         LogUserBecameActive(logger);
                         userIdleStore.Current = new(false);
                         using var scope = scopeFactory.CreateScope();
-                        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                        await mediator.Send(new TrackAppUsage.UserActiveCommand(), stoppingToken);
+                        var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+                        await publisher.Publish(new UserBecameActiveEvent(), stoppingToken);
                     }
                 }
             }
@@ -81,11 +85,11 @@ public partial class UserIdleMonitor(
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "User has become idle. Idle started at {IdleStartedAt}."
+        Message = "User became idle. Idle started at {IdleStartedAt}."
     )]
     private static partial void LogUserBecameIdle(ILogger logger, DateTimeOffset idleStartedAt);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "User has become active.")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "User became active.")]
     private static partial void LogUserBecameActive(ILogger logger);
 
     private async Task<UserSettings> GetUserSettingsAsync(CancellationToken stoppingToken)
@@ -96,4 +100,9 @@ public partial class UserIdleMonitor(
         var userSettings = await context.UserSettings.AsNoTracking().SingleAsync(stoppingToken);
         return userSettings;
     }
+}
+
+public interface IIdleTimeProvider
+{
+    TimeSpan GetSystemIdleTime();
 }

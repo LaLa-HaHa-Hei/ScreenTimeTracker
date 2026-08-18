@@ -1,5 +1,6 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using ScreenTimeTracker.ScreenTime.Domain.ValueObjects;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.DataManagement.DeleteUsageData;
@@ -13,21 +14,16 @@ public class DeleteUsageDataHandler(ScreenTimeDbContext context)
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
         var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
-        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+        var timeRange = LogicalDay.CalculateUtcWindow(
             request.StartDate,
-            dayCutoffHour,
-            timeZoneInfo
-        );
-        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
-            request.EndDate.AddDays(1),
-            dayCutoffHour,
-            timeZoneInfo
+            request.EndDate,
+            settings.TimeBoundary.DayCutoffHour,
+            request.TimeZoneInfo
         );
 
         await context
-            .AppUsageSessions.Where(x => minTime <= x.StartTime && x.EndTime < maxTime)
+            .AppUsageSessions.Where(x => timeRange.Start < x.EndTime && x.StartTime < timeRange.End)
             .ExecuteDeleteAsync(cancellationToken);
 
         return Unit.Value;

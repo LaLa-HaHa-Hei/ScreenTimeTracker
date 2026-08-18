@@ -46,13 +46,6 @@
       "tooltip": "定义了这一天从几点开始，到第二天几点结束。"
     }
   },
-  "regionalSettings": {
-    "title": "区域设置",
-    "timeZoneId": {
-      "label": "时区",
-      "tooltip": "统计结果展示时所使用的时区。"
-    }
-  },
   "appTrackingSettings": {
     "title": "应用追踪设置",
     "iconDirectory": {

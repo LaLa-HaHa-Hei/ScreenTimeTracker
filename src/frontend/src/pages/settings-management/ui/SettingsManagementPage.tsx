@@ -425,58 +425,6 @@ export const SettingsManagementPage = () => {
               </Stack>
             </Stack>
           </Paper>
-          {/* 区域设置 */}
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 2,
-            }}
-          >
-            <Typography sx={{ fontWeight: "bold" }}>
-              {t(($) => $.page_settingsManagement.regionalSettings.title)}
-            </Typography>
-            <Stack spacing={1} direction="column" sx={{ mt: 2 }}>
-              {/* IANA 时区 ID */}
-              <Stack
-                direction="row"
-                sx={{
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Stack direction="row" sx={{ alignItems: "center" }}>
-                  <Typography>
-                    {t(($) => $.page_settingsManagement.regionalSettings.timeZoneId.label)}
-                  </Typography>
-                  <Tooltip
-                    title={t(($) => $.page_settingsManagement.regionalSettings.timeZoneId.tooltip)}
-                  >
-                    <IconButton size="small">
-                      <HelpIcon fontSize="inherit" />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-                <Select
-                  size="small"
-                  value={userSettingsDtoData.regional.timeZoneId}
-                  onChange={async (event: SelectChangeEvent<string>) => {
-                    await patchUserSettingsAsync({
-                      regional: {
-                        ...userSettingsDtoData.regional,
-                        timeZoneId: event.target.value,
-                      },
-                    });
-                  }}
-                >
-                  {Intl.supportedValuesOf("timeZone").map((timeZoneId) => (
-                    <MenuItem key={timeZoneId} value={timeZoneId}>
-                      {timeZoneId}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Stack>
-            </Stack>
-          </Paper>
         </Stack>
       </Grid>
       {/* 第二列 */}

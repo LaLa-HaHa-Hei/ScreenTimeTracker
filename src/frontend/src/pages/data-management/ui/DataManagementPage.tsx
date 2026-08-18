@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 
 export const DataManagementPage = () => {
   const { t } = useTranslation(["page_dataManagement"]);
+  const timeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { enqueueSnackbar } = useSnackbar();
   const { mutateAsync: deleteUsageDataAsync } = useDeleteData();
   const { refetch } = useQuery({
@@ -244,6 +245,7 @@ export const DataManagementPage = () => {
                 await deleteUsageDataAsync({
                   startDate: dateToDateOnly(deleteUsageDataStartDate),
                   endDate: dateToDateOnly(deleteUsageDataEndDate),
+                  timeZoneId: timeZoneId,
                 });
                 enqueueSnackbar(
                   t(($) => $.page_dataManagement.messages.deleteSuccess),

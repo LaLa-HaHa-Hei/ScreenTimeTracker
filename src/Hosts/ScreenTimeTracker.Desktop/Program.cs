@@ -20,7 +20,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 [assembly: RootNamespace("ScreenTimeTracker.Desktop")]
 
-// 切换工作目录为程序所在目录
+// 切换工作目录为程序所在目录，规定所有相对路径都是相对于程序所在目录
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 // 临时日志配置
@@ -124,7 +124,7 @@ try
         if (!await instanceMessenger.SendMessageAsync("OpenUI"))
         {
             Log.Error("Failed to send message to existing instance.");
-            ShowErrorDialog("Program is already running, please check the tray icon.");
+            ShowError("Program is already running, please check the tray icon.");
         }
         Log.CloseAndFlush();
         return;
@@ -192,7 +192,7 @@ try
     catch (IOException ex) when (ex.InnerException is AddressInUseException)
     {
         Log.Error(ex, "Address already in use.");
-        ShowErrorDialog(
+        ShowError(
             "Address already in use, please close other instances or change the port in appsettings.json."
         );
         await app.StopAsync();
@@ -202,14 +202,14 @@ try
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly.");
-    ShowErrorDialog("Application terminated unexpectedly, please check the log.");
+    ShowError("Application terminated unexpectedly, please check the log.");
     Log.CloseAndFlush();
     Environment.Exit(1);
 }
 
-static void ShowErrorDialog(string message)
+static void ShowError(string message)
 {
-    if (OperatingSystem.IsWindowsVersionAtLeast(5, 1, 2600))
+    if (OperatingSystem.IsWindowsVersionAtLeast(5, 0, 0))
     {
         PInvoke.MessageBox(
             default,
@@ -219,5 +219,5 @@ static void ShowErrorDialog(string message)
         );
     }
     else
-        throw new PlatformNotSupportedException("Only Windows5.1.2600 or later is supported.");
+        throw new PlatformNotSupportedException("Only Windows5.0 or later is supported.");
 }

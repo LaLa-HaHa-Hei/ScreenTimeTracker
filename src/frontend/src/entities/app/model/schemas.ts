@@ -7,7 +7,7 @@ export const appSchema = z.object({
   processName: z.string(),
   allowMetadataAutoRefresh: z.boolean(),
   metadataLastRefreshedAt: z.date(),
-  categoryId: z.string(),
+  appCategoryId: z.string(),
   executablePath: z.string().nullable(),
   iconPath: z.string().nullable(),
   iconPathLastUpdatedAt: z.date(),

@@ -1,15 +1,12 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.ValueObjects;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Apps.GetAppUsageDistribution;
 
-public class GetAppUsageDistributionHandler(
-    ScreenTimeDbContext context,
-    ActiveAppUsageSessionStore activeSessionStore,
-    TimeProvider timeProvider
-) : IRequestHandler<GetAppUsageDistributionQuery, GetAppUsageDistributionResponse>
+public class GetAppUsageDistributionHandler(ScreenTimeDbContext context)
+    : IRequestHandler<GetAppUsageDistributionQuery, GetAppUsageDistributionResponse>
 {
     public async ValueTask<GetAppUsageDistributionResponse> Handle(
         GetAppUsageDistributionQuery request,
@@ -17,131 +14,84 @@ public class GetAppUsageDistributionHandler(
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
         var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
-        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+        var timeRange = LogicalDay.CalculateUtcWindow(
             request.StartDate,
-            dayCutoffHour,
-            timeZoneInfo
+            request.EndDate,
+            settings.TimeBoundary.DayCutoffHour,
+            request.TimeZoneInfo
         );
-        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
-            request.EndDate.AddDays(1),
-            dayCutoffHour,
-            timeZoneInfo
-        );
-        var excludedIds = request.ExcludedIds?.ToHashSet() ?? [];
+
+        var appQuery = context.Apps.AsNoTracking();
+
+        if (request.IncludedIds is not null)
+            appQuery = appQuery.Where(c => request.IncludedIds.Contains(c.Id));
+        else if (request.ExcludedIds is not null)
+            appQuery = appQuery.Where(c => !request.ExcludedIds.Contains(c.Id));
+
+        var appMap = await appQuery
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Color,
+                c.IconPath,
+                c.IconPathLastUpdatedAt,
+            })
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
+
+        if (appMap.Count == 0)
+            return new GetAppUsageDistributionResponse([], 0, 0, 0, 0);
+
+        var appIds = appMap.Keys;
 
         var sessions = await context
-            .AppUsageSessions.Where(x =>
-                !excludedIds.Contains(x.App!.Id) && x.StartTime < maxTime && minTime <= x.EndTime
+            .AppUsageSessions.AsNoTracking()
+            .Where(x =>
+                appIds.Contains(x.AppId)
+                && timeRange.Start < x.EndTime
+                && x.StartTime < timeRange.End
             )
-            .Select(x => new
-            {
-                x.App!.Id,
-                x.App.Name,
-                x.App.Color,
-                x.App.IconPath,
-                x.App.IconPathLastUpdatedAt,
-                x.StartTime,
-                x.EndTime,
-            })
+            .Select(x => new { x.AppId, x.UsagePeriod })
             .ToListAsync(cancellationToken);
 
-        var activeSession = activeSessionStore.Current;
-        if (activeSession is not null)
-        {
-            var activeSessionEnd = timeProvider.GetUtcNow();
-
-            if (activeSession.StartTime < maxTime && minTime < activeSessionEnd)
-            {
-                var activeApp = await context
-                    .Apps.AsNoTracking()
-                    .SingleAsync(x => x.Id == activeSession.AppId, cancellationToken);
-
-                if (!excludedIds.Contains(activeApp.Id))
-                    sessions.Add(
-                        new
-                        {
-                            activeApp.Id,
-                            activeApp.Name,
-                            activeApp.Color,
-                            activeApp.IconPath,
-                            activeApp.IconPathLastUpdatedAt,
-                            activeSession.StartTime,
-                            EndTime = activeSessionEnd,
-                        }
-                    );
-            }
-        }
-
-        var aggregatedUsage =
-            new Dictionary<
-                Guid,
-                (
-                    string Name,
-                    string Color,
-                    string? IconPath,
-                    DateTimeOffset IconPathLastUpdatedAt,
-                    long DurationMilliseconds
-                )
-            >();
+        var durationByAppId = new Dictionary<Guid, TimeSpan>();
 
         foreach (var session in sessions)
         {
-            // 截取和请求时间段交集的时间 (避免多算范围外的时长)
-            DateTimeOffset actualStart = minTime < session.StartTime ? session.StartTime : minTime;
-            DateTimeOffset actualEnd = session.EndTime < maxTime ? session.EndTime : maxTime;
+            TimeSpan overlap = timeRange.OverlapDuration(session.UsagePeriod);
+            if (overlap == TimeSpan.Zero)
+                continue;
 
-            if (actualStart < actualEnd)
-            {
-                long durationMilliseconds = (long)(actualEnd - actualStart).TotalMilliseconds;
-
-                if (!aggregatedUsage.TryGetValue(session.Id, out var current))
-                    aggregatedUsage[session.Id] = (
-                        session.Name,
-                        session.Color,
-                        session.IconPath,
-                        session.IconPathLastUpdatedAt,
-                        durationMilliseconds
-                    );
-                else
-                    aggregatedUsage[session.Id] = (
-                        current.Name,
-                        current.Color,
-                        current.IconPath,
-                        current.IconPathLastUpdatedAt,
-                        current.DurationMilliseconds + durationMilliseconds
-                    );
-            }
+            durationByAppId[session.AppId] =
+                durationByAppId.GetValueOrDefault(session.AppId) + overlap;
         }
 
-        // 计算总体宏观指标
-        int totalCount = aggregatedUsage.Count;
-        // 先把毫秒转为秒，防止 topN 是全部时加和少于总时长
-        long totalDurationSeconds = aggregatedUsage.Values.Sum(x => x.DurationMilliseconds / 1000);
+        int totalCount = durationByAppId.Count;
 
-        // 排序截取Top N列表
-        var topNItems = aggregatedUsage
-            // 先按照使用时长倒序排列，再保留到秒，防止顺序不准确
-            .OrderByDescending(x => x.Value.DurationMilliseconds)
-            .Select(kvp => new AppUsageDistributionItem(
-                Id: kvp.Key,
-                Name: kvp.Value.Name,
-                Color: kvp.Value.Color,
-                IconPath: kvp.Value.IconPath,
-                IconPathLastUpdatedAt: kvp.Value.IconPathLastUpdatedAt,
-                DurationSeconds: kvp.Value.DurationMilliseconds / 1000
-            ))
-            // 取前 TopN
+        long totalDurationSeconds = durationByAppId.Values.Sum(x => (long)x.TotalSeconds);
+
+        var topNItems = durationByAppId
+            .OrderByDescending(x => x.Value)
             .Take(request.TopN)
+            .Select(kvp =>
+            {
+                var app = appMap[kvp.Key];
+                return new AppUsageDistributionItem(
+                    Id: kvp.Key,
+                    Name: app.Name,
+                    Color: app.Color,
+                    IconPath: app.IconPath,
+                    IconPathLastUpdatedAt: app.IconPathLastUpdatedAt,
+                    DurationSeconds: (long)kvp.Value.TotalSeconds
+                );
+            })
             .ToList();
 
-        // 倒推“其他”数据
         int othersCount = totalCount - topNItems.Count;
         long topNDurationSeconds = topNItems.Sum(x => x.DurationSeconds);
         long othersDurationSeconds = Math.Max(0, totalDurationSeconds - topNDurationSeconds);
 
-        // 排序、格式化并取前 TopN 返回
         return new GetAppUsageDistributionResponse(
             Items: topNItems,
             TotalCount: totalCount,

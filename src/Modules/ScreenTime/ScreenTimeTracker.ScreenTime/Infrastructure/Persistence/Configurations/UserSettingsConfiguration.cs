@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ScreenTimeTracker.ScreenTime.Domain.UserSettings;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.UserSettings;
 
 namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
 {
@@ -16,7 +16,7 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
                 appTracking =>
                 {
                     appTracking
-                        .Property(nameof(AppTrackingSettings.IconDirectory))
+                        .Property(p => p.IconDirectory)
                         .HasColumnName(
                             $"{nameof(UserSettings.AppTracking)}_{nameof(AppTrackingSettings.IconDirectory)}"
                         );
@@ -53,7 +53,7 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
                 websiteTracking =>
                 {
                     websiteTracking
-                        .Property(nameof(WebsiteTrackingSettings.IconDirectory))
+                        .Property(p => p.IconDirectory)
                         .HasColumnName(
                             $"{nameof(UserSettings.WebsiteTracking)}_{nameof(WebsiteTrackingSettings.IconDirectory)}"
                         );
@@ -110,18 +110,6 @@ namespace ScreenTimeTracker.ScreenTime.Infrastructure.Persistence.Configurations
                         .Property(p => p.DayCutoffHour)
                         .HasColumnName(
                             $"{nameof(UserSettings.TimeBoundary)}_{nameof(TimeBoundarySettings.DayCutoffHour)}"
-                        );
-                }
-            );
-
-            builder.ComplexProperty(
-                s => s.Regional,
-                regional =>
-                {
-                    regional
-                        .Property(p => p.TimeZoneId)
-                        .HasColumnName(
-                            $"{nameof(UserSettings.Regional)}_{nameof(RegionalSettings.TimeZoneId)}"
                         );
                 }
             );

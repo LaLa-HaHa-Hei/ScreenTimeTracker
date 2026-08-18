@@ -22,7 +22,9 @@ public class GetWebsiteUsageDistributionEndpoint(IMediator mediator)
             new GetWebsiteUsageDistributionQuery(
                 req.StartDate,
                 req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
                 req.TopN,
+                req.IncludedIds,
                 req.ExcludedIds
             ),
             ct

@@ -22,8 +22,7 @@ public class PatchUserSettingsEndpoint(IMediator mediator)
                 req.AppTracking,
                 req.WebsiteTracking,
                 req.IdleDetection,
-                req.TimeBoundary,
-                req.Regional
+                req.TimeBoundary
             ),
             ct
         );

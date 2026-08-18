@@ -22,7 +22,7 @@ public class PatchWebsiteEndpoint(IMediator mediator) : Endpoint<PatchWebsiteReq
                 req.Name,
                 req.Color,
                 req.AllowMetadataAutoRefresh,
-                req.CategoryId,
+                req.WebsiteCategoryId,
                 req.IconPath
             ),
             ct

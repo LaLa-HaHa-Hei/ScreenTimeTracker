@@ -1,4 +1,3 @@
-using FastEndpoints;
 using Mediator;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategories;

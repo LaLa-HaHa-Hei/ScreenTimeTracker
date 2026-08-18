@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ScreenTimeTracker.ScreenTime.Domain.Websites;
+using ScreenTimeTracker.ScreenTime.Domain.Aggregates.WebsiteUsageSessions;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackWebsiteUsage;
@@ -31,7 +31,7 @@ public partial class WebsiteUsageActiveSessionAutoSaver(
 
                 using var scope = scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ScreenTimeDbContext>();
-                await activeSessionStore.Current.PersistSessionAsync(context, stoppingToken);
+                await context.PersistActiveSessionAsync(activeSessionStore.Current, stoppingToken);
                 await context.SaveChangesAsync(stoppingToken);
             }
         }

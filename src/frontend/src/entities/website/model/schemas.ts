@@ -7,7 +7,7 @@ export const websiteSchema = z.object({
   host: z.string(),
   allowMetadataAutoRefresh: z.boolean(),
   metadataLastRefreshedAt: z.date(),
-  categoryId: z.string(),
+  websiteCategoryId: z.string(),
   iconPath: z.string().nullable(),
   iconPathLastUpdatedAt: z.date(),
   isSystem: z.boolean(),

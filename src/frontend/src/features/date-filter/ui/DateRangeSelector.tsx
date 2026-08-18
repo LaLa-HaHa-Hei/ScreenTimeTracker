@@ -187,9 +187,11 @@ export const DateRangeSelector = ({
         <DatePicker
           value={dayjs(value.start)}
           sx={{ flex: "1" }}
-          onChange={(newdate) =>
-            newdate !== null && onValueChange({ start: newdate.toDate(), end: value.end })
-          }
+          onChange={(newdate) => {
+            if (newdate === null) return;
+            const newStart = newdate.toDate();
+            onValueChange({ start: newStart, end: value.end });
+          }}
           slotProps={{
             textField: {
               size: "small",
@@ -199,9 +201,11 @@ export const DateRangeSelector = ({
         <DatePicker
           value={dayjs(value.end)}
           sx={{ flex: "1" }}
-          onChange={(newdate) =>
-            newdate !== null && onValueChange({ start: value.start, end: newdate.toDate() })
-          }
+          onChange={(newdate) => {
+            if (newdate === null) return;
+            const newEnd = newdate.toDate();
+            onValueChange({ start: value.start, end: newEnd });
+          }}
           slotProps={{
             textField: {
               size: "small",

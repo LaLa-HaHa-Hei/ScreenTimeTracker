@@ -82,11 +82,14 @@ export const websiteCategoryUsageDistributionDtoSchema = z.object({
 export type WebsiteCategoryUsageDistributionDto = z.infer<
   typeof websiteCategoryUsageDistributionDtoSchema
 >;
+
 // api 参数类型
 export const getAppUsageDistributionParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   topN: z.number().optional(),
+  includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
 export type GetAppUsageDistributionParams = z.infer<typeof getAppUsageDistributionParamsSchema>;
@@ -94,7 +97,9 @@ export type GetAppUsageDistributionParams = z.infer<typeof getAppUsageDistributi
 export const getAppCategoryUsageDistributionParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   topN: z.number().optional(),
+  includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
 export type GetAppCategoryUsageDistributionParams = z.infer<
@@ -104,7 +109,9 @@ export type GetAppCategoryUsageDistributionParams = z.infer<
 export const getWebsiteUsageDistributionParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   topN: z.number().optional(),
+  includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
 export type GetWebsiteUsageDistributionParams = z.infer<
@@ -114,7 +121,9 @@ export type GetWebsiteUsageDistributionParams = z.infer<
 export const getWebsiteCategoryUsageDistributionParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   topN: z.number().optional(),
+  includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
 export type GetWebsiteCategoryUsageDistributionParams = z.infer<

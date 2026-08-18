@@ -26,12 +26,12 @@ public static class ServiceCollectionExtensions
             {
                 var interceptor =
                     serviceProvider.GetRequiredService<DispatchDomainEventsInterceptor>();
-                var persistenceOptions = serviceProvider
+                var databaseOptions = serviceProvider
                     .GetRequiredService<IOptions<DatabaseOptions>>()
                     .Value;
                 options
                     .UseSqlite(
-                        $"Data Source={persistenceOptions.DBFilePath}",
+                        $"Data Source={databaseOptions.DBFilePath}",
                         x => x.MigrationsHistoryTable("__EFMigrationsHistory_DesktopSettings")
                     )
                     .AddInterceptors(interceptor);

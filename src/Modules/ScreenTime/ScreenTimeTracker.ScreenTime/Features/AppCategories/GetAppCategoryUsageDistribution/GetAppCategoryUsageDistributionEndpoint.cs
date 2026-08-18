@@ -22,6 +22,7 @@ public class GetAppCategoryUsageDistributionEndpoint(IMediator mediator)
             new GetAppCategoryUsageDistributionQuery(
                 req.StartDate,
                 req.EndDate,
+                TimeZoneInfo.FindSystemTimeZoneById(req.TimeZoneId),
                 req.TopN,
                 req.ExcludedIds
             ),

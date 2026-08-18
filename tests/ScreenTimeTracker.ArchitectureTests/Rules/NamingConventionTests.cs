@@ -1,5 +1,4 @@
 using ArchUnitNET.Domain;
-using ArchUnitNET.Fluent;
 using ArchUnitNET.xUnitV3;
 using ScreenTimeTracker.ArchitectureTests.Fixtures;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;

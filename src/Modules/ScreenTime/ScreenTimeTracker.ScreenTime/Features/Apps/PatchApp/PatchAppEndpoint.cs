@@ -22,7 +22,7 @@ public class PatchAppEndpoint(IMediator mediator) : Endpoint<PatchAppRequest, Em
                 Name: req.Name,
                 Color: req.Color,
                 AllowMetadataAutoRefresh: req.AllowMetadataAutoRefresh,
-                CategoryId: req.CategoryId,
+                AppCategoryId: req.AppCategoryId,
                 IconPath: req.IconPath
             ),
             ct

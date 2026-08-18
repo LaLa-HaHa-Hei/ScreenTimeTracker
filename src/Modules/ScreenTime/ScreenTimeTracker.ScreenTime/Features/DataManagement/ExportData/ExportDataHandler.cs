@@ -18,15 +18,21 @@ public partial class ExportDataHandler(
         // App
 
         var apps = await context
-            .Apps.Select(x => new
-            {
-                x.Name,
-                x.Color,
-                x.ProcessName,
-                x.AllowMetadataAutoRefresh,
-                CategoryName = x.Category!.Name,
-                x.IconPath,
-            })
+            .Apps.Join(
+                context.AppCategories,
+                app => app.AppCategoryId,
+                category => category.Id,
+                (app, category) =>
+                    new
+                    {
+                        app.Name,
+                        app.Color,
+                        app.ProcessName,
+                        app.AllowMetadataAutoRefresh,
+                        CategoryName = category.Name,
+                        app.IconPath,
+                    }
+            )
             .ToListAsync(cancellationToken);
 
         ExportDataResponse.App[] appResults;
@@ -88,25 +94,37 @@ public partial class ExportDataHandler(
         }
 
         var appUsageSessions = await context
-            .AppUsageSessions.Select(x => new ExportDataResponse.AppUsageSession(
-                x.App!.ProcessName,
-                x.StartTime,
-                x.EndTime
-            ))
+            .AppUsageSessions.Join(
+                context.Apps,
+                session => session.AppId,
+                app => app.Id,
+                (session, app) =>
+                    new ExportDataResponse.AppUsageSession(
+                        app.ProcessName,
+                        session.UsagePeriod.Start,
+                        session.UsagePeriod.End
+                    )
+            )
             .ToListAsync(cancellationToken);
 
         // Website
 
         var websites = await context
-            .Websites.Select(x => new
-            {
-                x.Name,
-                x.Color,
-                x.Host,
-                x.AllowMetadataAutoRefresh,
-                CategoryName = x.Category!.Name,
-                x.IconPath,
-            })
+            .Websites.Join(
+                context.WebsiteCategories,
+                website => website.WebsiteCategoryId,
+                category => category.Id,
+                (website, category) =>
+                    new
+                    {
+                        website.Name,
+                        website.Color,
+                        website.Host,
+                        website.AllowMetadataAutoRefresh,
+                        CategoryName = category.Name,
+                        website.IconPath,
+                    }
+            )
             .ToListAsync(cancellationToken);
 
         ExportDataResponse.Website[] websiteResults;
@@ -168,11 +186,17 @@ public partial class ExportDataHandler(
         }
 
         var websiteUsageSessions = await context
-            .WebsiteUsageSessions.Select(x => new ExportDataResponse.WebsiteUsageSession(
-                x.Website!.Host,
-                x.StartTime,
-                x.EndTime
-            ))
+            .WebsiteUsageSessions.Join(
+                context.Websites,
+                session => session.WebsiteId,
+                website => website.Id,
+                (session, website) =>
+                    new ExportDataResponse.WebsiteUsageSession(
+                        website.Host,
+                        session.UsagePeriod.Start,
+                        session.UsagePeriod.End
+                    )
+            )
             .ToListAsync(cancellationToken);
 
         return new ExportDataResponse(

@@ -1,15 +1,15 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ScreenTimeTracker.ScreenTime.Domain.Apps;
+using ScreenTimeTracker.ScreenTime.Domain.ValueObjects;
 using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.AppCategories.GetAppCategoryUsageTimeline;
 
-public class GetAppCategoryUsageTimelineHandler(
-    ScreenTimeDbContext context,
-    ActiveAppUsageSessionStore activeSessionStore,
-    TimeProvider timeProvider
-) : IRequestHandler<GetAppCategoryUsageTimelineQuery, List<GetAppCategoryUsageTimelineResponseItem>>
+public class GetAppCategoryUsageTimelineHandler(ScreenTimeDbContext context)
+    : IRequestHandler<
+        GetAppCategoryUsageTimelineQuery,
+        List<GetAppCategoryUsageTimelineResponseItem>
+    >
 {
     public async ValueTask<List<GetAppCategoryUsageTimelineResponseItem>> Handle(
         GetAppCategoryUsageTimelineQuery request,
@@ -17,89 +17,81 @@ public class GetAppCategoryUsageTimelineHandler(
     )
     {
         var settings = await context.UserSettings.AsNoTracking().SingleAsync(cancellationToken);
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(settings.Regional.TimeZoneId);
         var dayCutoffHour = settings.TimeBoundary.DayCutoffHour;
-        var minTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
+        var timeRange = LogicalDay.CalculateUtcWindow(
             request.StartDate,
-            dayCutoffHour,
-            timeZoneInfo
-        );
-        var maxTime = UsageTimeCalculator.GetLogicalDayStartInUtc(
-            request.EndDate.AddDays(1),
-            dayCutoffHour,
-            timeZoneInfo
+            request.EndDate,
+            settings.TimeBoundary.DayCutoffHour,
+            request.TimeZoneInfo
         );
 
-        var query = context
-            .AppUsageSessions.AsNoTracking()
-            .Where(x => x.StartTime < maxTime && minTime <= x.EndTime);
+        var appCategoryQuery = context.AppCategories.AsNoTracking();
 
         if (request.IncludedIds is not null)
-            query = query.Where(x => request.IncludedIds.Contains(x.App!.CategoryId));
+            appCategoryQuery = appCategoryQuery.Where(c => request.IncludedIds.Contains(c.Id));
         else if (request.ExcludedIds is not null)
-            query = query.Where(x => !request.ExcludedIds.Contains(x.App!.CategoryId));
+            appCategoryQuery = appCategoryQuery.Where(c => !request.ExcludedIds.Contains(c.Id));
 
-        var sessions = await query
-            .Select(x => new
+        var appCategoryMap = await appCategoryQuery
+            .Select(c => new
             {
-                Id = x.App!.CategoryId,
-                x.App!.Category!.Name,
-                x.App!.Category!.Color,
-                x.StartTime,
-                x.EndTime,
+                c.Id,
+                c.Name,
+                c.Color,
             })
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
+
+        if (appCategoryMap.Count == 0)
+            return [];
+
+        var appCategoryIds = appCategoryMap.Keys;
+
+        var sessions = await context
+            .AppUsageSessions.AsNoTracking()
+            .Join(
+                context.Apps.AsNoTracking(),
+                session => session.AppId,
+                app => app.Id,
+                (session, app) =>
+                    new
+                    {
+                        app.AppCategoryId,
+                        session.UsagePeriod,
+                        session.StartTime,
+                        session.EndTime,
+                    }
+            )
+            .Where(x =>
+                appCategoryIds.Contains(x.AppCategoryId)
+                && timeRange.Start < x.EndTime
+                && x.StartTime < timeRange.End
+            )
+            .Select(x => new { x.AppCategoryId, x.UsagePeriod })
             .ToListAsync(cancellationToken);
 
-        var activeSession = activeSessionStore.Current;
-        if (activeSession is not null)
+        var result = new List<GetAppCategoryUsageTimelineResponseItem>(sessions.Count);
+
+        foreach (var session in sessions)
         {
-            var activeSessionEnd = timeProvider.GetUtcNow();
+            var appCategory = appCategoryMap[session.AppCategoryId];
+            var validPart = session.UsagePeriod.Intersect(timeRange);
 
-            if (activeSession.StartTime < maxTime && minTime < activeSessionEnd)
-            {
-                var activeApp = await context
-                    .Apps.Include(a => a.Category)
-                    .AsNoTracking()
-                    .SingleAsync(x => x.Id == activeSession.AppId, cancellationToken);
-                var included = request.IncludedIds?.Contains(activeApp.CategoryId) ?? true;
-                var notExcluded =
-                    request.ExcludedIds is null
-                    || !request.ExcludedIds.Contains(activeApp.CategoryId);
-                var shouldInclude = request.IncludedIds is not null ? included : notExcluded;
+            if (validPart is null)
+                continue;
 
-                if (shouldInclude)
-                    sessions.Add(
-                        new
-                        {
-                            Id = activeApp.CategoryId,
-                            activeApp.Category!.Name,
-                            activeApp.Category!.Color,
-                            activeSession.StartTime,
-                            EndTime = activeSessionEnd,
-                        }
-                    );
-            }
+            result.Add(
+                new GetAppCategoryUsageTimelineResponseItem(
+                    Id: appCategory.Id,
+                    Name: appCategory.Name,
+                    Color: appCategory.Color,
+                    StartTime: validPart.Value.Start,
+                    EndTime: validPart.Value.End
+                )
+            );
         }
 
-        var normalized = sessions.Select(s =>
-            s with
-            {
-                StartTime = s.StartTime < minTime ? minTime : s.StartTime,
-                EndTime = maxTime < s.EndTime ? maxTime : s.EndTime,
-            }
-        );
+        result.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
 
-        return
-        [
-            .. normalized
-                .OrderBy(x => x.StartTime)
-                .Select(x => new GetAppCategoryUsageTimelineResponseItem(
-                    Id: x.Id,
-                    Name: x.Name,
-                    Color: x.Color,
-                    StartTime: x.StartTime,
-                    EndTime: x.EndTime
-                )),
-        ];
+        return result;
     }
 }

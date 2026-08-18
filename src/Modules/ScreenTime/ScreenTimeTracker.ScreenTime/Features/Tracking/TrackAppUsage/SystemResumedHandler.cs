@@ -2,21 +2,21 @@ using Mediator;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
-public record SystemResumedCommand : IRequest;
-
 public class SystemResumedHandler(
     IForegroundWindowMonitor foregroundWindowMonitor,
-    IMediator mediator
-) : IRequestHandler<SystemResumedCommand>
+    ForegroundWindowProcessor foregroundWindowProcessor
+) : INotificationHandler<SystemResumedEvent>
 {
-    public async ValueTask<Unit> Handle(
-        SystemResumedCommand request,
+    public async ValueTask Handle(
+        SystemResumedEvent notification,
         CancellationToken cancellationToken
     )
     {
         var windowInfo = foregroundWindowMonitor.GetForegroundWindow();
-        await mediator.Send(new ForegroundWindowChangedCommand(windowInfo), cancellationToken);
+        foregroundWindowProcessor.Enqueue(
+            new ForegroundWindowChangedMessage(windowInfo, DateTimeOffset.Now)
+        );
 
-        return Unit.Value;
+        return;
     }
 }

@@ -43,6 +43,7 @@ export type WebsiteCategoryUsageTimelineItemDto = z.infer<
 export const getAppUsageTimelineParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
@@ -51,6 +52,7 @@ export type GetAppUsageTimelineParams = z.infer<typeof getAppUsageTimelineParams
 export const getAppCategoryUsageTimelineParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
@@ -61,6 +63,7 @@ export type GetAppCategoryUsageTimelineParams = z.infer<
 export const getWebsiteUsageTimelineParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });
@@ -69,6 +72,7 @@ export type GetWebsiteUsageTimelineParams = z.infer<typeof getWebsiteUsageTimeli
 export const getWebsiteCategoryUsageTimelineParamsSchema = z.object({
   startDate: dateOnlySchema,
   endDate: dateOnlySchema,
+  timeZoneId: z.string(),
   includedIds: z.array(z.string()).optional(),
   excludedIds: z.array(z.string()).optional(),
 });

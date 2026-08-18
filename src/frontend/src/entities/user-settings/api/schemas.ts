@@ -35,18 +35,11 @@ export const timeBoundarySettingsDtoSchema = z.object({
 
 export type TimeBoundarySettingsDto = z.infer<typeof timeBoundarySettingsDtoSchema>;
 
-export const regionalSettingsDtoSchema = z.object({
-  timeZoneId: z.string(),
-});
-
-export type RegionalSettingsDto = z.infer<typeof regionalSettingsDtoSchema>;
-
 export const userSettingsDtoSchema = z.object({
   appTracking: appTrackingSettingsDtoSchema,
   websiteTracking: websiteTrackingSettingsDtoSchema,
   idleDetection: idleDetectionSettingsDtoSchema,
   timeBoundary: timeBoundarySettingsDtoSchema,
-  regional: regionalSettingsDtoSchema,
 });
 
 export type UserSettingsDto = z.infer<typeof userSettingsDtoSchema>;
