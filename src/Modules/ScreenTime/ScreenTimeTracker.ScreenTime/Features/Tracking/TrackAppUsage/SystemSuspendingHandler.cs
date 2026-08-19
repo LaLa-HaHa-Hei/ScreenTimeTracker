@@ -15,12 +15,12 @@ public class SystemSuspendingHandler(
         CancellationToken cancellationToken
     )
     {
-        if (activeSessionStore.Current is null)
+        var activeSession = activeSessionStore.Take();
+        if (activeSession is null)
             return;
 
         var now = timeProvider.GetUtcNow();
-        await context.PersistActiveSessionAsync(activeSessionStore.Current, now, cancellationToken);
-        activeSessionStore.Current = null;
+        await context.PersistActiveSessionAsync(activeSession, now, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
         return;

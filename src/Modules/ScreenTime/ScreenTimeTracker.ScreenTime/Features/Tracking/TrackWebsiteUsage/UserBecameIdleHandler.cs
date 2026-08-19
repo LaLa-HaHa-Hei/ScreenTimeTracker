@@ -15,10 +15,31 @@ public class UserBecameIdleHandler(
         CancellationToken cancellationToken
     )
     {
-        if (activeSessionStore.Current is not null)
+        var activeSession = activeSessionStore.Take();
+        if (activeSession is not null)
         {
-            await context.PersistActiveSessionAsync(activeSessionStore.Current, cancellationToken);
-            activeSessionStore.Current = null;
+            if (activeSession.StartTime < notification.IdleStartedAt)
+                await context.PersistActiveSessionAsync(
+                    activeSession,
+                    notification.IdleStartedAt,
+                    cancellationToken
+                );
+            else
+            {
+                var savedActiveSession = await context.WebsiteUsageSessions.FirstOrDefaultAsync(
+                    x =>
+                        x.WebsiteId == activeSession.WebsiteId
+                        && x.StartTime == activeSession.StartTime,
+                    cancellationToken
+                );
+                if (savedActiveSession is not null)
+                    context.WebsiteUsageSessions.Remove(savedActiveSession);
+            }
+            activeSessionStore.Current = new ActiveWebsiteUsageSessionState(
+                activeSession.WebsiteId,
+                notification.IdleStartedAt,
+                notification.IdleStartedAt
+            );
         }
 
         // 删除已有数据中空闲开始以来的所有数据

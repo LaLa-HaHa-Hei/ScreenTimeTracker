@@ -10,6 +10,7 @@ public static class ActiveSessionDbContextExtensions
     public static async Task PersistActiveSessionAsync(
         this ScreenTimeDbContext context,
         ActiveWebsiteUsageSessionState activeSessionState,
+        DateTimeOffset endTime,
         CancellationToken cancellationToken
     )
     {
@@ -27,12 +28,12 @@ public static class ActiveSessionDbContextExtensions
         {
             var sessionEntity = WebsiteUsageSession.Create(
                 websiteId: activeSessionState.WebsiteId,
-                new TimeRange(activeSessionState.StartTime, activeSessionState.LastActiveAt)
+                new TimeRange(activeSessionState.StartTime, endTime)
             );
 
             context.WebsiteUsageSessions.Add(sessionEntity);
         }
         else
-            existing.UpdateEndTime(activeSessionState.LastActiveAt);
+            existing.UpdateEndTime(endTime);
     }
 }

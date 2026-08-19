@@ -20,13 +20,29 @@ public class UserBecameIdleHandler(
     {
         var now = timeProvider.GetUtcNow();
 
-        if (activeSessionStore.Current is not null)
-            await context.PersistActiveSessionAsync(
-                activeSessionStore.Current,
-                now,
-                cancellationToken
+        var activeSession = activeSessionStore.Take();
+        if (activeSession is not null)
+        {
+            if (activeSession.StartTime < notification.IdleStartedAt)
+                await context.PersistActiveSessionAsync(
+                    activeSession,
+                    notification.IdleStartedAt,
+                    cancellationToken
+                );
+            else
+            {
+                var savedActiveSession = await context.AppUsageSessions.FirstOrDefaultAsync(
+                    x => x.AppId == activeSession.AppId && x.StartTime == activeSession.StartTime,
+                    cancellationToken
+                );
+                if (savedActiveSession is not null)
+                    context.AppUsageSessions.Remove(savedActiveSession);
+            }
+            activeSessionStore.Current = new ActiveAppUsageSessionState(
+                App.IdleAppId,
+                notification.IdleStartedAt
             );
-        activeSessionStore.Current = new ActiveAppUsageSessionState(App.IdleAppId, now);
+        }
 
         // 修正已有数据中空闲开始到现在范围内数据为空闲
         var affectedSessions = await context

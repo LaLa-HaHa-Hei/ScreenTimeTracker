@@ -45,8 +45,8 @@ public static class ServiceCollectionExtensions
 
         // 后台服务
         services.AddHostedService<AppUsageActiveSessionTracker>();
-        services.AddHostedService<AppUsageActiveSessionAutoSaver>();
-        services.AddHostedService<WebsiteUsageActiveSessionAutoSaver>();
+        services.AddHostedService<ActiveAppUsageSessionAutoSaver>();
+        services.AddHostedService<ActiveWebsiteUsageSessionAutoSaver>();
         services.AddHostedService<AppUsageSessionOptimizationWorker>();
         services.AddHostedService<WebsiteUsageSessionOptimizationWorker>();
         services.AddHostedService<SystemSuspendMonitor>();

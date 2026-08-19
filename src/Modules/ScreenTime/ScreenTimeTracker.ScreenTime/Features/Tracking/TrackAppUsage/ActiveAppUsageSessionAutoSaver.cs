@@ -6,7 +6,7 @@ using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackAppUsage;
 
-public partial class AppUsageActiveSessionAutoSaver(
+public partial class ActiveAppUsageSessionAutoSaver(
     IServiceScopeFactory scopeFactory,
     ActiveAppUsageSessionStore activeSessionStore,
     TimeProvider timeProvider

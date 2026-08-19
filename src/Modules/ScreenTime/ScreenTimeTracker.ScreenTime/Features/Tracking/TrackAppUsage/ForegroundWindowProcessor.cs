@@ -103,16 +103,18 @@ public partial class ForegroundWindowProcessor(
             );
 
         if (activeSessionStore.Current is null)
-        {
             activeSessionStore.Current = new ActiveAppUsageSessionState(appId, message.OccurredAt);
-        }
         else if (activeSessionStore.Current.AppId != appId)
         {
-            await context.PersistActiveSessionAsync(
-                activeSessionStore.Current,
-                message.OccurredAt,
-                cancellationToken
-            );
+            var activeSession = activeSessionStore.Take();
+            if (activeSession is not null)
+            {
+                await context.PersistActiveSessionAsync(
+                    activeSession,
+                    message.OccurredAt,
+                    cancellationToken
+                );
+            }
             activeSessionStore.Current = new ActiveAppUsageSessionState(appId, message.OccurredAt);
         }
 
@@ -159,7 +161,6 @@ public partial class ForegroundWindowProcessor(
                 app.RefreshMetadata(occurredAt, executablePath, iconPath);
             }
             context.Apps.Add(app);
-            await context.SaveChangesAsync(cancellationToken);
         }
         // 已有 App 信息
         else
@@ -181,7 +182,6 @@ public partial class ForegroundWindowProcessor(
                     );
                     app.RefreshMetadata(occurredAt, executablePath, iconPath);
                 }
-                await context.SaveChangesAsync(cancellationToken);
             }
         }
         return app.Id;

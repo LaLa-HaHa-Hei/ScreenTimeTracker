@@ -19,14 +19,14 @@ public class TimerDriftDetectedHandler(
     )
     {
         var now = timeProvider.GetUtcNow();
-
-        if (activeSessionStore.Current is not null)
+        var activeSession = activeSessionStore.Take();
+        if (activeSession is not null && activeSession.StartTime < notification.DriftStartAt)
             await context.PersistActiveSessionAsync(
-                activeSessionStore.Current,
-                now,
+                activeSession,
+                notification.DriftStartAt,
                 cancellationToken
             );
-        activeSessionStore.Current = null;
+
         var windowInfo = foregroundWindowMonitor.GetForegroundWindow();
         foregroundWindowProcessor.Enqueue(new ForegroundWindowChangedMessage(windowInfo, now));
 

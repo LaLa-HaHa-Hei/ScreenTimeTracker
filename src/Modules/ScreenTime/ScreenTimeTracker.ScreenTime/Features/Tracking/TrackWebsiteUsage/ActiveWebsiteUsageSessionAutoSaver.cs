@@ -6,7 +6,7 @@ using ScreenTimeTracker.ScreenTime.Infrastructure.Persistence;
 
 namespace ScreenTimeTracker.ScreenTime.Features.Tracking.TrackWebsiteUsage;
 
-public partial class WebsiteUsageActiveSessionAutoSaver(
+public partial class ActiveWebsiteUsageSessionAutoSaver(
     IServiceScopeFactory scopeFactory,
     ActiveWebsiteUsageSessionStore activeSessionStore
 ) : BackgroundService
@@ -31,7 +31,11 @@ public partial class WebsiteUsageActiveSessionAutoSaver(
 
                 using var scope = scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ScreenTimeDbContext>();
-                await context.PersistActiveSessionAsync(activeSessionStore.Current, stoppingToken);
+                await context.PersistActiveSessionAsync(
+                    activeSessionStore.Current,
+                    activeSessionStore.Current.LastActiveAt,
+                    cancellationToken: stoppingToken
+                );
                 await context.SaveChangesAsync(stoppingToken);
             }
         }

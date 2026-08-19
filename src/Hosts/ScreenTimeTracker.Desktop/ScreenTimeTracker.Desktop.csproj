@@ -4,7 +4,7 @@
     <ApplicationIcon>Resources/Icon.ico</ApplicationIcon>
     <AssemblyName>ScreenTimeTracker</AssemblyName>
     <RootNamespace>ScreenTimeTracker.Desktop</RootNamespace>
-    <Version>4.6.2</Version>
+    <Version>4.6.3</Version>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 

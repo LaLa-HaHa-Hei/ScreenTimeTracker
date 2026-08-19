@@ -106,7 +106,13 @@ public partial class WebsiteActivityProcessor(
         else
         {
             // 切换了网站或时间间隔过长：持久化旧 Session 并开启新 Session
-            await context.PersistActiveSessionAsync(activeSessionStore.Current, cancellationToken);
+            var activeSession = activeSessionStore.Take();
+            if (activeSession is not null)
+                await context.PersistActiveSessionAsync(
+                    activeSession,
+                    activeSession.LastActiveAt,
+                    cancellationToken
+                );
             activeSessionStore.Current = new ActiveWebsiteUsageSessionState(
                 website.Id,
                 report.ReportedAt - report.Duration,
